@@ -17,10 +17,10 @@ export const env = {
   TURSO_DATABASE_URL: required('TURSO_DATABASE_URL'),
   TURSO_AUTH_TOKEN: required('TURSO_AUTH_TOKEN'),
 
-  WT_SECRET: process.env.JWT_SECRET as string,
+  JWT_SECRET: process.env.JWT_SECRET as string,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '3h',
 };
 
-if (!env.WT_SECRET) {
-  throw new Error('WT_SECRET is missing');
+if (!env.JWT_SECRET) {
+  throw new Error('JWT_SECRET is missing');
 }
