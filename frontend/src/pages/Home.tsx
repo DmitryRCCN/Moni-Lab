@@ -2,39 +2,38 @@ import LearningPath from '../components/LearningPath'
 
 export default function Home() {
   return (
-    <div className="app-shell">
-      <div className="app-grid">
-        {/* Left column is the sidebar - already rendered by Navbar in App layout */}
-
-        <main className="main-content">
-          <div className="main-inner">
-            <h1 className="text-3xl font-bold mb-1">Ruta de aprendizaje</h1>
-            <p className="text-sm text-gray-400 mb-6">Sigue el camino para aprender economía jugando.</p>
-
-            <div className="card card-path">
-              <LearningPath />
-            </div>
-
-            <section className="features">
-              <div className="card small">
-                <h3 className="card-title">Progreso</h3>
-                <p className="card-desc">Visualiza tus últimas sesiones y logros.</p>
-              </div>
-
-              <div className="card small">
-                <h3 className="card-title">Retos diarios</h3>
-                <p className="card-desc">Completa mini-retos para ganar monedas.</p>
-              </div>
-
-              <div className="card small">
-                <h3 className="card-title">Recompensas</h3>
-                <p className="card-desc">Canjea tus monedas en la tienda.</p>
-              </div>
-            </section>
+    <div className="min-h-screen">
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Stats row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center border border-white/10">
+            <p className="text-xs text-white/70 mb-1">Nivel</p>
+            <p className="text-2xl font-bold text-yellow-300">4</p>
           </div>
-        </main>
+          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center border border-white/10">
+            <p className="text-xs text-white/70 mb-1">Monedas</p>
+            <p className="text-2xl font-bold text-yellow-300">393</p>
+          </div>
+          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center border border-white/10">
+            <p className="text-xs text-white/70 mb-1">Racha</p>
+            <p className="text-2xl font-bold text-orange-300">🔥 7</p>
+          </div>
+          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center border border-white/10">
+            <p className="text-xs text-white/70 mb-1">Progreso</p>
+            <p className="text-2xl font-bold text-emerald-300">60%</p>
+          </div>
+        </div>
 
-        {/* right panel intentionally hidden for now (ignored per request) */}
+        {/* Learning path title */}
+        <div className="mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">Ruta de aprendizaje</h1>
+          <p className="text-white/80 text-sm sm:text-base">Sigue el camino para dominar la educación financiera 💰</p>
+        </div>
+
+        {/* Learning path container */}
+        <div className="bg-white/5 backdrop-blur rounded-2xl p-8 border border-white/10 shadow-xl">
+          <LearningPath />
+        </div>
       </div>
     </div>
   )
