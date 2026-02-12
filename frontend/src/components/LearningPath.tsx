@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
 
 type Step = {
   id: number
@@ -15,6 +16,13 @@ const steps: Step[] = [
 ]
 
 export default function LearningPath() {
+  const [pulsing, setPulsing] = useState<Record<number, boolean>>({})
+
+  function triggerPulse(id: number) {
+    setPulsing(prev => ({ ...prev, [id]: true }))
+    setTimeout(() => setPulsing(prev => ({ ...prev, [id]: false })), 300)
+  }
+
   return (
     <div className="flex flex-col items-center w-full">
       {/* Vertical path with center line */}
@@ -61,15 +69,14 @@ export default function LearningPath() {
                 {/* Central node */}
                 <Link
                   to={isLocked ? '#' : `/lesson/${s.id}`}
-                  className={`absolute left-1/2 transform -translate-x-1/2 flex-shrink-0 ${
-                    isLocked ? 'cursor-not-allowed' : 'cursor-pointer'
-                  }`}
+                  className={`absolute left-1/2 transform -translate-x-1/2 flex-shrink-0 ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                  onClick={() => !isLocked && triggerPulse(s.id)}
                 >
                   <div
                     className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg transition-all duration-300 border-2 ${
                       isLocked
                         ? 'bg-gray-600 border-gray-500 text-white/70'
-                        : 'bg-gradient-to-br from-emerald-400 to-teal-500 border-emerald-300 hover:scale-110 hover:shadow-emerald-500/50 hover:shadow-2xl'
+                        : `bg-gradient-to-br from-emerald-400 to-teal-500 border-emerald-300 ${pulsing[s.id] ? 'scale-125 ring-4 ring-emerald-300/40' : 'hover:scale-110 hover:shadow-emerald-500/50 hover:shadow-2xl'}`
                     }`}
                   >
                     {isLocked ? '🔒' : '✓'}
