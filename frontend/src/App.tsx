@@ -7,17 +7,16 @@ import Profile from './pages/Profile'
 function App() {
   return (
     <BrowserRouter>
-      <div className="flex">
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-emerald-900 via-teal-800 to-green-900 text-white">
         <Navbar />
-
-        <div className="flex-1">
+        <main className="flex-1 pt-20 pb-24 md:pb-8">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/lesson/:id" element={<Lesson />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </div>
+        </main>
       </div>
     </BrowserRouter>
   )
