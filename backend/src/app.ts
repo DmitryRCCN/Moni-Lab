@@ -1,4 +1,5 @@
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import { db } from './db/client';
 
 import authRoutes from './modules/auth/auth.routes';
@@ -8,6 +9,7 @@ import meRoutes from './routes/me.route';
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 
 // Rutas de autenticación
 app.use('/auth', authRoutes);

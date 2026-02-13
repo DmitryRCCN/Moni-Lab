@@ -21,7 +21,7 @@ export function signAccessToken(userId: string) {
   return jwt.sign(
     { userId, type: 'access' } as AccessTokenPayload,
     env.JWT_SECRET,
-    { expiresIn: '1s' } // 15 minutos
+    { expiresIn: '15m' } // 15 minutos
   );
 }
 
