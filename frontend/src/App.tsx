@@ -7,6 +7,8 @@ import Stats from './pages/Stats'
 import Store from './pages/Store'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import { AuthProvider } from './context/AuthContext'
+import RequireAuth from './components/RequireAuth'
 
 function AppContent() {
   const location = useLocation()
@@ -17,11 +19,11 @@ function AppContent() {
       {!hideNavbar && <Navbar />}
       <main className={`flex-1 ${hideNavbar ? 'pt-0' : 'pt-20'} pb-24 md:pb-8`}>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/lesson/:id" element={<Lesson />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/stats" element={<Stats />} />
-          <Route path="/store" element={<Store />} />
+          <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
+          <Route path="/lesson/:id" element={<RequireAuth><Lesson /></RequireAuth>} />
+          <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+          <Route path="/stats" element={<RequireAuth><Stats /></RequireAuth>} />
+          <Route path="/store" element={<RequireAuth><Store /></RequireAuth>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -34,7 +36,9 @@ function AppContent() {
 function App() {
   return (
     <BrowserRouter>
-      <AppContent />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </BrowserRouter>
   )
 }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 export default function Register() {
   const [email, setEmail] = useState('')
@@ -8,7 +9,7 @@ export default function Register() {
   const [confirm, setConfirm] = useState('')
   const [show, setShow] = useState(false)
   const [error, setError] = useState('')
-  const navigate = useNavigate()
+  const { register } = useAuth()
 
   function validate() {
     if (!email || !username || !password) return 'Completa todos los campos'
@@ -19,7 +20,7 @@ export default function Register() {
     return ''
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const v = validate()
     if (v) {
@@ -27,9 +28,12 @@ export default function Register() {
       return
     }
     setError('')
-    // Simular registro (frontend-only)
-    localStorage.setItem('moni_user', JSON.stringify({ email, username }))
-    navigate('/')
+    try {
+      await register({ email, username, password })
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Error al registrarse')
+      setError(error.message)
+    }
   }
 
   return (

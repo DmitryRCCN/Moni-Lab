@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -7,7 +8,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [show, setShow] = useState(false)
   const [error, setError] = useState('')
-  const navigate = useNavigate()
+  const { login } = useAuth()
 
   function validate() {
     if (!email && !username) return 'Ingresa correo o usuario'
@@ -16,7 +17,7 @@ export default function Login() {
     return ''
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const v = validate()
     if (v) {
@@ -24,9 +25,12 @@ export default function Login() {
       return
     }
     setError('')
-    // Simular login (frontend only)
-    localStorage.setItem('moni_user', JSON.stringify({ email, username }))
-    navigate('/')
+    try {
+      await login({ email: email || undefined, username: username || undefined, password })
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Error al iniciar sesión')
+      setError(error.message || 'Error al iniciar sesión')
+    }
   }
 
   return (
