@@ -1,27 +1,15 @@
-import LearningPath from '../components/LearningPath'
-
 export default function Home() {
   return (
-    <div className="min-h-screen">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Stats row */}
-        <div className="flex justify-start sm:justify-start mb-8">
-          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center border border-white/10 w-44">
-            <p className="text-xs text-white/70 mb-1">Monedas</p>
-            <p className="text-2xl font-bold text-yellow-300">393</p>
-          </div>
-        </div>
-
-        {/* Learning path title */}
-        <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">Ruta de aprendizaje</h1>
-          <p className="text-white/80 text-sm sm:text-base">Sigue el camino para dominar la educación financiera 💰</p>
-        </div>
-
-        {/* Learning path container */}
-        <div className="bg-white/5 backdrop-blur rounded-2xl p-8 border border-white/10 shadow-xl">
-          <LearningPath />
-        </div>
+    <div className="p-8">
+      <h1 className="text-3xl font-bold mb-4">Bienvenido a Moni-Lab</h1>
+      <p className="text-gray-700 mb-6">Tu plataforma de aprendizaje de programación gamificada.</p>
+      <div className="bg-white p-6 rounded shadow">
+        <h2 className="text-2xl font-bold mb-3">¿Qué es Moni-Lab?</h2>
+        <p className="text-gray-700 mb-4">Moni-Lab es una plataforma diseñada para hacer que el aprendizaje de la programación sea divertido y motivador. A través de lecciones interactivas, quizzes y una ruta de aprendizaje gamificada, te ayudamos a dominar las habilidades de programación mientras ganas monedas virtuales y desbloqueas recompensas.</p>
+        <h2 className="text-2xl font-bold mb-3">¿Cómo funciona?</h2>
+        <p className="text-gray-700 mb-4">Sigue la ruta de aprendizaje para completar lecciones y quizzes. Gana monedas por cada lección completada y úsalas para personalizar tu avatar o desbloquear contenido exclusivo. Consulta tu perfil para ver tu progreso y estadísticas.</p>
+        <h2 className="text-2xl font-bold mb-3">¡Comienza ahora!</h2>
+        <p className="text-gray-700">Haz clic en "Ruta de aprendizaje" para comenzar tu viaje de programación con Moni-Lab. ¡Diviértete aprendiendo!</p>
       </div>
     </div>
   )
