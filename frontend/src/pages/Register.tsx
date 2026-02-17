@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import api from '../api'
 
 export default function Register() {
   const [email, setEmail] = useState('')
@@ -27,9 +28,16 @@ export default function Register() {
       return
     }
     setError('')
-    // Simular registro (frontend-only)
-    localStorage.setItem('moni_user', JSON.stringify({ email, username }))
-    navigate('/')
+    ;(async () => {
+      try {
+        const res = (await api('/auth/register', { method: 'POST', body: { email, password, nombre: username } })) as any
+        if (res.accessToken) localStorage.setItem('moni_access', res.accessToken)
+        if (res.user) localStorage.setItem('moni_user', JSON.stringify(res.user))
+        navigate('/')
+      } catch (err: any) {
+        setError(err.message || 'Error en registro')
+      }
+    })()
   }
 
   return (

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import api from '../api'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -11,6 +12,7 @@ export default function Login() {
 
   function validate() {
     if (!email && !username) return 'Ingresa correo o usuario'
+    if (!email) return 'Usa tu correo para iniciar sesión'
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Correo inválido'
     if (password.length < 6) return 'La contraseña debe tener al menos 6 caracteres'
     return ''
@@ -24,9 +26,18 @@ export default function Login() {
       return
     }
     setError('')
-    // Simular login (frontend only)
-    localStorage.setItem('moni_user', JSON.stringify({ email, username }))
-    navigate('/')
+    // Intentar login real
+    ;(async () => {
+      try {
+        const res = (await api('/auth/login', { method: 'POST', body: { email, password } })) as any
+        // Guardar access token y usuario
+        if (res.accessToken) localStorage.setItem('moni_access', res.accessToken)
+        if (res.user) localStorage.setItem('moni_user', JSON.stringify(res.user))
+        navigate('/')
+      } catch (err: any) {
+        setError(err.message || 'Error en login')
+      }
+    })()
   }
 
   return (

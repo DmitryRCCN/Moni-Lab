@@ -1,5 +1,6 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import { db } from './db/client';
 
 import authRoutes from './modules/auth/auth.routes';
@@ -10,6 +11,14 @@ import meRoutes from './routes/me.route';
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+app.use(
+  cors({
+    origin: FRONTEND_URL,
+    credentials: true,
+  })
+);
 
 // Rutas de autenticación
 app.use('/auth', authRoutes);
