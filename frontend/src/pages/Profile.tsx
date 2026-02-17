@@ -1,35 +1,24 @@
+import { Link } from 'react-router-dom';
+
 export default function Profile() {
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-4">Mi Perfil</h1>
-      
-      <div className="bg-white p-6 rounded shadow max-w-md">
-        {/* Avatar y datos básicos */}
-        <div className="text-center mb-6">
-          <div className="w-20 h-20 bg-gray-300 rounded-full mx-auto mb-4"></div>
-          <h2 className="text-xl font-bold">Nombre Usuario</h2>
-          <p className="text-gray-600">niño@ejemplo.com</p>
-        </div>
-        
-        {/* Estadísticas */}
-        <div className="space-y-3 mb-6">
-          <div className="flex justify-between">
-            <span>Monedas:</span>
-            <span className="font-bold">150</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Puntos:</span>
-            <span className="font-bold">450</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Emblemas:</span>
-            <span className="font-bold">5</span>
+    <div className="p-4 max-w-4xl mx-auto">
+      <div className="bg-gradient-to-br from-emerald-800/40 to-teal-900/30 p-6 rounded-lg shadow-lg border border-white/6">
+        <div className="flex items-center gap-6">
+          <div className="w-28 h-28 rounded-full bg-gradient-to-br from-yellow-300 to-orange-400 flex items-center justify-center text-3xl font-bold text-slate-900">A</div>
+          <div>
+            <h3 className="text-2xl font-bold">Usuario Ejemplo</h3>
+            <p className="text-sm text-white/80 mt-1">Nivel 3 · <span className="font-semibold">120</span> monedas</p>
+            <div className="mt-3 flex gap-3">
+              <Link to="/stats" className="px-3 py-1 bg-white/10 rounded hover:bg-white/20">Ver estadísticas</Link>
+              <Link to="/store" className="px-3 py-1 bg-white/10 rounded hover:bg-white/20">Tienda</Link>
+            </div>
           </div>
         </div>
-        
-        {/* Botones de acción */}
-        <button className="w-full p-2 bg-blue-500 text-white rounded mb-2">Editar Perfil</button>
-        <button className="w-full p-2 bg-red-500 text-white rounded">Cerrar Sesión</button>
+        <section className="mt-6 bg-white/5 p-4 rounded">
+          <h4 className="font-semibold mb-2">Acerca de</h4>
+          <p className="text-sm text-white/80">Este es un perfil de ejemplo. Aquí puedes mostrar progreso, logros y personalización de avatar.</p>
+        </section>
       </div>
     </div>
   )

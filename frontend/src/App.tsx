@@ -3,6 +3,10 @@ import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import Lesson from './pages/Lesson'
 import Profile from './pages/Profile'
+import Stats from './pages/Stats'
+import Store from './pages/Store'
+import Login from './pages/Login'
+import Register from './pages/Register'
 
 function App() {
   return (
@@ -14,6 +18,10 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/lesson/:id" element={<Lesson />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/stats" element={<Stats />} />
+            <Route path="/store" element={<Store />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

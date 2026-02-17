@@ -5,22 +5,10 @@ export default function Home() {
     <div className="min-h-screen">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Stats row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center border border-white/10">
-            <p className="text-xs text-white/70 mb-1">Nivel</p>
-            <p className="text-2xl font-bold text-yellow-300">4</p>
-          </div>
-          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center border border-white/10">
+        <div className="flex justify-start sm:justify-start mb-8">
+          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center border border-white/10 w-44">
             <p className="text-xs text-white/70 mb-1">Monedas</p>
             <p className="text-2xl font-bold text-yellow-300">393</p>
-          </div>
-          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center border border-white/10">
-            <p className="text-xs text-white/70 mb-1">Racha</p>
-            <p className="text-2xl font-bold text-orange-300">🔥 7</p>
-          </div>
-          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center border border-white/10">
-            <p className="text-xs text-white/70 mb-1">Progreso</p>
-            <p className="text-2xl font-bold text-emerald-300">60%</p>
           </div>
         </div>
 
