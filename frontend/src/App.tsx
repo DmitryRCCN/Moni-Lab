@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Path from './pages/Path'
 import Lesson from './pages/Lesson'
@@ -8,22 +8,22 @@ import Store from './pages/Store'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import { AuthProvider } from './context/AuthContext'
+import Footer from './components/Footer'
+import RequireAuth from './components/RequireAuth'
 
 function AppContent() {
-  const location = useLocation()
-  const hideNavbar = ['/home', '/login', '/register'].includes(location.pathname)
-
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-emerald-900 via-teal-800 to-green-900 text-white">
-      {!hideNavbar && <Navbar />}
-      <main className={`flex-1 ${hideNavbar ? 'pt-0' : 'pt-20'} pb-24 md:pb-8`}>
+      <Navbar />
+      <main className={`flex-1 pt-20 pb-24 md:pb-8`}>
         <Routes>
-          <Route path="/" element={<Path />} />
-          <Route path="/lesson/:id" element={<Lesson />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/stats" element={<Stats />} />
-          <Route path="/store" element={<Store />} />
-          <Route path="/home" element={<Home />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/lesson/:id" element={<RequireAuth><Lesson /></RequireAuth>} />
+          <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+          <Route path="/stats" element={<RequireAuth><Stats /></RequireAuth>} />
+          <Route path="/store" element={<RequireAuth><Store /></RequireAuth>} />
+          <Route path="/Path" element={<RequireAuth><Path /></RequireAuth>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -35,9 +35,12 @@ function AppContent() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <AppContent />
+        <Footer />
+      </BrowserRouter>
+    </AuthProvider>
   )
 }
 

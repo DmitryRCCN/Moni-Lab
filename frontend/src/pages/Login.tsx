@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../api'
+import { useAuth } from '../context/AuthContext'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -9,6 +10,7 @@ export default function Login() {
   const [show, setShow] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
+  const { loginFromResponse } = useAuth()
 
   function validate() {
     if (!email && !username) return 'Ingresa correo o usuario'
@@ -30,10 +32,9 @@ export default function Login() {
     ;(async () => {
       try {
         const res = (await api('/auth/login', { method: 'POST', body: { email, password } })) as any
-        // Guardar access token y usuario
-        if (res.accessToken) localStorage.setItem('moni_access', res.accessToken)
-        if (res.user) localStorage.setItem('moni_user', JSON.stringify(res.user))
-        navigate('/')
+        // Centralizar estado usando AuthContext
+        loginFromResponse(res)
+        navigate('/Path')
       } catch (err: any) {
         setError(err.message || 'Error en login')
       }

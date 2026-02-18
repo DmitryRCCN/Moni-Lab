@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../api'
+import { useAuth } from '../context/AuthContext'
 
 export default function Register() {
   const [email, setEmail] = useState('')
@@ -10,6 +11,7 @@ export default function Register() {
   const [show, setShow] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
+  const { loginFromResponse } = useAuth()
 
   function validate() {
     if (!email || !username || !password) return 'Completa todos los campos'
@@ -31,9 +33,8 @@ export default function Register() {
     ;(async () => {
       try {
         const res = (await api('/auth/register', { method: 'POST', body: { email, password, nombre: username } })) as any
-        if (res.accessToken) localStorage.setItem('moni_access', res.accessToken)
-        if (res.user) localStorage.setItem('moni_user', JSON.stringify(res.user))
-        navigate('/')
+        loginFromResponse(res)
+        navigate('/Path')
       } catch (err: any) {
         setError(err.message || 'Error en registro')
       }
