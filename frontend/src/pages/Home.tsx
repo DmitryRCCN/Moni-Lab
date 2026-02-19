@@ -5,9 +5,11 @@ export default function Home(
   return (
     <div className="p-8 max-w-4xl mx-auto ">
       <h1 className="flex items-center justify-center flex-nowrap text-5xl font-bold mb-4 text-yellow-300">
-        <img src="images/mono.png" alt="izquierda" className="w-90 h-60" />
+        <img src="images/mono.png" alt="izquierda" className="hidden md:block w-60 h-38" />
+
         <span className="whitespace-nowrap">Bienvenido a Moni-Lab</span>
-        <img src="images/mona.png" alt="derecha" className="w-90 h-60" />
+
+        <img src="images/mona.png" alt="derecha" className="hidden md:block w-60 h-38" />
       </h1>
       <div className="bg-white p-6 rounded-xl shadow mb-6">
         <div className="flex items-start gap-4">
@@ -37,7 +39,7 @@ export default function Home(
       </div>
       <div className="bg-white p-6 rounded-xl shadow gap-1 mb-6">
         <h2 className="text-2xl font-bold mb-3 text-emerald-900">¡Comienza ahora!</h2>
-        <p className="text-emerald-900">Haz clic en "Ruta de aprendizaje" para comenzar tu viaje de programación con Moni-Lab. ¡Diviértete aprendiendo!</p>
+        <p className="text-emerald-900">Haz clic en "Registrarse" para comenzar tu viaje en el mundo de la economía con Moni-Lab. <br></br> ¡Diviértete aprendiendo!</p>
       </div>
     </div>
   )
