@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { env } from '../../config/env';
 
 const refreshSchema = z.object({
-  refreshToken: z.string(),
+  refreshToken: z.string().optional(),
 });
 
 export async function register(req: Request, res: Response) {
