@@ -30,9 +30,9 @@ export async function getUserProfile(userId: string) {
       SELECT 
         COUNT(*) as total_lecciones,
         SUM(CASE WHEN estado = 'completado' THEN 1 ELSE 0 END) as completadas,
-        AVG(puntaje) as puntaje_promedio
-      FROM progreso
-      WHERE usuario_id = ?
+        AVG(mejor_puntaje) as puntaje_promedio
+      FROM progreso_nodo
+      WHERE id_usuario = ?
     `,
     args: [userId],
   });
@@ -116,20 +116,19 @@ export async function deleteUser(userId: string) {
 export async function getUserProgress(userId: string) {
   const result = await db.execute({
     sql: `
-      SELECT 
-        p.id,
-        p.leccion_id,
-        l.titulo,
-        l.dificultad,
-        p.estado,
-        p.puntaje,
-        p.intentos,
-        p.completed_at,
-        p.created_at
-      FROM progreso p
-      LEFT JOIN lecciones l ON p.leccion_id = l.id
-      WHERE p.usuario_id = ?
-      ORDER BY p.created_at DESC
+      SELECT
+        ia.id_intento as id,
+        ia.id_actividad as actividad_id,
+        a.tipo_actividad,
+        n.titulo as nodo_titulo,
+        ia.puntaje_obtenido as puntaje,
+        ia.detalle_respuestas as detalle,
+        ia.fecha_hora as creado_en
+      FROM intento_actividad ia
+      LEFT JOIN actividad a ON ia.id_actividad = a.id_actividad
+      LEFT JOIN nodo n ON a.id_nodo = n.id_nodo
+      WHERE ia.id_usuario = ?
+      ORDER BY ia.fecha_hora DESC
     `,
     args: [userId],
   });

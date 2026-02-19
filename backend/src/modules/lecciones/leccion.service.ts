@@ -139,11 +139,11 @@ export async function getLeccionStats(leccionId: string) {
       SELECT
         COUNT(*) as total_intentos,
         SUM(CASE WHEN estado = 'completado' THEN 1 ELSE 0 END) as completados,
-        AVG(puntaje) as puntaje_promedio,
-        MAX(puntaje) as puntaje_maximo,
-        MIN(puntaje) as puntaje_minimo
-      FROM progreso
-      WHERE leccion_id = ?
+        AVG(puntaje_obtenido) as puntaje_promedio,
+        MAX(puntaje_obtenido) as puntaje_maximo,
+        MIN(puntaje_obtenido) as puntaje_minimo
+      FROM intento_actividad
+      WHERE id_actividad = ?
     `,
     args: [leccionId],
   });
