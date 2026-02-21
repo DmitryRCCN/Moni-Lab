@@ -1,6 +1,46 @@
 import LearningPath from '../components/LearningPath'
+import { useEffect, useState } from 'react'
+import api from '../api'
+import { useAuth } from '../context/AuthContext'
+
+type Nodo = { id_nodo: string; titulo: string; descripcion?: string }
 
 export default function Path() {
+  const [nodos, setNodos] = useState<Nodo[] | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const { user } = useAuth()
+  const [progressMap, setProgressMap] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    let mounted = true
+    async function load() {
+      try {
+        const res = await api('/nodos')
+        if (mounted) setNodos(res || [])
+        // si hay usuario autenticado, cargar su progreso para colorear actividades
+        if (user) {
+          try {
+            const p = await api(`/usuario/${user.id}/progreso`)
+            const map: Record<string, string> = {}
+            ;(p?.progreso || p || []).forEach((row: any) => {
+              if (row.actividad_id) map[row.actividad_id] = row.estado || row.estado_actividad || 'disponible'
+            })
+            if (mounted) setProgressMap(map)
+          } catch (e) {
+            // ignore
+          }
+        }
+      } catch (err: any) {
+        if (mounted) setError(err.message || 'Error cargando nodos')
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+    load()
+    return () => { mounted = false }
+  }, [])
+
   return (
     <div className="min-h-screen">
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -20,8 +60,16 @@ export default function Path() {
 
         {/* Learning path container */}
         <div className="bg-white/5 backdrop-blur rounded-2xl p-8 border border-white/10 shadow-xl">
-          <LearningPath />
+          {loading ? (
+            <p>Cargando ruta...</p>
+          ) : error ? (
+            <p className="text-red-400">{error}</p>
+          ) : (
+            <LearningPath nodes={nodos || undefined} progress={progressMap} />
+          )}
         </div>
+
+        {/* (Creación de actividades eliminada; se carga desde la BD) */}
       </div>
     </div>
   )

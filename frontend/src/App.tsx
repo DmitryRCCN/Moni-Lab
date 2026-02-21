@@ -20,6 +20,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/lesson/:id" element={<RequireAuth><Lesson /></RequireAuth>} />
+          <Route path="/lesson" element={<RequireAuth><Lesson /></RequireAuth>} />
           <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="/stats" element={<RequireAuth><Stats /></RequireAuth>} />
           <Route path="/store" element={<RequireAuth><Store /></RequireAuth>} />

@@ -50,6 +50,8 @@ export async function api(path: string, options: RequestInit = {}) {
 
   const opts: RequestInit = {
     ...options,
+    // evitar caché para que el servidor no responda 304 Not Modified
+    cache: (options as any).cache ?? 'no-store',
     credentials: 'include',
     headers,
   };

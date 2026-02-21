@@ -7,6 +7,8 @@ import authRoutes from './modules/auth/auth.routes';
 import usuarioRoutes from './modules/usuario/usuario.routes';
 import leccionesRoutes from './modules/lecciones/leccion.routes';
 import meRoutes from './routes/me.route';
+import nodoRoutes from './modules/nodo/nodo.routes';
+import actividadRoutes from './modules/actividad/actividad.routes';
 
 const app = express();
 app.use(express.json());
@@ -27,6 +29,9 @@ app.use('/auth', authRoutes);
 app.use('/api', meRoutes);
 app.use('/usuario', usuarioRoutes);
 app.use('/lecciones', leccionesRoutes);
+// Rutas nuevas para nodos (solo lectura) y actividad (GET)
+app.use('/nodos', nodoRoutes);
+app.use('/', actividadRoutes);
 
 // Endpoint de prueba (sin autenticación)
 app.get('/api/test', (_req, res) => {
