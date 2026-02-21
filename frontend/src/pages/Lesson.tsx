@@ -64,7 +64,7 @@ export default function Lesson() {
           )}
         </div>
       ) : actividad.tipo_actividad === 'ejercicio' && actividad.ejercicio ? (
-        <Exercise ejercicio={actividad.ejercicio} />
+        <Exercise ejercicio={actividad.ejercicio} activityId={actividad.id_actividad} />
       ) : (
         <div className="p-4">Tipo de actividad desconocido</div>
       )}

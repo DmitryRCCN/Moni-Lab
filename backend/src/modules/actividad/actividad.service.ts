@@ -30,3 +30,28 @@ export async function getActividadById(id: string) {
     ejercicio: r.nivel_dificultad ? { nivel_dificultad: r.nivel_dificultad, minimo_aprobatorio: r.minimo_aprobatorio, es_de_salto: !!r.es_de_salto } : null,
   };
 }
+
+export async function getPreguntasByEjercicio(id_actividad: string) {
+  const result = await db.execute({
+    sql: `
+      SELECT p.id_pregunta, p.enunciado, p.tipo_pregunta, p.nivel_dificultad, p.respuesta_correcta, p.opciones, p.topico, p.puntos
+      FROM pregunta p
+      JOIN ejercicio_pregunta ep ON ep.id_pregunta = p.id_pregunta
+      WHERE ep.id_actividad = ?
+    `,
+    args: [id_actividad],
+  });
+
+  return result.rows || [];
+}
+
+import { v4 as uuid } from 'uuid';
+
+export async function createIntento(data: { id_usuario: string; id_actividad: string; puntaje_obtenido?: number; detalle_respuestas?: string }) {
+  const id = uuid();
+  await db.execute({
+    sql: `INSERT INTO intento_actividad (id_intento, id_usuario, id_actividad, puntaje_obtenido, detalle_respuestas) VALUES (?, ?, ?, ?, ?)`,
+    args: [id, data.id_usuario, data.id_actividad, data.puntaje_obtenido ?? null, data.detalle_respuestas ?? null],
+  });
+  return { id_intento: id, ...data };
+}
