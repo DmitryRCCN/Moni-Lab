@@ -91,7 +91,8 @@ export async function getProgress(req: AuthRequest, res: Response) {
     const progress = await getUserProgress(req.user.userId);
     res.json({
       usuario_id: req.user.userId,
-      progreso: progress,
+      progreso: progress.progreso || [],
+      intentos: progress.intentos || [],
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

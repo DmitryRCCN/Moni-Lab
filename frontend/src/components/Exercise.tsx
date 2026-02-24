@@ -22,6 +22,7 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [awardedCoins, setAwardedCoins] = useState<number>(0)
 
   useEffect(() => {
     let mounted = true
@@ -74,33 +75,36 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
   async function confirmAnswer() {
     if (selected === null) return
     const correct = selected === q.respuesta_correcta
-    setAnswers(prev => [...prev, { id: q.id_pregunta, selected, correct, puntos: q.puntos }])
+    const currentAnswer = { id: q.id_pregunta, selected, correct, puntos: q.puntos }
+    const newAnswers = [...answers, currentAnswer]
     setSelected(null)
+
     if (current + 1 < preguntas.length) {
+      setAnswers(newAnswers)
       setCurrent(current + 1)
       return
     }
 
     // finished -> submit intento
-    const totalPoints = answers.reduce((s, a) => s + (a.correct ? a.puntos : 0), correct ? q.puntos : 0)
+    const totalPoints = newAnswers.reduce((s, a) => s + (a.correct ? a.puntos : 0), 0)
     const maxPoints = preguntas.reduce((s, p) => s + (p.puntos || 0), 0)
     const percent = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 0
 
     setSubmitting(true)
     try {
-      await api('/intento', {
+      const res: any = await api('/intento', {
         method: 'POST',
         body: {
-          id_usuario: user?.id,
           id_actividad: activityId,
-          puntaje_obtenido: totalPoints,
-          detalle_respuestas: JSON.stringify({ answers: [...answers, { id: q.id_pregunta, selected, correct, puntos: q.puntos }] }),
+          puntaje_obtenido: percent,
+          detalle_respuestas: JSON.stringify({ answers: newAnswers }),
         },
       })
       setError(null)
       // replace view with results
-      setAnswers(prev => [...prev, { id: q.id_pregunta, selected, correct, puntos: q.puntos }])
+      setAnswers(newAnswers)
       setCurrent(preguntas.length)
+      if (res?.awardedCoins) setAwardedCoins(res.awardedCoins)
     } catch (err: any) {
       setError(err.message || 'Error enviando intento')
     } finally {
@@ -116,6 +120,11 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
       <div className="bg-white/5 p-6 rounded shadow mb-6">
         <h2 className="text-xl font-semibold mb-3">Resultado</h2>
         <p>Puntaje obtenido: <strong>{scored}</strong> / {maxPoints} ({percent}%)</p>
+        {awardedCoins > 0 && (
+          <div className="mt-3 p-3 bg-emerald-700/30 rounded">
+            <strong>Has ganado {awardedCoins} monedas 🎉</strong>
+          </div>
+        )}
         <p className="mt-3">Respuestas:</p>
         <ul className="list-disc pl-6 mt-2 text-sm text-white/80">
           {answers.map(a => (

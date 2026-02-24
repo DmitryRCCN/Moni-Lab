@@ -55,7 +55,7 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
 
                   {/* Título del nodo */}
                   <h3 className="text-lg font-semibold text-white/90 mb-8">
-                    {node.titulo}
+                    {`${node.orden_secuencial}. ${node.titulo}`}
                   </h3>
 
                   {/* Actividades */}

@@ -8,6 +8,7 @@ type AuthContextValue = {
   accessToken: string | null
   loginFromResponse: (res: any) => void
   logout: () => Promise<void>
+  initializing: boolean
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -23,6 +24,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   })
 
   const [accessToken, setAccessTokenState] = useState<string | null>(null)
+  const [initializing, setInitializing] = useState(true)
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
@@ -56,6 +58,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } catch {
         // no estamos autenticados
       }
+      finally {
+        if (mounted) setInitializing(false)
+      }
     })()
 
     return () => { mounted = false }
@@ -87,7 +92,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, loginFromResponse, logout }}>
+    <AuthContext.Provider value={{ user, accessToken, loginFromResponse, logout, initializing }}>
       {children}
     </AuthContext.Provider>
   )

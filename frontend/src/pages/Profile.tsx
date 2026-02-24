@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import api from '../api'
+import { useAuth } from '../context/AuthContext'
 
 type ProfileData = {
   id: string
@@ -21,33 +22,41 @@ export default function Profile() {
   const [data, setData] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { initializing } = useAuth()
 
   useEffect(() => {
     let mounted = true
-    setLoading(true)
-    api('/usuario/me')
-      .then((res) => {
+    async function load() {
+      setLoading(true)
+      try {
+        const res = await api('/usuario/me')
         if (!mounted) return
         setData(res)
+  
         setError(null)
-      })
-      .catch((err) => {
+      } catch (err: any) {
         if (!mounted) return
         setError(err.message || 'Error al cargar perfil')
-      })
-      .finally(() => mounted && setLoading(false))
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+
+    if (!initializing) {
+      load()
+    }
 
     return () => {
       mounted = false
     }
-  }, [])
+  }, [initializing])
 
   if (loading) return <div className="p-4 max-w-4xl mx-auto">Cargando perfil...</div>
   if (error) return <div className="p-4 max-w-4xl mx-auto text-red-300">{error}</div>
 
   if (!data) return <div className="p-4 max-w-4xl mx-auto">Perfil no disponible</div>
 
-  const initials = data.nombre ? data.nombre.split(' ').map(s => s[0]).slice(0,2).join('') : data.email[0]
+  const initials = data.nombre ? data.nombre.split(' ').map(s => s[0]).slice(0,2).join('') : data.email[0] 
 
   return (
     <div className="p-4 max-w-4xl mx-auto">

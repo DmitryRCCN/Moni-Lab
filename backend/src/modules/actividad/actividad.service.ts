@@ -1,4 +1,5 @@
 import { db } from '../../db/client';
+import { v4 as uuid } from 'uuid';
 
 export async function getActividadById(id: string) {
   const result = await db.execute({
@@ -44,14 +45,57 @@ export async function getPreguntasByEjercicio(id_actividad: string) {
 
   return result.rows || [];
 }
-
-import { v4 as uuid } from 'uuid';
-
 export async function createIntento(data: { id_usuario: string; id_actividad: string; puntaje_obtenido?: number; detalle_respuestas?: string }) {
   const id = uuid();
   await db.execute({
     sql: `INSERT INTO intento_actividad (id_intento, id_usuario, id_actividad, puntaje_obtenido, detalle_respuestas) VALUES (?, ?, ?, ?, ?)`,
     args: [id, data.id_usuario, data.id_actividad, data.puntaje_obtenido ?? null, data.detalle_respuestas ?? null],
   });
-  return { id_intento: id, ...data };
+
+  // Si el puntaje alcanza el mínimo del ejercicio, actualizar progreso_actividad y dar monedas si corresponde
+  let awardedCoins = 0
+  try {
+    const ejercicioRes = await db.execute({
+      sql: `SELECT minimo_aprobatorio FROM ejercicio WHERE id_actividad = ?`,
+      args: [data.id_actividad],
+    });
+
+    const actividadRes = await db.execute({
+      sql: `SELECT puntos_otorgados FROM actividad WHERE id_actividad = ?`,
+      args: [data.id_actividad],
+    });
+
+    const minimo = ejercicioRes.rows[0]?.minimo_aprobatorio ?? null;
+    const puntosOtorgados = actividadRes.rows[0]?.puntos_otorgados ?? 0;
+
+    if (minimo !== null && data.puntaje_obtenido !== undefined && data.puntaje_obtenido !== null) {
+      if (data.puntaje_obtenido >= minimo) {
+        // Verificar estado previo
+        const prev = await db.execute({
+          sql: `SELECT estado FROM progreso_actividad WHERE id_usuario = ? AND id_actividad = ?`,
+          args: [data.id_usuario, data.id_actividad],
+        });
+        const prevEstado = prev.rows[0]?.estado ?? null;
+
+        // Actualizar a completada
+        await db.execute({
+          sql: `UPDATE progreso_actividad SET estado = 'completada' WHERE id_usuario = ? AND id_actividad = ?`,
+          args: [data.id_usuario, data.id_actividad],
+        });
+
+        // Si antes no estaba completada, otorgar monedas
+        if (prevEstado !== 'completada' && puntosOtorgados > 0) {
+          await db.execute({
+            sql: `UPDATE usuarios SET monedas_virtuales = COALESCE(monedas_virtuales,0) + ? WHERE id = ?`,
+            args: [puntosOtorgados, data.id_usuario],
+          });
+          awardedCoins = puntosOtorgados
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Error updating progreso or awarding coins:', e);
+  }
+
+  return { id_intento: id, ...data, awardedCoins };
 }

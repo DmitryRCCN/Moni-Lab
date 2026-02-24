@@ -143,6 +143,20 @@ CREATE TABLE IF NOT EXISTS usuarios (
   );
 
   -- ===============================
+  -- PROGRESO_ACTIVIDAD
+  -- ===============================
+  CREATE TABLE IF NOT EXISTS progreso_actividad (
+    id_progreso TEXT PRIMARY KEY,
+    id_usuario TEXT NOT NULL,
+    id_actividad TEXT NOT NULL,
+    estado TEXT NOT NULL,
+    mejor_puntaje INTEGER DEFAULT 0,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id),
+    FOREIGN KEY (id_actividad) REFERENCES actividad(id_actividad)
+  );
+
+  -- ===============================
   -- PROGRESO_NODO
   -- ===============================
   CREATE TABLE IF NOT EXISTS progreso_nodo (

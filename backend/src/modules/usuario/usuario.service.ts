@@ -7,7 +7,7 @@ import { v4 as uuid } from 'uuid';
  */
 export async function getUserById(userId: string) {
   const result = await db.execute({
-    sql: 'SELECT id, email, nombre, rol, activo, created_at FROM usuarios WHERE id = ?',
+    sql: 'SELECT id, email, nombre, rol, activo, monedas_virtuales, experiencia_total, created_at FROM usuarios WHERE id = ?',
     args: [userId],
   });
 
@@ -114,7 +114,18 @@ export async function deleteUser(userId: string) {
  * Obtiene el progreso del usuario
  */
 export async function getUserProgress(userId: string) {
-  const result = await db.execute({
+  // Obtener progreso por actividad (estado) si la tabla existe
+  const progresoRes = await db.execute({
+    sql: `
+      SELECT id_progreso, id_usuario, id_actividad, estado
+      FROM progreso_actividad
+      WHERE id_usuario = ?
+    `,
+    args: [userId],
+  });
+
+  // Intentos / historial
+  const intentosRes = await db.execute({
     sql: `
       SELECT
         ia.id_intento as id,
@@ -133,5 +144,8 @@ export async function getUserProgress(userId: string) {
     args: [userId],
   });
 
-  return result.rows;
+  return {
+    progreso: progresoRes.rows || [],
+    intentos: intentosRes.rows || [],
+  };
 }

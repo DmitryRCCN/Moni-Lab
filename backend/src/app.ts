@@ -9,6 +9,7 @@ import leccionesRoutes from './modules/lecciones/leccion.routes';
 import meRoutes from './routes/me.route';
 import nodoRoutes from './modules/nodo/nodo.routes';
 import actividadRoutes from './modules/actividad/actividad.routes';
+import itemRoutes from './modules/item/item.routes';
 
 const app = express();
 app.use(express.json());
@@ -32,6 +33,8 @@ app.use('/lecciones', leccionesRoutes);
 // Rutas nuevas para nodos (solo lectura) y actividad (GET)
 app.use('/nodos', nodoRoutes);
 app.use('/', actividadRoutes);
+// Rutas de tienda
+app.use('/items', itemRoutes);
 
 // Endpoint de prueba (sin autenticación)
 app.get('/api/test', (_req, res) => {

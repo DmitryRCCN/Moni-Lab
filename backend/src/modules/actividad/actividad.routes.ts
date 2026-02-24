@@ -1,13 +1,11 @@
 import { Router } from 'express';
-import { getActividadHandler } from './actividad.controller';
+import { getActividadHandler, getPreguntasHandler, postIntentoHandler } from './actividad.controller';
+import { authMiddleware } from '../../shared/middlewares/auth.middleware';
 
 const router = Router();
 
 router.get('/actividad/:id', getActividadHandler);
-
-import { getPreguntasHandler, postIntentoHandler } from './actividad.controller';
-
 router.get('/ejercicio/:id/preguntas', getPreguntasHandler);
-router.post('/intento', postIntentoHandler);
+router.post('/intento', authMiddleware, postIntentoHandler);
 
 export default router;

@@ -11,7 +11,7 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
     }
 
     const result = await db.execute({
-      sql: 'SELECT id, email, nombre FROM usuarios WHERE id = ?',
+      sql: 'SELECT id, email, nombre,experiencia_total, monedas_virtuales FROM usuarios WHERE id = ?',
       args: [req.user.userId],
     });
 
@@ -27,6 +27,8 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
         id: user.id,
         email: user.email,
         nombre: user.nombre,
+        experiencia_total: user.experiencia_total,
+        monedas_virtuales: user.monedas_virtuales,
       },
     });
   } catch (error) {
