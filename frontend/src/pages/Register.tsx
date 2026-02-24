@@ -17,7 +17,7 @@ export default function Register() {
     if (!email || !username || !password) return 'Completa todos los campos'
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Correo inválido'
     if (username.length < 3) return 'El usuario debe tener al menos 3 caracteres'
-    if (password.length < 6) return 'La contraseña debe tener al menos 6 caracteres'
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)) return 'La contraseña debe tener al menos 8 caracteres, incluyendo mayúsculas, minúsculas, números y caracteres especiales'
     if (password !== confirm) return 'Las contraseñas no coinciden'
     return ''
   }
