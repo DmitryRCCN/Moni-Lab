@@ -21,14 +21,27 @@ export default function Path() {
         // si hay usuario autenticado, cargar su progreso para colorear actividades
         if (user) {
           try {
-            const p = await api(`/usuario/${user.id}/progreso`)
-            const map: Record<string, string> = {}
-            ;(p?.progreso || p || []).forEach((row: any) => {
-              if (row.actividad_id) map[row.actividad_id] = row.estado || row.estado_actividad || 'disponible'
-            })
-            if (mounted) setProgressMap(map)
+            const p = await api(`/usuario/${user.id}/progreso`);
+            const map: Record<string, string> = {};
+            
+            // 1. Aseguramos que iteramos sobre un array
+            const rows = Array.isArray(p) ? p : (p?.progreso || []);
+
+            rows.forEach((row: any) => {
+              // 2. IMPORTANTE: Usamos 'id_actividad' como llave para que coincida con el componente
+              // Verificamos ambos posibles nombres que vengan del API
+              const id = row.id_actividad || row.actividad_id;
+              const estado = row.estado || row.estado_actividad || 'disponible';
+              
+              if (id) {
+                map[id] = estado;
+              }
+            });
+
+            console.log("Mapa de progreso generado:", map); // Tip: Revisa esto en la consola
+            if (mounted) setProgressMap(map);
           } catch (e) {
-            // ignore
+            console.error("Error cargando progreso:", e);
           }
         }
       } catch (err: any) {
@@ -45,12 +58,7 @@ export default function Path() {
     <div className="min-h-screen">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Stats row */}
-        <div className="flex justify-start sm:justify-start mb-8">
-          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center border border-white/10 w-44">
-            <p className="text-xs text-white/70 mb-1">Monedas</p>
-            <p className="text-2xl font-bold text-yellow-300">393</p>
-          </div>
-        </div>
+
 
         {/* Learning path title */}
         <div className="mb-8">

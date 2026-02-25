@@ -35,3 +35,4 @@ export async function postIntentoHandler(req: AuthRequest, res: Response) {
     res.status(500).json({ error: err.message || 'Error al crear intento' });
   }
 }
+

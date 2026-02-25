@@ -7,5 +7,6 @@ const router = Router();
 router.get('/actividad/:id', getActividadHandler);
 router.get('/ejercicio/:id/preguntas', getPreguntasHandler);
 router.post('/intento', authMiddleware, postIntentoHandler);
+router.post('/Lectura/completar', authMiddleware, );
 
 export default router;

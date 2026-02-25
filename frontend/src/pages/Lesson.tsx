@@ -1,4 +1,4 @@
-import { useParams, useLocation } from 'react-router-dom'
+import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import api from '../api'
 import Exercise from '../components/Exercise'
@@ -6,15 +6,19 @@ import Exercise from '../components/Exercise'
 export default function Lesson() {
   const params = useParams()
   const location = useLocation()
-  // prefer activityId passed via navigation state (to hide id from URL)
+  const navigate = useNavigate()
+  
   const stateActivityId = (location.state as any)?.activityId as string | undefined
-  const routeId = params.id
-  const id = stateActivityId || routeId
+  const id = stateActivityId || params.id
 
   const [actividad, setActividad] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [rawResponse, setRawResponse] = useState<any>(null)
+
+  // --- Estados para el temporizador de lectura ---
+  const [secondsLeft, setSecondsLeft] = useState(15)
+  const [isCompleting, setIsCompleting] = useState(false)
+  const [success, setSuccess] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -24,17 +28,11 @@ export default function Lesson() {
         setLoading(false)
         return
       }
-      setLoading(true)
       try {
         const res = await api(`/actividad/${id}`)
-        if (!mounted) return
-        setRawResponse(res)
-        if (!mounted) return
-        setActividad(res)
-        setError(null)
+        if (mounted) setActividad(res)
       } catch (err: any) {
-        if (!mounted) return
-        setError(err.message || 'No se encontró la actividad')
+        if (mounted) setError(err.message || 'No se encontró la actividad')
       } finally {
         if (mounted) setLoading(false)
       }
@@ -43,30 +41,79 @@ export default function Lesson() {
     return () => { mounted = false }
   }, [id])
 
-  if (loading) return <div className="p-8">Cargando actividad...</div>
+  // --- Lógica del Temporizador ---
+  useEffect(() => {
+    if (actividad?.tipo_actividad === 'lectura' && secondsLeft > 0) {
+      const timer = setInterval(() => {
+        setSecondsLeft((prev) => prev - 1)
+      }, 1000)
+      return () => clearInterval(timer)
+    }
+  }, [actividad, secondsLeft])
+
+  const handleCompleteReading = async () => {
+    setIsCompleting(true)
+    try {
+      // Endpoint sugerido para marcar lectura como completada
+      await api('/actividad/completar-lectura', {
+        method: 'POST',
+        body: { id_actividad: id }
+      })
+      setSuccess(true)
+      // Redirigir a Path después de 2 segundos
+      setTimeout(() => navigate('/path'), 2000)
+    } catch (err: any) {
+      alert(err.message || "Error al completar lectura")
+    } finally {
+      setIsCompleting(false)
+    }
+  }
+
+  if (loading) return <div className="p-8 text-white">Cargando actividad...</div>
   if (error) return <div className="p-8 text-red-300">{error}</div>
-  if (!actividad) return <div className="p-8">Actividad no disponible</div>
+  if (!actividad) return <div className="p-8 text-white">Actividad no disponible</div>
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-4">{actividad.tipo_actividad === 'lectura' ? 'Lectura' : actividad.tipo_actividad === 'ejercicio' ? 'Ejercicio' : 'Actividad'}</h1>
+    <div className="p-8 max-w-3xl mx-auto text-white">
+      <h1 className="text-3xl font-bold mb-4">
+        {actividad.tipo_actividad === 'lectura' ? '📖 Lectura' : '✏️ Ejercicio'}
+      </h1>
 
       {actividad.tipo_actividad === 'lectura' && actividad.lectura ? (
-        <div className="bg-white/5 p-6 rounded shadow mb-6">
-          <h2 className="text-xl font-semibold mb-3">Lectura</h2>
-          <div className="prose prose-invert max-w-none">
-            <p>{actividad.lectura.cuerpo_texto}</p>
+        <div className="bg-white/5 p-6 rounded-xl border border-white/10 shadow-xl">
+          <div className="prose prose-invert max-w-none mb-8">
+            <p className="text-lg leading-relaxed">{actividad.lectura.cuerpo_texto}</p>
           </div>
-          {actividad.lectura.url_multimedia && (
-            <div className="mt-4">
-              <img src={actividad.lectura.url_multimedia} alt="multimedia" className="max-w-full rounded" />
-            </div>
-          )}
+
+          <div className="flex flex-col items-center gap-4 pt-6 border-t border-white/10">
+            {success ? (
+              <div className="text-emerald-400 font-bold animate-pulse text-center">
+                ¡Excelente! Guardando progreso y volviendo a la ruta...
+              </div>
+            ) : (
+              <>
+                <button
+                  disabled={secondsLeft > 0 || isCompleting}
+                  onClick={handleCompleteReading}
+                  className={`px-10 py-3 rounded-full font-bold transition-all ${
+                    secondsLeft > 0 
+                      ? 'bg-gray-600 text-white/40 cursor-not-allowed' 
+                      : 'bg-emerald-500 hover:bg-emerald-400 hover:scale-105 shadow-lg'
+                  }`}
+                >
+                  {secondsLeft > 0 
+                    ? `Espera ${secondsLeft}s para finalizar` 
+                    : isCompleting ? 'Procesando...' : 'Completar Lectura'}
+                </button>
+                <p className="text-xs text-white/30 text-center">
+                  Debes leer con atención antes de marcar como terminado.
+                </p>
+              </>
+            )}
+          </div>
         </div>
-      ) : actividad.tipo_actividad === 'ejercicio' && actividad.ejercicio ? (
-        <Exercise ejercicio={actividad.ejercicio} activityId={actividad.id_actividad} />
       ) : (
-        <div className="p-4">Tipo de actividad desconocido</div>
+        <Exercise ejercicio={actividad.ejercicio} activityId={actividad.id_actividad} />
       )}
     </div>
   )
