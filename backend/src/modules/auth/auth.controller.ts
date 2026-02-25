@@ -32,7 +32,7 @@ export async function register(req: Request, res: Response) {
 export async function login(req: Request, res: Response) {
   try {
     const data = loginSchema.parse(req.body);
-    const result = await loginUser(data.email, data.password);
+    const result = await loginUser(data.nombre, data.password);
     const cookieOptions = {
       httpOnly: true,
       secure: env.NODE_ENV === 'production',

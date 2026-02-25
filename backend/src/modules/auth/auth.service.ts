@@ -56,10 +56,10 @@ export async function registerUser(data: {
   };
 }
 
-export async function loginUser(email: string, password: string): Promise<AuthResponse> {
+export async function loginUser(nombre: string, password: string): Promise<AuthResponse> {
   const result = await db.execute({
-    sql: `SELECT id, email, password, nombre FROM usuarios WHERE email = ? AND activo = true`,
-    args: [email],
+    sql: `SELECT id, email, password, nombre FROM usuarios WHERE nombre = ? AND activo = true`,
+    args: [nombre],
   });
 
   const user = result.rows[0] as any;

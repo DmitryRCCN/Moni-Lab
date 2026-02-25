@@ -4,7 +4,7 @@ import api from '../api'
 import { useAuth } from '../context/AuthContext'
 
 export default function Login() {
-  const [email, setEmail] = useState('')
+  //const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [show, setShow] = useState(false)
@@ -13,10 +13,10 @@ export default function Login() {
   const { loginFromResponse } = useAuth()
 
   function validate() {
-    if (!email && !username) return 'Ingresa correo o usuario'
-    if (!email) return 'Usa tu correo para iniciar sesión'
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Correo inválido'
-    if (password.length < 6) return 'La contraseña debe tener al menos 6 caracteres'
+    if (!username) return 'Ingresa nombre de usuario'
+    if (password.length < 6) return 'La contraseña debe tener al menos 8 caracteres'
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(password))
+      return 'La contraseña debe tener al menos 8 caracteres, incluyendo mayúsculas, minúsculas, números y al menos uno de estos símbolos: @$!%*?&';
     return ''
   }
 
@@ -31,7 +31,7 @@ export default function Login() {
     // Intentar login real
     ;(async () => {
       try {
-        const res = (await api('/auth/login', { method: 'POST', body: { email, password } })) as any
+        const res = (await api('/auth/login', { method: 'POST', body: { nombre: username, password } })) as any
         // Centralizar estado usando AuthContext
         loginFromResponse(res)
         navigate('/Path')
@@ -53,15 +53,7 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="text-sm text-white/80">Correo electrónico</label>
-            <input
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="ejemplo@correo.com"
-              className="w-full mt-1 p-3 rounded-lg bg-white/5 border border-white/6 focus:outline-none focus:ring-2 focus:ring-emerald-300"
-            />
-          </div>
+          
 
           <div>
             <label className="text-sm text-white/80">Usuario</label>
