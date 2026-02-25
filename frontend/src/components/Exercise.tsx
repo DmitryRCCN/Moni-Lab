@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import api from '../api'
 import { useAuth } from '../context/AuthContext'
 
@@ -15,6 +16,7 @@ type Pregunta = {
 
 export default function Exercise({ ejercicio, activityId }: { ejercicio: any; activityId: string }) {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [preguntas, setPreguntas] = useState<Pregunta[]>([])
   const [current, setCurrent] = useState(0)
   const [selected, setSelected] = useState<string | null>(null)
@@ -24,6 +26,9 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
   const [error, setError] = useState<string | null>(null)
   const [awardedCoins, setAwardedCoins] = useState<number>(0)
 
+  // --- ESTADO PARA EL CIERRE ---
+  const [secondsLeft, setSecondsLeft] = useState(5)
+
   useEffect(() => {
     let mounted = true
     async function load() {
@@ -31,12 +36,9 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
       try {
         const res: any = await api(`/ejercicio/${activityId}/preguntas`)
         if (!mounted) return
-        const list: Pregunta[] = res.preguntas || []
-        setPreguntas(list)
-        setError(null)
+        setPreguntas(res.preguntas || [])
       } catch (err: any) {
-        if (!mounted) return
-        setError(err.message || 'No se pudieron cargar preguntas')
+        if (mounted) setError(err.message || 'Error')
       } finally {
         if (mounted) setLoading(false)
       }
@@ -45,28 +47,21 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
     return () => { mounted = false }
   }, [activityId])
 
-  if (!ejercicio) return <div>No hay datos del ejercicio</div>
-  if (loading) return <div className="p-6">Cargando preguntas...</div>
-  if (error) return <div className="p-6 text-red-300">{error}</div>
-  if (!preguntas || preguntas.length === 0) return (
-    <div className="bg-white/5 p-6 rounded shadow mb-6">
-      <h2 className="text-xl font-semibold mb-3">Ejercicio</h2>
-      <p className="mb-2">Nivel: <strong>{ejercicio.nivel_dificultad}</strong></p>
-      <p className="mb-2">Mínimo aprobatorio: <strong>{ejercicio.minimo_aprobatorio}%</strong></p>
-      <div className="mt-4">
-        <p className="text-sm text-white/70">No hay preguntas asignadas a este ejercicio.</p>
-      </div>
-    </div>
-  )
-
-  const q = preguntas[current]
+  // --- LÓGICA DEL TEMPORIZADOR AL FINALIZAR ---
+  useEffect(() => {
+    if (current >= preguntas.length && preguntas.length > 0 && secondsLeft > 0) {
+      const timer = setInterval(() => {
+        setSecondsLeft((prev) => prev - 1)
+      }, 1000)
+      return () => clearInterval(timer)
+    }
+  }, [current, preguntas.length, secondsLeft])
 
   function parseOptions(opcionesField: string) {
     try {
       const parsed = JSON.parse(opcionesField)
       if (Array.isArray(parsed)) return parsed as string[]
     } catch (_) {
-      // fall back to pipe-separated
       return opcionesField.split('|').map(s => s.trim())
     }
     return []
@@ -74,6 +69,7 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
 
   async function confirmAnswer() {
     if (selected === null) return
+    const q = preguntas[current]
     const correct = selected === q.respuesta_correcta
     const currentAnswer = { id: q.id_pregunta, selected, correct, puntos: q.puntos }
     const newAnswers = [...answers, currentAnswer]
@@ -85,7 +81,6 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
       return
     }
 
-    // finished -> submit intento
     const totalPoints = newAnswers.reduce((s, a) => s + (a.correct ? a.puntos : 0), 0)
     const maxPoints = preguntas.reduce((s, p) => s + (p.puntos || 0), 0)
     const percent = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 0
@@ -100,8 +95,6 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
           detalle_respuestas: JSON.stringify({ answers: newAnswers }),
         },
       })
-      setError(null)
-      // replace view with results
       setAnswers(newAnswers)
       setCurrent(preguntas.length)
       if (res?.awardedCoins) setAwardedCoins(res.awardedCoins)
@@ -112,57 +105,96 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
     }
   }
 
+  // 1. COMPROBACIONES INICIALES (Cargando o Errores)
+  if (loading) return <div className="p-6">Cargando preguntas...</div>
+  if (error) return <div className="p-6 text-red-300">{error}</div>
+  if (!ejercicio || preguntas.length === 0) return <div className="p-6">No hay datos disponibles.</div>
+
+  // 2. VISTA DE RESULTADOS (Cuando ya terminó todas las preguntas)
   if (current >= preguntas.length) {
     const scored = answers.reduce((s, a) => s + (a.correct ? a.puntos : 0), 0)
     const maxPoints = preguntas.reduce((s, p) => s + (p.puntos || 0), 0)
     const percent = maxPoints > 0 ? Math.round((scored / maxPoints) * 100) : 0
+
     return (
-      <div className="bg-white/5 p-6 rounded shadow mb-6">
-        <h2 className="text-xl font-semibold mb-3">Resultado</h2>
-        <p>Puntaje obtenido: <strong>{scored}</strong> / {maxPoints} ({percent}%)</p>
-        {awardedCoins > 0 && (
-          <div className="mt-3 p-3 bg-emerald-700/30 rounded">
-            <strong>Has ganado {awardedCoins} monedas 🎉</strong>
+      <div className="bg-white/5 p-6 rounded-xl border border-white/10 shadow-2xl animate-in fade-in zoom-in duration-300">
+        <h2 className="text-2xl font-bold mb-4 text-center">¡Ejercicio Terminado!</h2>
+        
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-white/5 p-4 rounded-lg text-center">
+            <p className="text-sm text-white/60">Puntaje</p>
+            <p className="text-2xl font-bold">{percent}%</p>
           </div>
-        )}
-        <p className="mt-3">Respuestas:</p>
-        <ul className="list-disc pl-6 mt-2 text-sm text-white/80">
-          {answers.map(a => (
-            <li key={a.id}>{a.id}: {a.selected} — {a.correct ? '✓' : '✗'}</li>
+          <div className="bg-white/5 p-4 rounded-lg text-center">
+            <p className="text-sm text-white/60">Monedas</p>
+            <p className="text-2xl font-bold text-yellow-400">+{awardedCoins}</p>
+          </div>
+        </div>
+
+        <div className="space-y-2 mb-8 max-h-40 overflow-y-auto pr-2">
+          {answers.map((a, i) => (
+            <div key={i} className={`p-2 rounded text-sm flex justify-between ${a.correct ? 'bg-emerald-500/10 text-emerald-300' : 'bg-red-500/10 text-red-300'}`}>
+              <span>Pregunta {i + 1}</span>
+              <span>{a.correct ? '✓' : '✗'}</span>
+            </div>
           ))}
-        </ul>
+        </div>
+
+        <div className="flex flex-col items-center border-t border-white/10 pt-6">
+          <button
+            disabled={secondsLeft > 0}
+            onClick={() => navigate('/path')}
+            className={`w-full py-4 rounded-xl font-bold transition-all duration-300 ${
+              secondsLeft > 0 
+                ? 'bg-gray-700 text-white/30 cursor-not-allowed' 
+                : 'bg-emerald-500 hover:bg-emerald-400 hover:scale-[1.02] shadow-[0_0_20px_rgba(16,185,129,0.3)]'
+            }`}
+          >
+            {secondsLeft > 0 
+              ? `Revisando resultados... (${secondsLeft}s)` 
+              : 'Finalizar y Continuar'}
+          </button>
+        </div>
       </div>
     )
   }
 
+  // 3. VISTA DE PREGUNTA ACTUAL (Aquí es donde va el código que no sabías donde poner)
+  const q = preguntas[current]
   const opciones = parseOptions(q.opciones || '[]')
 
   return (
     <div className="bg-white/5 p-6 rounded shadow mb-6">
-      <h2 className="text-xl font-semibold mb-3">Ejercicio</h2>
-      <p className="mb-2">Nivel: <strong>{ejercicio.nivel_dificultad}</strong></p>
-      <p className="mb-2">Mínimo aprobatorio: <strong>{ejercicio.minimo_aprobatorio}%</strong></p>
-      <div className="mt-4">
-        <div className="mb-4">
-          <div className="text-lg font-medium">Pregunta {current + 1} / {preguntas.length}</div>
-          <div className="mt-2 text-white/90">{q.enunciado}</div>
-        </div>
+       <h2 className="text-xl font-semibold mb-3">Pregunta {current + 1} / {preguntas.length}</h2>
+       <div className="mt-2 text-white/90 text-lg mb-6">{q?.enunciado}</div>
 
-        <div className="grid gap-3">
-          {opciones.map((opt, i) => (
-            <button key={i} className={`text-left px-4 py-3 rounded ${selected === opt ? 'bg-emerald-600 text-white' : 'bg-white/3 text-white/90'}`} onClick={() => setSelected(opt)}>
-              {opt}
-            </button>
-          ))}
-        </div>
+       <div className="grid gap-3">
+         {opciones.map((opt: string, i: number) => (
+           <button 
+             key={i} 
+             className={`text-left px-4 py-3 rounded-xl transition-all ${selected === opt ? 'bg-emerald-600 ring-2 ring-emerald-400' : 'bg-white/5 hover:bg-white/10'}`} 
+             onClick={() => setSelected(opt)}
+           >
+             {opt}
+           </button>
+         ))}
+       </div>
 
-        <div className="mt-4 flex gap-3">
-          <button disabled={!selected || submitting} onClick={confirmAnswer} className="bg-emerald-500 px-4 py-2 rounded">Confirmar</button>
-          <button onClick={() => setSelected(null)} className="bg-gray-700 px-4 py-2 rounded">Limpiar</button>
-        </div>
-
-        {submitting && <div className="mt-3">Enviando resultado...</div>}
-      </div>
+       <div className="mt-8 flex gap-3">
+         <button 
+           disabled={!selected || submitting} 
+           onClick={confirmAnswer} 
+           className="flex-1 bg-emerald-500 disabled:bg-gray-600 py-3 rounded-xl font-bold"
+         >
+           {submitting ? 'Enviando...' : 'Confirmar Respuesta'}
+         </button>
+         <button 
+           onClick={() => setSelected(null)} 
+           className="bg-gray-700 px-4 py-2 rounded-xl"
+         >
+           Limpiar
+         </button>
+       </div>
     </div>
   )
 }
