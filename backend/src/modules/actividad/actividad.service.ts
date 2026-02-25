@@ -99,3 +99,32 @@ export async function createIntento(data: { id_usuario: string; id_actividad: st
 
   return { id_intento: id, ...data, awardedCoins };
 }
+
+export async function completeLectura(id_usuario: string, id_actividad: string) {
+  const id = uuid();
+  // obtener puntos otorgados por la actividad
+  const actividadRes = await db.execute({ sql: `SELECT puntos_otorgados FROM actividad WHERE id_actividad = ?`, args: [id_actividad] });
+  const puntosOtorgados = actividadRes.rows[0]?.puntos_otorgados ?? 0;
+
+  // verificar estado previo
+  const prev = await db.execute({ sql: `SELECT estado FROM progreso_actividad WHERE id_usuario = ? AND id_actividad = ?`, args: [id_usuario, id_actividad] });
+  const prevEstado = prev.rows[0]?.estado ?? null;
+
+  // si no existe registro de progreso, insertarlo como completado
+  if (!prev.rows || prev.rows.length === 0) {
+    await db.execute({ sql: `INSERT INTO progreso_actividad (id_progreso, id_usuario, id_actividad, estado, mejor_puntaje) VALUES (?, ?, ?, 'completada', NULL)`, args: [id, id_usuario, id_actividad] });
+  } else {
+    await db.execute({ sql: `UPDATE progreso_actividad SET estado = 'completada' WHERE id_usuario = ? AND id_actividad = ?`, args: [id_usuario, id_actividad] });
+  }
+
+  let awardedCoins = 0;
+  if (prevEstado !== 'completada' && puntosOtorgados > 0) {
+    await db.execute({ sql: `UPDATE usuarios SET monedas_virtuales = COALESCE(monedas_virtuales,0) + ? WHERE id = ?`, args: [puntosOtorgados, id_usuario] });
+    awardedCoins = puntosOtorgados;
+  }
+
+  const updated = await db.execute({ sql: `SELECT monedas_virtuales FROM usuarios WHERE id = ?`, args: [id_usuario] });
+  const monedas_restantes = updated.rows[0]?.monedas_virtuales ?? null;
+
+  return { awardedCoins, monedas_restantes };
+}
