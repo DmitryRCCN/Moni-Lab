@@ -104,8 +104,13 @@ export default function Login() {
       {showErrorModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center">
           <div className="bg-slate-900 p-6 rounded shadow-lg w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-2">Error de inicio de sesión</h3>
-            <p className="mb-4">{errorMessage}</p>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold">Error de inicio de sesión</h3>
+                <p>{errorMessage}</p>
+              </div>
+              <img src="images/monaError.png" alt="icono" className="w-45 h-40" />
+            </div>
             <div className="flex gap-3 justify-end">
               <button onClick={() => setShowErrorModal(false)} className="px-3 py-1 bg-amber-400 text-slate-900 rounded">Aceptar</button>
             </div>
