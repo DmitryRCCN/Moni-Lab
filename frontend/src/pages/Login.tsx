@@ -9,6 +9,8 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [show, setShow] = useState(false)
   const [error, setError] = useState('')
+  const [showErrorModal, setShowErrorModal] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   const navigate = useNavigate()
   const { loginFromResponse } = useAuth()
 
@@ -36,7 +38,8 @@ export default function Login() {
         loginFromResponse(res)
         navigate('/Path')
       } catch (err: any) {
-        setError(err.message || 'Error en login')
+        setErrorMessage('Datos incorrectos o innexistentes. Intentalo otra vez')
+        setShowErrorModal(true)
       }
     })()
   }
@@ -96,6 +99,24 @@ export default function Login() {
           <Link to="/register" className="text-yellow-300 font-semibold">Regístrate</Link>
         </p>
       </div>
+
+      {/* Modal de error */}
+      {showErrorModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center">
+          <div className="bg-slate-900 p-6 rounded shadow-lg w-full max-w-md">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold">Error de inicio de sesión</h3>
+                <p>{errorMessage}</p>
+              </div>
+              <img src="images/monaError.png" alt="icono" className="w-45 h-40" />
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setShowErrorModal(false)} className="px-3 py-1 bg-amber-400 text-slate-900 rounded">Aceptar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

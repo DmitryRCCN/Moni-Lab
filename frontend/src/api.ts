@@ -1,5 +1,9 @@
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
+interface ApiOptions extends Omit<RequestInit, 'body'> {
+  body?: any;
+}
+
 let accessToken: string | null = null;
 export function setAccessToken(token: string | null) {
   accessToken = token;
@@ -8,7 +12,7 @@ export function getAccessToken() {
   return accessToken;
 }
 
-async function fetchWithOpts(url: string, opts: RequestInit) {
+async function fetchWithOpts(url: string, opts: ApiOptions) {
   const res = await fetch(url, opts);
   return res;
 }
@@ -35,7 +39,7 @@ export async function refreshAccessTokenViaCookie() {
   throw new Error('No access token in refresh response');
 }
 
-export async function api(path: string, options: RequestInit = {}) {
+export async function api(path: string, options: ApiOptions = {}) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   const url = `${API_BASE}${normalizedPath}`;
 
