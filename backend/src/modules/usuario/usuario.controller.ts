@@ -14,6 +14,7 @@ import { AuthRequest } from '../../shared/middlewares/auth.middleware';
  */
 export async function getProfile(req: AuthRequest, res: Response) {
   try {
+    console.log(res.locals.user); // Verificar que el usuario está presente
     if (!req.user) {
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }

@@ -38,7 +38,7 @@ export default function Path() {
               }
             });
 
-            console.log("Mapa de progreso generado:", map); // Tip: Revisa esto en la consola
+            //console.log("Mapa de progreso generado:", map); // Tip: Revisa esto en la consola
             if (mounted) setProgressMap(map);
           } catch (e) {
             console.error("Error cargando progreso:", e);

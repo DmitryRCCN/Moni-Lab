@@ -37,10 +37,21 @@ export async function getUserProfile(userId: string) {
     args: [userId],
   });
 
+  // OBTENER LOS ITEMS COMPRADOS (Añade esta parte)
+  const itemsResult = await db.execute({
+    sql: `
+      SELECT id_item, equipado 
+      FROM usuario_item 
+      WHERE id_usuario = ?
+    `,
+    args: [userId],
+  });
+
   const stats = statsResult.rows[0] as any;
 
   return {
     ...user,
+    items_comprados: itemsResult.rows || [],
     estadisticas: {
       totalLecciones: stats?.total_lecciones || 0,
       leccionesCompletadas: stats?.completadas || 0,
