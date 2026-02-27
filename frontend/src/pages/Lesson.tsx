@@ -80,7 +80,7 @@ export default function Lesson() {
       </h1>
 
       {actividad.tipo_actividad === 'lectura' && actividad.lectura ? (
-        <div className="bg-white/5 p-6 rounded-xl border border-white/10 shadow-xl">
+        <div className="moni-panel p-6 animate-in fade-in duration-300">
           <div className="prose prose-invert max-w-none mb-8">
             <p className="text-lg leading-relaxed">{actividad.lectura.cuerpo_texto}</p>
           </div>

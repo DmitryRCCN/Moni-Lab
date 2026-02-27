@@ -60,7 +60,7 @@ export default function Profile() {
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
-      <div className="bg-gradient-to-br from-emerald-800/40 to-teal-900/30 p-6 rounded-lg shadow-lg border border-white/6">
+      <div className="moni-panel p-6">
         <div className="flex items-center gap-6">
           <div className="w-28 h-28 rounded-full bg-gradient-to-br from-yellow-300 to-orange-400 flex items-center justify-center text-3xl font-bold text-slate-900">{initials}</div>
           <div>
@@ -72,12 +72,12 @@ export default function Profile() {
             </div>
           </div>
         </div>
-        <section className="mt-6 bg-white/5 p-4 rounded">
-          <h4 className="font-semibold mb-2">Acerca de</h4>
+        <section className="mt-6 bg-black/20 p-4 rounded-xl">
+          <h4 className="font-semibold text-emerald-400 mb-2">Acerca de</h4>
           <p className="text-sm text-white/80">Experiencia total: <span className="font-semibold">{data.experiencia_total ?? 0}</span></p>
           <p className="text-sm text-white/80">Email: <span className="font-semibold">{data.email}</span></p>
           <div className="mt-3">
-            <h5 className="font-semibold mb-1">Estadísticas</h5>
+            <h5 className="font-semibold text-emerald-400 mb-2">Estadísticas</h5>
             <p className="text-sm text-white/80">Lecciones totales: {data.estadisticas?.totalLecciones ?? 0}</p>
             <p className="text-sm text-white/80">Completadas: {data.estadisticas?.leccionesCompletadas ?? 0}</p>
             <p className="text-sm text-white/80">Puntaje promedio: {Math.round((data.estadisticas?.puntajePromedio ?? 0) * 100) / 100}</p>

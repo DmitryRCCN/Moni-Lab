@@ -48,7 +48,7 @@ export default function Stats() {
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
-      <div className="bg-gradient-to-br from-emerald-800/30 to-teal-900/20 p-6 rounded-lg shadow-lg border border-white/6">
+      <div className="moni-panel p-6">
         <h2 className="text-2xl font-bold mb-4">Estadísticas</h2>
 
         <ul className="space-y-3">

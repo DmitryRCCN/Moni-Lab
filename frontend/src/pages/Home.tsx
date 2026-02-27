@@ -11,7 +11,7 @@ export default function Home(
 
         <img src="images/mona.png" alt="derecha" className="hidden md:block w-60 h-38" />
       </h1>
-      <div className="bg-white p-6 rounded-xl shadow mb-6">
+      <div className="moni-panel p-8 mb-6">
         <div className="flex items-start gap-4">
           <img src="images/monoCoin.png" alt="icono" className="w-40 h-40" />
           <div>
@@ -24,7 +24,7 @@ export default function Home(
           </div>
         </div>
       </div>
-      <div className="bg-white p-6 rounded-xl shadow mb-6">
+      <div className="moni-panel p-6 mb-6">
         <div className="flex items-start gap-4">
           <div>
             <h2 className="text-2xl font-bold text-emerald-900 mb-2">
@@ -37,7 +37,7 @@ export default function Home(
           <img src="images/monaRead.png" alt="icono" className="w-40 h-40" />
         </div>
       </div>
-      <div className="bg-white p-6 rounded-xl shadow gap-1 mb-6">
+      <div className="moni-panel p-6 mb-6">
         <h2 className="text-2xl font-bold mb-3 text-emerald-900">¡Comienza ahora!</h2>
         <p className="text-emerald-900">Haz clic en "Registrarse" para comenzar tu viaje en el mundo de la economía con Moni-Lab. <br></br> ¡Diviértete aprendiendo!</p>
       </div>

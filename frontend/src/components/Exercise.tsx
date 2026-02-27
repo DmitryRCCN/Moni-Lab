@@ -117,15 +117,15 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
     const percent = maxPoints > 0 ? Math.round((scored / maxPoints) * 100) : 0
 
     return (
-      <div className="bg-white/5 p-6 rounded-xl border border-white/10 shadow-2xl animate-in fade-in zoom-in duration-300">
+      <div className="moni-panel p-6 max-w-3xl mx-auto animate-in fade-in duration-300">
         <h2 className="text-2xl font-bold mb-4 text-center">¡Ejercicio Terminado!</h2>
         
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-white/5 p-4 rounded-lg text-center">
+          <div className="bg-white/25 p-4 rounded-lg text-center">
             <p className="text-sm text-white/60">Puntaje</p>
             <p className="text-2xl font-bold">{percent}%</p>
           </div>
-          <div className="bg-white/5 p-4 rounded-lg text-center">
+          <div className="bg-white/25 p-4 rounded-lg text-center">
             <p className="text-sm text-white/60">Monedas</p>
             <p className="text-2xl font-bold text-yellow-400">+{awardedCoins}</p>
           </div>
@@ -133,7 +133,7 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
 
         <div className="space-y-2 mb-8 max-h-40 overflow-y-auto pr-2">
           {answers.map((a, i) => (
-            <div key={i} className={`p-2 rounded text-sm flex justify-between ${a.correct ? 'bg-emerald-500/10 text-emerald-300' : 'bg-red-500/10 text-red-300'}`}>
+            <div key={i} className={`p-2 rounded text-sm flex justify-between ${a.correct ? 'bg-emerald-500/50 text-emerald-300' : 'bg-red-500/50 text-red-300'}`}>
               <span>Pregunta {i + 1}</span>
               <span>{a.correct ? '✓' : '✗'}</span>
             </div>
@@ -164,15 +164,15 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
   const opciones = parseOptions(q.opciones || '[]')
 
   return (
-    <div className="bg-white/5 p-6 rounded shadow mb-6">
+    <div className="moni-panel p-6 max-w-3xl mx-auto animate-in fade-in duration-300">
        <h2 className="text-xl font-semibold mb-3">Pregunta {current + 1} / {preguntas.length}</h2>
-       <div className="mt-2 text-white/90 text-lg mb-6">{q?.enunciado}</div>
+       <div className="mt-2 text-white/900 text-lg mb-6">{q?.enunciado}</div>
 
        <div className="grid gap-3">
          {opciones.map((opt: string, i: number) => (
            <button 
              key={i} 
-             className={`text-left px-4 py-3 rounded-xl transition-all ${selected === opt ? 'bg-emerald-600 ring-2 ring-emerald-400' : 'bg-white/5 hover:bg-white/10'}`} 
+             className={`text-left px-4 py-3 rounded-xl transition-all ${selected === opt ? 'bg-emerald-600 ring-2 ring-emerald-400' : 'bg-white/15 hover:bg-white/25'}`} 
              onClick={() => setSelected(opt)}
            >
              {opt}

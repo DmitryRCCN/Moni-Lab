@@ -106,7 +106,7 @@ export default function Store() {
         </div>
       )}
 
-      <div className="bg-slate-900/40 backdrop-blur-md rounded-3xl p-6 border border-white/10 shadow-2xl">
+      <div className="moni-panel p-6">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-black bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">

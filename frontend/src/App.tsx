@@ -14,9 +14,14 @@ import RequireAuth from './components/RequireAuth'
 
 function AppContent() {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-emerald-900 via-teal-800 to-green-900 text-white">
+    /* CAMBIO CLAVE: Quitamos el gradiente sólido y usamos uno con transparencia (90%) 
+       para que la imagen del body se intuya al fondo, pero el texto sea legible.
+    */
+    <div className="min-h-screen flex flex-col bg-transparent text-white">
       <Navbar />
-      <main className={`flex-1 pt-20 pb-24 md:pb-8`}>
+      
+      {/* Contenedor principal con padding y suavizado de fuente */}
+      <main className="flex-1 pt-24 pb-24 md:pb-12">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/lesson/:id" element={<RequireAuth><Lesson /></RequireAuth>} />
@@ -38,8 +43,11 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <AppContent />
-        <Footer />
+        {/* Envolvemos todo para que el fondo sea consistente */}
+        <div className="relative w-full overflow-x-hidden">
+          <AppContent />
+          <Footer />
+        </div>
       </BrowserRouter>
     </AuthProvider>
   )

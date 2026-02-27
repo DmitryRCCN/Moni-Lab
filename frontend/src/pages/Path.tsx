@@ -61,13 +61,13 @@ export default function Path() {
 
 
         {/* Learning path title */}
-        <div className="mb-8">
+        <div className="moni-panel p-6 mb-6">
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">Ruta de aprendizaje</h1>
           <p className="text-white/80 text-sm sm:text-base">Sigue el camino para dominar la educación financiera 💰</p>
         </div>
 
         {/* Learning path container */}
-        <div className="bg-white/5 backdrop-blur rounded-2xl p-8 border border-white/10 shadow-xl">
+        <div className="moni-panel p-6 mb-6">
           {loading ? (
             <p>Cargando ruta...</p>
           ) : error ? (
