@@ -8,6 +8,7 @@ import Store from './pages/Store'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import TermCond from './pages/TermCond'
 import { AuthProvider } from './context/AuthContext'
 import Footer from './components/Footer'
 import RequireAuth from './components/RequireAuth'
@@ -32,6 +33,7 @@ function AppContent() {
           <Route path="/Path" element={<RequireAuth><Path /></RequireAuth>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/terms" element={<TermCond />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

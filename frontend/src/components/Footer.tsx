@@ -8,7 +8,6 @@ export default function Footer() {
         <div className="flex items-center gap-4">
           <NavLink to="/privacy" className="text-sm hover:text-white">Aviso de privacidad</NavLink>
           <NavLink to="/terms" className="text-sm hover:text-white">Términos y condiciones</NavLink>
-          <NavLink to="/about" className="text-sm hover:text-white">About us</NavLink>
         </div>
       </div>
     </footer>

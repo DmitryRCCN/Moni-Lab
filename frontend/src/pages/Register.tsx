@@ -9,6 +9,7 @@ export default function Register() {
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [show, setShow] = useState(false)
+  const [acceptTerms, setAcceptTerms] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const { loginFromResponse } = useAuth()
@@ -20,6 +21,7 @@ export default function Register() {
     if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(password))
       return 'La contraseña debe tener al menos 8 caracteres, incluyendo mayúsculas, minúsculas, números y al menos uno de estos símbolos: @$!%*?&';
     if (password !== confirm) return 'Las contraseñas no coinciden'
+    if (!acceptTerms) return 'Debes aceptar los Términos y Condiciones para continuar'
     return ''
   }
 
@@ -99,6 +101,22 @@ export default function Register() {
               />
               <button type="button" onClick={() => setShow(s => !s)} className="absolute right-2 top-2 text-sm text-white/70">{show ? 'Ocultar' : 'Mostrar'}</button>
             </div>
+          </div>
+
+          <div className="flex items-start gap-2 pt-2">
+            <input
+              type="checkbox"
+              id="terms"
+              checked={acceptTerms}
+              onChange={e => setAcceptTerms(e.target.checked)}
+              className="mt-1 cursor-pointer"
+            />
+            <label htmlFor="terms" className="text-xs text-white/80 cursor-pointer">
+              Acepto los{' '}
+              <Link to="/terms" target="_blank" className="text-yellow-300 font-semibold hover:underline">
+                Términos y Condiciones
+              </Link>
+            </label>
           </div>
 
           {error && <p className="text-sm text-rose-400">{error}</p>}
