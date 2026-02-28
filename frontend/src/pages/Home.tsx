@@ -4,10 +4,10 @@ export default function Home(
 ) {
   return (
     <div className="p-8 max-w-4xl mx-auto ">
-      <h1 className="flex items-center justify-center flex-nowrap text-5xl font-bold mb-4 text-yellow-300">
+      <h1 className="flex items-center justify-center flex-nowrap text-5xl font-bold mb-4 text-yellow-500">
         <img src="images/mono.png" alt="izquierda" className="hidden md:block w-60 h-38" />
 
-        <span className="whitespace-nowrap">Bienvenido a Moni-Lab</span>
+        <span className="whitespace-nowrap text-yellow-300">Bienvenido a Moni-Lab</span>
 
         <img src="images/mona.png" alt="derecha" className="hidden md:block w-60 h-38" />
       </h1>
