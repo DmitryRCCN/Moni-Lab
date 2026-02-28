@@ -10,6 +10,8 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import RegisterUser from './pages/RegisterUser'
 import TermCond from './pages/TermCond'
+import Privacy from './pages/Privacy'
+import About from './pages/About'
 import { AuthProvider } from './context/AuthContext'
 import Footer from './components/Footer'
 import RequireAuth from './components/RequireAuth'
@@ -36,6 +38,8 @@ function AppContent() {
           <Route path="/register" element={<Register />} />
           <Route path="/register/user" element={<RegisterUser />} />
           <Route path="/terms" element={<TermCond />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/about" element={<About />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
