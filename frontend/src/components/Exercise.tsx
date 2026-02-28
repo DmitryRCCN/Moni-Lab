@@ -18,6 +18,7 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
   const { user } = useAuth()
   const navigate = useNavigate()
   const [preguntas, setPreguntas] = useState<Pregunta[]>([])
+  const [intentoId, setIntentoId] = useState<string | null>(null)
   const [current, setCurrent] = useState(0)
   const [selected, setSelected] = useState<string | null>(null)
   const [answers, setAnswers] = useState<Array<{ id: string; selected: string; correct: boolean; puntos: number }>>([])
@@ -36,6 +37,7 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
       try {
         const res: any = await api(`/ejercicio/${activityId}/preguntas`)
         if (!mounted) return
+        setIntentoId(res.id_intento ?? null)
         setPreguntas(res.preguntas || [])
       } catch (err: any) {
         if (mounted) setError(err.message || 'Error')
@@ -87,12 +89,19 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
 
     setSubmitting(true)
     try {
+      const detalle = JSON.stringify(newAnswers.map(a => ({
+        id_pregunta: a.id,
+        respuesta_usuario: a.selected,
+        es_correcta: a.correct,
+        puntos_obtenidos: a.puntos
+      })))
+
       const res: any = await api('/intento', {
         method: 'POST',
         body: {
           id_actividad: activityId,
           puntaje_obtenido: percent,
-          detalle_respuestas: JSON.stringify({ answers: newAnswers }),
+          detalle_respuestas: detalle,
         },
       })
       setAnswers(newAnswers)

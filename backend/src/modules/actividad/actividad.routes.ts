@@ -5,7 +5,7 @@ import { authMiddleware } from '../../shared/middlewares/auth.middleware';
 const router = Router();
 
 router.get('/actividad/:id', getActividadHandler);
-router.get('/ejercicio/:id/preguntas', getPreguntasHandler);
+router.get('/ejercicio/:id/preguntas', authMiddleware, getPreguntasHandler);
 router.post('/intento', authMiddleware, postIntentoHandler);
 
 // Ruta compatible con frontend: POST /actividad/completar-lectura

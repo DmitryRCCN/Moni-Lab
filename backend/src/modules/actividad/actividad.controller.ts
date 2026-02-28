@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
-import { getActividadById, getPreguntasByEjercicio, createIntento } from './actividad.service';
-import { completeLectura } from './actividad.service';
+import { getActividadById, getPreguntasByEjercicio, updateIntentoFinal, completeLectura } from './actividad.service';
 import { AuthRequest } from '../../shared/middlewares/auth.middleware';
 
 export async function getActividadHandler(req: Request, res: Response) {
@@ -13,11 +12,12 @@ export async function getActividadHandler(req: Request, res: Response) {
   }
 }
 
-export async function getPreguntasHandler(req: Request, res: Response) {
+export async function getPreguntasHandler(req: AuthRequest, res: Response) {
   try {
+    if (!req.user) return res.status(401).json({ error: 'No auth' });
     const id = req.params.id;
-    const preguntas = await getPreguntasByEjercicio(id);
-    res.json({ preguntas });
+    const data = await getPreguntasByEjercicio(id, req.user.userId);
+    res.json(data);
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Error al obtener preguntas' });
   }
@@ -30,7 +30,7 @@ export async function postIntentoHandler(req: AuthRequest, res: Response) {
     if (!body || !body.id_actividad) {
       return res.status(400).json({ error: 'id_actividad es requerido' });
     }
-    const intento = await createIntento({ id_usuario: req.user.userId, id_actividad: body.id_actividad, puntaje_obtenido: body.puntaje_obtenido, detalle_respuestas: body.detalle_respuestas });
+    const intento = await updateIntentoFinal(req.user.userId, { id_actividad: body.id_actividad, puntaje_obtenido: body.puntaje_obtenido, detalle_respuestas: body.detalle_respuestas });
     res.status(201).json(intento);
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Error al crear intento' });
