@@ -19,6 +19,8 @@ export const env = {
 
   JWT_SECRET: process.env.JWT_SECRET as string,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '3h',
+
+  RESEND_ACCESS_TOKEN: required('RESEND_ACCESS_TOKEN'),
 };
 
 if (!env.JWT_SECRET) {

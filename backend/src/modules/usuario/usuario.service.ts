@@ -29,9 +29,9 @@ export async function getUserProfile(userId: string) {
     sql: `
       SELECT 
         COUNT(*) as total_lecciones,
-        SUM(CASE WHEN estado = 'completado' THEN 1 ELSE 0 END) as completadas,
+        SUM(CASE WHEN estado = 'completada' THEN 1 ELSE 0 END) as completadas,
         AVG(mejor_puntaje) as puntaje_promedio
-      FROM progreso_nodo
+      FROM progreso_actividad
       WHERE id_usuario = ?
     `,
     args: [userId],
