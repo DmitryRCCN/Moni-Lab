@@ -2,9 +2,12 @@
   "name": "moni-lab-backend",
   "private": true,
   "scripts": {
+    "clean": "rm -rf dist",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js"
+    "lint": "eslint . --ext .ts,.js",
+    "prepare:prod": "npm run clean && npm run build"
   },
   "dependencies": {
     "@libsql/client": "^0.17.0",

@@ -6,8 +6,12 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev:backend": "pnpm --filter moni-lab-backend dev",
-    "dev:frontend": "pnpm --filter moni-lab-frontend dev",
-    "dev": "pnpm -r dev"
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -w -r build",
+    "build:backend": "pnpm --filter moni-lab-backend run build",
+    "build:frontend": "pnpm --filter frontend run build",
+    "start:backend": "pnpm --filter moni-lab-backend start"
   },
   "keywords": [],
   "author": "",

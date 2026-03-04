@@ -20,8 +20,15 @@ app.use(cookieParser());
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin: (origin, callback) => {
+      // allow server-to-server or curl requests when no origin
+      if (!origin) return callback(null, true);
+      const allowed = [FRONTEND_URL];
+      if (allowed.includes(origin)) return callback(null, true);
+      return callback(new Error('No permitido por CORS'), false);
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
   })
 );
 
@@ -81,20 +88,21 @@ app.get('/health/db', async (_req, res) => {
 });
 
 
-app.get('/test-email', async (_req, res) => {
-  try {
-    await sendMail(
-      "diego.cruz5152@alumnos.udg.mx",
-      //"luis.mendez5078@alumnos.udg.mx",
-      //"jorge.ibarra5177@alumnos.udg.mx",
-      "Prueba Moni-Lab 🚀",
-      "<h1>Funciona el sistema de correos 🎉</h1><p>Este es un test.</p>"
-    );
+// Ruta de prueba de correo SOLO en entornos no productivos
+if (process.env.NODE_ENV !== 'production') {
+  app.get('/test-email', async (_req, res) => {
+    try {
+      await sendMail(
+        process.env.DEV_TEST_EMAIL || 'test@example.com',
+        'Prueba Moni-Lab 🚀',
+        '<h1>Funciona el sistema de correos 🎉</h1><p>Este es un test.</p>'
+      );
 
-    res.json({ message: "Correo enviado correctamente" });
-  } catch (error) {
-    res.status(500).json({ error: "Error enviando correo" });
-  }
-});
+      res.json({ message: 'Correo enviado correctamente' });
+    } catch (error) {
+      res.status(500).json({ error: 'Error enviando correo' });
+    }
+  });
+}
 
 export default app;
