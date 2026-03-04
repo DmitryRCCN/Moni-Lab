@@ -32,19 +32,7 @@ export async function getActividadById(id: string) {
   };
 }
 
-export async function getPreguntasByEjercicio(id_actividad: string) {
-  const result = await db.execute({
-    sql: `
-      SELECT p.id_pregunta, p.enunciado, p.tipo_pregunta, p.nivel_dificultad, p.respuesta_correcta, p.opciones, p.topico, p.puntos
-      FROM pregunta p
-      JOIN ejercicio_pregunta ep ON ep.id_pregunta = p.id_pregunta
-      WHERE ep.id_actividad = ?
-    `,
-    args: [id_actividad],
-  });
-
-  return result.rows || [];
-}
+// NOTE: getPreguntasByEjercicio removed (replaced by getPreguntasByEjercicio that uses intento congelado)
 // --- NUEVAS FUNCIONES: intento congelado y actualización final ---
 export async function getOrCreateIntento(id_usuario: string, id_actividad: string) {
   // A. Buscar intento abierto
@@ -122,19 +110,21 @@ export async function updateIntentoFinal(id_usuario: string, data: { id_activida
   try {
     const ejercicioRes = await db.execute({ sql: `SELECT minimo_aprobatorio FROM ejercicio WHERE id_actividad = ?`, args: [data.id_actividad] });
     const actividadRes = await db.execute({ sql: `SELECT puntos_otorgados FROM actividad WHERE id_actividad = ?`, args: [data.id_actividad] });
-    const minimo = ejercicioRes.rows[0]?.minimo_aprobatorio ?? null;
-    const puntosOtorgados = actividadRes.rows[0]?.puntos_otorgados ?? 0;
+      const minimoRaw = ejercicioRes.rows[0]?.minimo_aprobatorio ?? null;
+      const puntosOtorgadosRaw = actividadRes.rows[0]?.puntos_otorgados ?? 0;
+      const minimo = minimoRaw !== null ? Number(minimoRaw) : null;
+      const puntosOtorgados = Number(puntosOtorgadosRaw) || 0;
 
-    if (minimo !== null && data.puntaje_obtenido !== undefined && data.puntaje_obtenido !== null) {
-      if (data.puntaje_obtenido >= minimo) {
+      if (minimo !== null && data.puntaje_obtenido !== undefined && data.puntaje_obtenido !== null) {
+        if (Number(data.puntaje_obtenido) >= minimo) {
         const prev = await db.execute({ sql: `SELECT estado FROM progreso_actividad WHERE id_usuario = ? AND id_actividad = ?`, args: [id_usuario, data.id_actividad] });
         const prevEstado = prev.rows[0]?.estado ?? null;
 
         if (!prev.rows || prev.rows.length === 0) {
           const idp = uuid();
-          await db.execute({ sql: `INSERT INTO progreso_actividad (id_progreso, id_usuario, id_actividad, estado, mejor_puntaje) VALUES (?, ?, ?, 'completada', ?)`, args: [idp, id_usuario, data.id_actividad, data.puntaje_obtenido] });
+          await db.execute({ sql: `INSERT INTO progreso_actividad (id_progreso, id_usuario, id_actividad, estado, mejor_puntaje) VALUES (?, ?, ?, 'completada', ?)`, args: [idp, id_usuario, data.id_actividad, Number(data.puntaje_obtenido)] });
         } else {
-          await db.execute({ sql: `UPDATE progreso_actividad SET estado = 'completada', mejor_puntaje = ? WHERE id_usuario = ? AND id_actividad = ?`, args: [data.puntaje_obtenido, id_usuario, data.id_actividad] });
+          await db.execute({ sql: `UPDATE progreso_actividad SET estado = 'completada', mejor_puntaje = ? WHERE id_usuario = ? AND id_actividad = ?`, args: [Number(data.puntaje_obtenido), id_usuario, data.id_actividad] });
         }
 
         if (prevEstado !== 'completada' && puntosOtorgados > 0) {
@@ -157,7 +147,7 @@ export async function completeLectura(id_usuario: string, id_actividad: string) 
   const id = uuid();
   // obtener puntos otorgados por la actividad
   const actividadRes = await db.execute({ sql: `SELECT puntos_otorgados FROM actividad WHERE id_actividad = ?`, args: [id_actividad] });
-  const puntosOtorgados = actividadRes.rows[0]?.puntos_otorgados ?? 0;
+  const puntosOtorgados = Number(actividadRes.rows[0]?.puntos_otorgados ?? 0);
 
   // verificar estado previo
   const prev = await db.execute({ sql: `SELECT estado FROM progreso_actividad WHERE id_usuario = ? AND id_actividad = ?`, args: [id_usuario, id_actividad] });

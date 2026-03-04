@@ -37,7 +37,7 @@ export async function update(req: AuthRequest, res: Response) {
     }
 
     // Solo pueden actualizar su propio perfil
-    if (req.params.id !== req.user.userId) {
+    if (String(req.params.id) !== req.user.userId) {
       return res.status(403).json({ error: 'No tienes permisos para actualizar este usuario' });
     }
 
@@ -63,7 +63,7 @@ export async function deleteAccount(req: AuthRequest, res: Response) {
     }
 
     // Solo pueden borrar su propia cuenta
-    if (req.params.id !== req.user.userId) {
+    if (String(req.params.id) !== req.user.userId) {
       return res.status(403).json({ error: 'No tienes permisos para borrar esta cuenta' });
     }
 
@@ -85,7 +85,7 @@ export async function getProgress(req: AuthRequest, res: Response) {
     }
 
     // Solo pueden ver su propio progreso
-    if (req.params.id !== req.user.userId) {
+    if (String(req.params.id) !== req.user.userId) {
       return res.status(403).json({ error: 'No tienes permisos para ver este progreso' });
     }
 

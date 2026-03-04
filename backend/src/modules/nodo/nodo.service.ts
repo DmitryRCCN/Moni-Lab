@@ -13,12 +13,12 @@ export async function getAllNodos() {
     `,
   });
 
-  const rows = result.rows;
+  const rows = result.rows || [];
   const map: Record<string, any> = {};
   for (const r of rows) {
-    const id = r.id_nodo;
-    if (!map[id]) {
-      map[id] = {
+    const key = String(r.id_nodo);
+    if (!map[key]) {
+      map[key] = {
         id_nodo: r.id_nodo,
         titulo: r.titulo,
         descripcion: r.descripcion,
@@ -28,7 +28,7 @@ export async function getAllNodos() {
       };
     }
     if (r.id_actividad) {
-      map[id].activities.push({ id_actividad: r.id_actividad, tipo_actividad: r.tipo_actividad, orden_secuencial: r.actividad_orden });
+      map[key].activities.push({ id_actividad: r.id_actividad, tipo_actividad: r.tipo_actividad, orden_secuencial: r.actividad_orden });
     }
   }
 

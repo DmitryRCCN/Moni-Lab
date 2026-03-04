@@ -33,7 +33,8 @@ export async function listLecciones(req: Request, res: Response) {
 export async function getLeccion(req: AuthRequest, res: Response) {
   try {
     const { id } = req.params;
-    const leccion = await getLeccionContenido(id);
+    const leccionId = Array.isArray(id) ? String(id[0]) : String(id);
+    const leccion = await getLeccionContenido(leccionId);
     res.json(leccion);
   } catch (error: any) {
     if (error.message.includes('no encontrada')) {
@@ -77,8 +78,9 @@ export async function updateLeccionHandler(req: AuthRequest, res: Response) {
     }
 
     const { id } = req.params;
+    const leccionId = Array.isArray(id) ? String(id[0]) : String(id);
     const data = updateLeccionSchema.parse(req.body);
-    const updatedLeccion = await updateLeccion(id, data);
+    const updatedLeccion = await updateLeccion(leccionId, data);
     res.json(updatedLeccion);
   } catch (error: any) {
     if (error.name === 'ZodError') {
@@ -103,7 +105,8 @@ export async function deleteLeccionHandler(req: AuthRequest, res: Response) {
     }
 
     const { id } = req.params;
-    const result = await deleteLeccion(id);
+    const leccionId = Array.isArray(id) ? String(id[0]) : String(id);
+    const result = await deleteLeccion(leccionId);
     res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -117,9 +120,10 @@ export async function deleteLeccionHandler(req: AuthRequest, res: Response) {
 export async function getLeccionStatsHandler(req: AuthRequest, res: Response) {
   try {
     const { id } = req.params;
-    const stats = await getLeccionStats(id);
+    const leccionId = Array.isArray(id) ? String(id[0]) : String(id);
+    const stats = await getLeccionStats(leccionId);
     res.json({
-      leccion_id: id,
+      leccion_id: leccionId,
       ...stats,
     });
   } catch (error: any) {
