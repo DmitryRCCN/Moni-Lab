@@ -23,23 +23,23 @@ body {
 
 /* --- CLASE MAESTRA PARA TODOS LOS CONTENEDORES --- */
 .moni-panel {
-  background: rgba(18, 77, 63, 0.75); /* Verde selva profundo con 75% opacidad */
+  background: rgba(18, 77, 63, 0.75); /* Fondo esmeralda con transparencia */
   backdrop-filter: blur(8px); /* Efecto de cristal */
   -webkit-backdrop-filter: blur(8px);
-  border: 2px solid rgba(16, 185, 129, 0.2); /* Borde esmeralda sutil */
+  border: 2px solid rgba(16, 185, 129, 0.2); /* Borde esmeralda */
   border-radius: 1.5rem; /* rounded-3xl aproximado */
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
   color: white;
 }
 
-/* Títulos con sombra de "sticker" (nítida, no borrosa) */
+/* Títulos con sombra de "sticker" */
 h1, h2, h3 {
   text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.7);
-  color: unset !important; /* Ignora herencia de color del padre, deja que Tailwind lo controle */
+  color: unset !important; /* Ignora herencia de color del padre, dejo que Tailwind controle mi css */
 }
 
-/* Texto pequeño: QUITAMOS la sombra para evitar que se vea oscuro/sucio */
+/* Texto pequeño */
 p, li, label {
   text-shadow: none;
-  color: rgba(255, 255, 255, 0.95); /* Blanco casi puro para máximo contraste */
+  color: rgba(255, 255, 255, 0.95); /* Blanco para contraste */
 }

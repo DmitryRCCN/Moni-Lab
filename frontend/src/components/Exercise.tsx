@@ -168,7 +168,7 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
     )
   }
 
-  // 3. VISTA DE PREGUNTA ACTUAL (Aquí es donde va el código que no sabías donde poner)
+  // 3. VISTA DE PREGUNTA ACTUAL
   const q = preguntas[current]
   const opciones = parseOptions(q.opciones || '[]')
 

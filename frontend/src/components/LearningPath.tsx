@@ -72,7 +72,7 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
 
                         const numero = `${node.orden_secuencial}.${activity.orden_secuencial ?? 1}`
 
-                        // CONTENIDO DEL BOTÓN (para no repetir código)
+                        // CONTENIDO DEL BOTÓN
                         const ButtonContent = (
                           <div
                             className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg transition-all duration-300 border-2 ${colorClass} ${

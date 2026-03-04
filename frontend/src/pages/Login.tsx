@@ -4,7 +4,6 @@ import api from '../api'
 import { useAuth } from '../context/AuthContext'
 
 export default function Login() {
-  //const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [show, setShow] = useState(false)

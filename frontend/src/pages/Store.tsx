@@ -28,7 +28,7 @@ export default function Store() {
 
         setItems(itemsRes || [])
         
-        // --- MEJORA 1: PERFECCIONAR LA DETECCIÓN DE ITEMS PROPIOS ---
+        // ---DETECCIÓN DE ITEMS PROPIOS ---
         // Buscamos las monedas y los items tanto en la raíz como dentro de 'user'
         const userData = profileRes?.user || profileRes
         setUserCoins(userData?.monedas_virtuales ?? 0)
@@ -57,7 +57,7 @@ export default function Store() {
   async function confirmPurchase() {
     if (!selected) return
     
-    // --- MEJORA 2: CIERRE AUTOMÁTICO DEL MODAL ---
+    // --- CIERRE DEL MODAL ---
     // Guardamos la referencia y cerramos el modal inmediatamente para que 
     // el usuario vea la notificación mientras el proceso ocurre de fondo
     const itemToBuy = selected

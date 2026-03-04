@@ -38,6 +38,10 @@ app.use('/', actividadRoutes);
 // Rutas de tienda
 app.use('/items', itemRoutes);
 
+/*
+--- Rutas de prueba de aquí para abajo (ADVERTENCIA) ---
+*/
+
 // Endpoint de prueba (sin autenticación)
 app.get('/api/test', (_req, res) => {
   res.json({ 

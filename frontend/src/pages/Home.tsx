@@ -1,7 +1,4 @@
-export default function Home(
-
-  
-) {
+export default function Home() {
   return (
     <div className="p-8 max-w-4xl mx-auto ">
       <h1 className="flex items-center justify-center flex-nowrap text-5xl font-bold mb-4 text-yellow-500">

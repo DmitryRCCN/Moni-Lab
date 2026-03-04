@@ -54,7 +54,7 @@ export default function Lesson() {
   const handleCompleteReading = async () => {
     setIsCompleting(true)
     try {
-      // Endpoint sugerido para marcar lectura como completada
+      // Endpoint para marcar lectura como completada
       await api('/actividad/completar-lectura', {
         method: 'POST',
         body: { id_actividad: id }

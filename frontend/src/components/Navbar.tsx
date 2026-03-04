@@ -26,7 +26,7 @@ export default function Navbar() {
               </svg>
             </NavLink>
 
-            {/* Nombre de la página y lema: oculto en móvil */}
+            {/* Nombre de la página y lema: oculto en celular */}
             <div className="hidden sm:block">
               <h1 className="font-bold text-lg text-white">Moni-Lab</h1>
               <p className="text-xs text-white/80">Aprende jugando</p>
@@ -62,7 +62,7 @@ export default function Navbar() {
                 <span className="hidden md:inline">Perfil</span>
               </NavLink>
 
-              {/* Botón Salir solo ícono */}
+              {/* Botón Salir */}
               <button
                 onClick={handleLogout}
                 className="flex items-center justify-center w-10 h-10 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-sm transition"

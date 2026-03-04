@@ -7,7 +7,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        superWonder: ['Super Wonder', 'sans-serif'], // nuevo nombre de la fuente
+        superWonder: ['Super Wonder', 'sans-serif'],
       },
     },
   },
