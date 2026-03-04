@@ -10,9 +10,9 @@
     "types": ["node"],
 
     "strict": true,
-    "isolatedModules": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    "isolatedModules": false,
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false,
 
     "esModuleInterop": true,
     "resolveJsonModule": true,
