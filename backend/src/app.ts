@@ -1,7 +1,9 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+
 import { db } from './db/client';
+import { sendMail } from './config/mail';
 
 import authRoutes from './modules/auth/auth.routes';
 import usuarioRoutes from './modules/usuario/usuario.routes';
@@ -74,5 +76,21 @@ app.get('/health/db', async (_req, res) => {
   }
 });
 
+
+app.get('/test-email', async (_req, res) => {
+  try {
+    await sendMail(
+      "diego.cruz5152@alumnos.udg.mx",
+      //"luis.mendez5078@alumnos.udg.mx",
+      //"jorge.ibarra5177@alumnos.udg.mx",
+      "Prueba Moni-Lab 🚀",
+      "<h1>Funciona el sistema de correos 🎉</h1><p>Este es un test.</p>"
+    );
+
+    res.json({ message: "Correo enviado correctamente" });
+  } catch (error) {
+    res.status(500).json({ error: "Error enviando correo" });
+  }
+});
 
 export default app;
