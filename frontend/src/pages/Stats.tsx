@@ -4,9 +4,8 @@ import api from '../api'
 type StatsData = {
   experiencia_total?: number
   monedas_virtuales?: number
-  nivel_actual?: number
+  nivel_actual?: string
   estadisticas?: {
-    totalLecciones?: number
     leccionesCompletadas?: number
     puntajePromedio?: number
   }
@@ -50,7 +49,6 @@ export default function Stats() {
     <div className="p-4 max-w-3xl mx-auto">
       <div className="moni-panel p-6">
         <h2 className="text-2xl font-bold mb-4">Estadísticas</h2>
-
         <ul className="space-y-3">
           <li className="flex justify-between items-center bg-white/5 p-3 rounded-md">
             <span className="font-medium">Experiencia total</span>
@@ -62,11 +60,7 @@ export default function Stats() {
           </li>
           <li className="flex justify-between items-center bg-white/5 p-3 rounded-md">
             <span className="font-medium">Nivel actual</span>
-            <span className="font-mono text-lg">{data.nivel_actual ?? 1}</span>
-          </li>
-          <li className="flex justify-between items-center bg-white/5 p-3 rounded-md">
-            <span className="font-medium">Lecciones totales</span>
-            <span className="font-mono text-lg">{data.estadisticas?.totalLecciones ?? 0}</span>
+            <span className="font-mono text-lg">{data.nivel_actual ?? '0.0'}</span>
           </li>
           <li className="flex justify-between items-center bg-white/5 p-3 rounded-md">
             <span className="font-medium">Lecciones completadas</span>

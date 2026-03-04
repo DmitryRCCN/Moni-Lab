@@ -1,29 +1,24 @@
--- Tabla de usuarios
+-- ===============================
+-- USUARIOS (Entidad central)
+-- ===============================
 CREATE TABLE IF NOT EXISTS usuarios (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL,
-  -- ===============================
-  -- USUARIOS (Entidad central)
-  -- ===============================
-  CREATE TABLE IF NOT EXISTS usuarios (
-    id TEXT PRIMARY KEY,
-    email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    nombre TEXT NOT NULL,
+  nombre TEXT NOT NULL,
 
-    rol TEXT CHECK (rol IN ('estudiante', 'tutor', 'admin')) DEFAULT 'estudiante',
-    activo BOOLEAN DEFAULT true,
+  rol TEXT CHECK (rol IN ('estudiante', 'tutor', 'admin')) DEFAULT 'estudiante',
+  activo BOOLEAN DEFAULT true,
 
-    experiencia_total INTEGER DEFAULT 0,
-    monedas_virtuales INTEGER DEFAULT 0,
-    nivel_actual INTEGER DEFAULT 1,
+  experiencia_total INTEGER DEFAULT 0,
+  monedas_virtuales INTEGER DEFAULT 0,
+  nivel_actual TEXT DEFAULT '0.0',
 
-    id_tutor TEXT NULL,
+  id_tutor TEXT NULL,
 
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 
   -- ===============================
   -- REFRESH TOKENS (JWT)
@@ -76,6 +71,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   CREATE TABLE IF NOT EXISTS actividad (
     id_actividad TEXT PRIMARY KEY,
     id_nodo TEXT NOT NULL,
+    orden_secuencial INTEGER NOT NULL,
     tipo_actividad TEXT CHECK (tipo_actividad IN ('lectura', 'ejercicio')) NOT NULL,
     puntos_otorgados INTEGER DEFAULT 0,
     es_aleatorio BOOLEAN DEFAULT false,

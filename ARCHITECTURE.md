@@ -125,7 +125,6 @@ Cliente recibe:
   "email": "diego@example.com",
   "nombre": "Diego",
   "estadisticas": {
-    "totalLecciones": 10,
     "leccionesCompletadas": 7,
     "puntajePromedio": 85.5
   }
@@ -353,7 +352,7 @@ describe('Usuario', () => {
   test('getUserProfile retorna estadísticas', async () => {
     const profile = await getUserProfile(userId);
     expect(profile.estadisticas).toBeDefined();
-    expect(profile.estadisticas.totalLecciones).toBeGreaterThanOrEqual(0);
+    expect(profile.estadisticas.leccionesCompletadas).toBeGreaterThanOrEqual(0);
   });
   
   test('updateUser solo actualiza campos permitidos', async () => {

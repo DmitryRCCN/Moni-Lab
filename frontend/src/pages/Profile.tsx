@@ -10,9 +10,8 @@ type ProfileData = {
   rol?: string
   experiencia_total?: number
   monedas_virtuales?: number
-  nivel_actual?: number
+  nivel_actual?: string
   estadisticas?: {
-    totalLecciones?: number
     leccionesCompletadas?: number
     puntajePromedio?: number
   }
@@ -65,7 +64,7 @@ export default function Profile() {
           <div className="w-28 h-28 rounded-full bg-gradient-to-br from-yellow-300 to-orange-400 flex items-center justify-center text-3xl font-bold text-slate-900">{initials}</div>
           <div>
             <h3 className="text-2xl font-bold">{data.nombre}</h3>
-            <p className="text-sm text-white/80 mt-1">Nivel {data.nivel_actual || 1} · <span className="font-semibold">{data.monedas_virtuales ?? 0}</span> monedas</p>
+            <p className="text-sm text-white/80 mt-1">Nivel {data.nivel_actual ?? '0.0'} · <span className="font-semibold">{data.monedas_virtuales ?? 0}</span> monedas</p>
             <div className="mt-3 flex gap-3">
               <Link to="/stats" className="px-3 py-1 bg-white/10 rounded hover:bg-white/20">Ver estadísticas</Link>
               <Link to="/store" className="px-3 py-1 bg-white/10 rounded hover:bg-white/20">Tienda</Link>
@@ -78,7 +77,6 @@ export default function Profile() {
           <p className="text-sm text-white/80">Email: <span className="font-semibold">{data.email}</span></p>
           <div className="mt-3">
             <h5 className="font-semibold text-emerald-400 mb-2">Estadísticas</h5>
-            <p className="text-sm text-white/80">Lecciones totales: {data.estadisticas?.totalLecciones ?? 0}</p>
             <p className="text-sm text-white/80">Completadas: {data.estadisticas?.leccionesCompletadas ?? 0}</p>
             <p className="text-sm text-white/80">Puntaje promedio: {Math.round((data.estadisticas?.puntajePromedio ?? 0) * 100) / 100}</p>
           </div>
