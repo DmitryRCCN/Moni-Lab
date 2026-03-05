@@ -17,15 +17,24 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'https://monilab.com.mx',
+  'https://www.monilab.com.mx',
+  'http://localhost:5173'
+].filter(Boolean);
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow server-to-server or curl requests when no origin
       if (!origin) return callback(null, true);
-      const allowed = [FRONTEND_URL];
-      if (allowed.includes(origin)) return callback(null, true);
-      return callback(new Error('No permitido por CORS'), false);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.log('Blocked by CORS:', origin);
+      return callback(new Error('No permitido por CORS'));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
