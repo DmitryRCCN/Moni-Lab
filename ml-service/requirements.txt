@@ -1,4 +1,10 @@
 fastapi
 uvicorn
+libsql-client
+pandas
 scikit-learn
-joblib
+matplotlib
+seaborn
+fpdf2
+requests
+python-dotenv
