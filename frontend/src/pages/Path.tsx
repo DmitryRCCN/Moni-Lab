@@ -55,13 +55,10 @@ export default function Path() {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Stats row */}
-
-
+      <div className="animate-in fade-in duration-500">
         {/* Learning path title */}
         <div className="moni-panel p-6 mb-6">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">Ruta de aprendizaje</h1>
+          <h1 className="text-3xl font-bold  text-yellow-400 mb-3">Ruta de aprendizaje</h1>
           <p className="text-white/80 text-sm sm:text-base">Sigue el camino para dominar la educación financiera 💰</p>
         </div>
 
@@ -75,8 +72,6 @@ export default function Path() {
             <LearningPath nodes={nodos || undefined} progress={progressMap} />
           )}
         </div>
-
-        {/* (Creación de actividades eliminada; se carga desde la BD) */}
       </div>
     </div>
   )

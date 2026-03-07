@@ -1,43 +1,99 @@
 export default function Home() {
   return (
-    <div className="p-8 max-w-4xl mx-auto ">
-      <h1 className="flex items-center justify-center flex-nowrap text-5xl font-bold mb-4 text-yellow-500">
-        <img src="images/mono.png" alt="izquierda" className="hidden md:block w-60 h-38" />
+   <div className="animate-in fade-in duration-700">
 
-        <span className="whitespace-nowrap text-yellow-300">Bienvenido a Moni-Lab</span>
+      {/* HERO */}
+      <div className="flex items-center justify-center gap-4 mb-10 text-center flex-wrap">
+        
+        <img
+          src="/images/mono.avif"
+          alt="Mono"
+          loading="eager"
+          decoding="async"
+          className="hidden md:block w-36 lg:w-48"
+        />
 
-        <img src="images/mona.png" alt="derecha" className="hidden md:block w-60 h-38" />
-      </h1>
-      <div className="moni-panel p-8 mb-6">
-        <div className="flex items-start gap-4">
-          <img src="images/monoCoin.png" alt="icono" className="w-40 h-40" />
+        <h1 className="text-4xl md:text-5xl font-bold text-yellow-400 whitespace-nowrap">
+          Bienvenido a Moni-Lab
+        </h1>
+
+        <img
+          src="/images/mona.avif"
+          alt="Mona"
+          loading="lazy"
+          decoding="async"
+          className="hidden md:block w-36 lg:w-48"
+        />
+      </div>
+
+      {/* PANEL 1 */}
+      <section className="moni-panel p-6 md:p-8 mb-8">
+        <div className="flex flex-col md:flex-row items-center gap-6">
+
+          <img
+            src="/images/monoCoin.avif"
+            alt="Moni coin"
+            loading="lazy"
+            decoding="async"
+            className="w-28 md:w-36 shrink-0"
+          />
+
           <div>
-            <h2 className="text-2xl font-bold text-emerald-900 mb-2">
+            <h2 className="text-2xl font-bold text-yellow-400 mb-2">
               ¿Qué es Moni-Lab?
             </h2>
-            <p className="text-emerald-900">
-              Moni-Lab es una plataforma diseñada para que aprendas las bases de una educación financiera productiva y de una manera divertida y motivadora.
+
+            <p>
+              Moni-Lab es una plataforma diseñada para aprender educación
+              financiera de forma divertida mediante lecciones, actividades y
+              recompensas dentro de la plataforma.
             </p>
           </div>
+
         </div>
-      </div>
-      <div className="moni-panel p-6 mb-6">
-        <div className="flex items-start gap-4">
+      </section>
+
+      {/* PANEL 2 */}
+      <section className="moni-panel p-6 md:p-8 mb-8">
+        <div className="flex flex-col md:flex-row items-center gap-6">
+
           <div>
-            <h2 className="text-2xl font-bold text-emerald-900 mb-2">
+            <h2 className="text-2xl font-bold text-yellow-400 mb-2">
               ¿Cómo funciona?
             </h2>
-            <p className="text-emerald-900">
-              Sigue la ruta de aprendizaje para completar lecciones y quizzes. Gana monedas por cada lección completada y úsalas para personalizar tu avatar o desbloquear contenido exclusivo. Consulta tu perfil para ver tu progreso y estadísticas.
+
+            <p>
+              Sigue el recorrido de aprendizaje para completar lecciones y
+              quizzes. Gana monedas por cada actividad completada y úsalas
+              para personalizar tu avatar o desbloquear contenido.
             </p>
           </div>
-          <img src="images/monaRead.png" alt="icono" className="w-40 h-40" />
+
+          <img
+            src="/images/monaRead.avif"
+            alt="Aprender"
+            loading="lazy"
+            decoding="async"
+            className="w-28 md:w-36 shrink-0"
+          />
+
         </div>
-      </div>
-      <div className="moni-panel p-6 mb-6">
-        <h2 className="text-2xl font-bold mb-3 text-emerald-900">¡Comienza ahora!</h2>
-        <p className="text-emerald-900">Haz clic en "Registrarse" para comenzar tu viaje en el mundo de la economía con Moni-Lab. <br></br> ¡Diviértete aprendiendo!</p>
-      </div>
+      </section>
+
+      {/* PANEL 3 */}
+      <section className="moni-panel p-6 md:p-8 text-center">
+
+        <h2 className="text-2xl font-bold text-yellow-400 mb-3">
+          ¡Comienza ahora!
+        </h2>
+
+        <p>
+          Haz clic en <b>Registrarse</b> para comenzar tu viaje en el mundo
+          de la economía con Moni-Lab.
+        </p>
+
+      </section>
+
     </div>
   )
 }
