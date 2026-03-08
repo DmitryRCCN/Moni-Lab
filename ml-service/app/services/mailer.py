@@ -1,6 +1,5 @@
 import os
 import resend
-import base64
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -19,15 +18,14 @@ def send_email_with_report(pdf_path):
         with open(pdf_path, "rb") as f:
             pdf_data = f.read()
             # Resend SDK puede pedir el contenido como lista de bytes o base64 dependiendo de la versión
-            # Lo más seguro para el SDK es enviarlo como lista de enteros o bytes directamente
             attachment_content = list(pdf_data) 
 
         # 3. ENVÍO USANDO EL SDK OFICIAL
         params = {
             "from": "Moni-Lab Analytics <analytics@mail.monilab.com.mx>",
             "to": destinatarios,
-            "subject": "📊 Reporte de Minería de Datos - Moni-Lab",
-            "html": "<strong>Hola equipo.</strong><p>El análisis de clusters está listo en el PDF adjunto.</p>",
+            "subject": "Reporte de Minería de Datos - Moni-Lab",
+            "html": "<strong>Hola equipo.</strong><p>El análisis de clusters semanal está listo en el PDF adjunto.</p>",
             "attachments": [
                 {
                     "filename": "Reporte_MoniLab.pdf",
@@ -37,10 +35,9 @@ def send_email_with_report(pdf_path):
         }
 
         email = resend.Emails.send(params)
-        print(f"✅ ¡Reporte enviado con éxito! ID: {email['id']}")
+        print(f"¡Reporte enviado con éxito! ID: {email['id']}")
         return 200
 
     except Exception as e:
-        print(f"❌ Error al enviar el reporte: {str(e)}")
-        # Si es un error de dominio no verificado, aquí te lo dirá claramente
+        print(f"Error al enviar el reporte: {str(e)}")
         return 500

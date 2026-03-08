@@ -3,7 +3,7 @@ import Navbar from './components/Navbar'
 import Path from './pages/Path'
 import Lesson from './pages/Lesson'
 import Profile from './pages/Profile'
-import Stats from './pages/Stats'
+//import Stats from './pages/Stats'
 import Store from './pages/Store'
 import Home from './pages/Home'
 import Login from './pages/Login'
@@ -28,7 +28,7 @@ function AppContent() {
           <Route path="/lesson" element={<RequireAuth><Lesson /></RequireAuth>} />
           <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="/store" element={<RequireAuth><Store /></RequireAuth>} />
-          <Route path="/Path" element={<RequireAuth><Path /></RequireAuth>} />
+          <Route path="/path" element={<RequireAuth><Path /></RequireAuth>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/register/user" element={<RegisterUser />} />

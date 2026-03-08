@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 
 export default function Register() {
   const [email, setEmail] = useState('')
@@ -94,13 +94,13 @@ export default function Register() {
               className="text-xs text-white/80 cursor-pointer"
             >
               Acepto los{' '}
-              <Link
+              <NavLink
                 to="/terms"
                 target="_blank"
                 className="text-yellow-300 font-semibold hover:underline"
               >
                 Términos y Condiciones
-              </Link>
+              </NavLink>
             </label>
 
           </div>
@@ -122,12 +122,12 @@ export default function Register() {
 
         <p className="text-sm text-white/80 mt-4 text-center">
           ¿Ya tienes cuenta?{' '}
-          <Link
+          <NavLink
             to="/login"
             className="text-yellow-300 font-semibold"
           >
             Inicia sesión
-          </Link>
+          </NavLink>
         </p>
 
       </div>
