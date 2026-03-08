@@ -12,10 +12,12 @@ import meRoutes from './routes/me.route';
 import nodoRoutes from './modules/nodo/nodo.routes';
 import actividadRoutes from './modules/actividad/actividad.routes';
 import itemRoutes from './modules/item/item.routes';
+import mailRoutes from './modules/mail/mail.routes';
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+
 
 const allowedOrigins = [
   process.env.FRONTEND_URL,
@@ -53,6 +55,9 @@ app.use('/nodos', nodoRoutes);
 app.use('/', actividadRoutes);
 // Rutas de tienda
 app.use('/items', itemRoutes);
+
+// Rutas de correo
+app.use('/mail', mailRoutes);
 
 /*
 --- Rutas de prueba de aquí para abajo (ADVERTENCIA) ---

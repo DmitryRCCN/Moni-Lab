@@ -78,7 +78,7 @@ export default function Store() {
       
       setNotification({ msg: `¡Éxito! Has adquirido ${itemToBuy.nombre}`, type: 'success' })
     } catch (err: any) {
-      setNotification({ msg: err.message || 'No se pudo completar la compra', type: 'error' })
+      setNotification({ msg: 'No se pudo completar la compra', type: 'error' })
     } finally {
       setPurchasing(false)
     }
@@ -91,7 +91,7 @@ export default function Store() {
   const inventoryItems = items.filter(item => ownedIds.has(String(item.id_item)))
 
   return (
-    <div className="p-4 max-w-5xl mx-auto animate-in fade-in duration-500">
+   <div className="animate-in fade-in duration-500">
       
       {notification && (
         <div className="fixed top-20 right-4 z-50 animate-in slide-in-from-right-full duration-300">
@@ -109,7 +109,7 @@ export default function Store() {
       <div className="moni-panel p-6">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-black bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold   text-yellow-400 mb-3">
               Moni-Store
             </h1>
             <p className="text-white/40 text-sm">Personaliza tu experiencia</p>

@@ -10,36 +10,40 @@
   font-display: swap;
 }
 
+@media (min-width: 1024px) {
+  body {
+    background-attachment: fixed;
+  }
+}
+
+
 body {
   font-family: 'Super Wonder', sans-serif;
-  background-image: url('/images/background.jpg');
+  background-image: url('/images/background.avif');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-attachment: fixed; 
   min-height: 100vh;
   background-color: #064e3b; 
 }
 
-/* --- CLASE MAESTRA PARA TODOS LOS CONTENEDORES --- */
+/* --- CLASE MAESTRA --- */
 .moni-panel {
-  background: rgba(18, 77, 63, 0.75); /* Fondo esmeralda con transparencia */
-  backdrop-filter: blur(8px); /* Efecto de cristal */
-  -webkit-backdrop-filter: blur(8px);
-  border: 2px solid rgba(16, 185, 129, 0.2); /* Borde esmeralda */
-  border-radius: 1.5rem; /* rounded-3xl aproximado */
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
-  color: white;
+  background: rgba(18, 77, 63, 0.72);
+  backdrop-filter: transparent(6px);
+  border: 1px solid rgba(16,185,129,.25);
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,.35);
+  transition: transform .2s ease, box-shadow .2s ease;
 }
 
-/* Títulos con sombra de "sticker" */
+/* Títulos: Quitamos el unset !important para que el amarillo de Tailwind funcione */
 h1, h2, h3 {
   text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.7);
-  color: unset !important; /* Ignora herencia de color del padre, dejo que Tailwind controle mi css */
 }
 
-/* Texto pequeño */
 p, li, label {
   text-shadow: none;
-  color: rgba(255, 255, 255, 0.95); /* Blanco para contraste */
+  color: rgba(255, 255, 255, 0.95);
 }

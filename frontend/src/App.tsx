@@ -21,14 +21,12 @@ function AppContent() {
     <div className="min-h-screen flex flex-col bg-transparent text-white">
       <Navbar />
       
-      {/* Contenedor principal */}
-      <main className="flex-1 pt-24 pb-24 md:pb-12">
+      <main className="flex-1 pt-28 pb-20 px-4 w-full max-w-5xl mx-auto">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/lesson/:id" element={<RequireAuth><Lesson /></RequireAuth>} />
           <Route path="/lesson" element={<RequireAuth><Lesson /></RequireAuth>} />
           <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
-          <Route path="/stats" element={<RequireAuth><Stats /></RequireAuth>} />
           <Route path="/store" element={<RequireAuth><Store /></RequireAuth>} />
           <Route path="/Path" element={<RequireAuth><Path /></RequireAuth>} />
           <Route path="/login" element={<Login />} />
