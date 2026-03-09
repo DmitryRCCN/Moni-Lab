@@ -22,21 +22,22 @@ export async function refreshAccessTokenViaCookie() {
   const url = `${API_BASE}/auth/refresh`;
   const res = await fetch(url, {
     method: 'POST',
-    credentials: 'include',
+    credentials: 'include', 
     headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}), // <--- Enviamos un body vacío explícito
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || res.statusText);
+    // Aquí es donde el AuthContext entrará al catch y pondrá initializing: false
+    throw new Error('Sin sesión');
   }
 
   const body = await res.json();
   if (body?.accessToken) {
     setAccessToken(body.accessToken);
-    return body.accessToken as string;
+    return body.accessToken;
   }
-  throw new Error('No access token in refresh response');
+  throw new Error('Token no recibido');
 }
 
 export async function api(path: string, options: ApiOptions = {}) {

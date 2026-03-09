@@ -15,9 +15,11 @@ export async function register(req: Request, res: Response) {
     // Set refresh token as HttpOnly cookie and don't expose it in JSON
     const cookieOptions = {
       httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: 'lax' as const,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      secure: true, // Siempre true en producción (HTTPS)
+      sameSite: 'none' as const, 
+      // Si los dominios son muy diferentes, usa 'none' y secure: true
+      domain: process.env.NODE_ENV === 'production' ? '.monilab.com.mx' : undefined,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     };
     res.cookie('refreshToken', result.refreshToken, cookieOptions);
     res.status(201).json({ accessToken: result.accessToken, user: result.user });
@@ -35,8 +37,10 @@ export async function login(req: Request, res: Response) {
     const result = await loginUser(data.nombre, data.password);
     const cookieOptions = {
       httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: 'lax' as const,
+      secure: true, // Siempre true en producción (HTTPS)
+      sameSite: 'none' as const, 
+      // Si los dominios son muy diferentes, usa 'none' y secure: true
+      domain: process.env.NODE_ENV === 'production' ? '.monilab.com.mx' : undefined,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     };
     res.cookie('refreshToken', result.refreshToken, cookieOptions);
@@ -52,13 +56,23 @@ export async function login(req: Request, res: Response) {
  */
 export async function refresh(req: Request, res: Response) {
   try {
-    const data = refreshSchema.parse(req.body);
-    const token = data.refreshToken || (req as any).cookies?.refreshToken;
-    if (!token) return res.status(400).json({ error: 'Refresh token required' });
+    // 1. Evitamos que Zod explote si el body llega vacío (común en fetch)
+    const body = req.body || {};
+    const data = refreshSchema.parse(body);
+
+    // 2. Buscamos el token
+    const token = data.refreshToken || req.cookies?.refreshToken;
+
+    // 3.  Si no hay token, respondemos 401 (Unauthorized)
+    if (!token) {
+      return res.status(401).json({ error: 'No hay sesión activa' });
+    }
+
     const result = await refreshAccessToken(token);
     res.json(result);
   } catch (err: any) {
-    res.status(401).json({ error: err.message });
+    // Cualquier error de validación o token expirado también es 401
+    res.status(401).json({ error: 'Sesión inválida' });
   }
 }
 

@@ -39,8 +39,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Al montar, intentar obtener un access token desde la cookie (refreshToken)
   useEffect(() => {
-    let mounted = true
-    ;(async () => {
+    let mounted = true;
+    (async () => {
       try {
         const token = await refreshAccessTokenViaCookie()
         if (!mounted) return
@@ -56,15 +56,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUser(u)
         }
       } catch {
-        // no estamos autenticados
-      }
-      finally {
-        if (mounted) setInitializing(false)
-      }
-    })()
+      // Si llega aquí (error 401), el usuario simplemente no está logueado.
+      // Limpiamos basura vieja del localStorage por seguridad
+      localStorage.removeItem('moni_user');
+      setUser(null);
+    } finally {
+      if (mounted) setInitializing(false);
+    }
+  })();
 
-    return () => { mounted = false }
-  }, [])
+  return () => { mounted = false };
+}, []);
 
   function loginFromResponse(res: any) {
     if (res?.accessToken) {
