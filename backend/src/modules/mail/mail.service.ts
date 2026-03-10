@@ -9,7 +9,7 @@ export class MailService {
   async sendWelcomeEmail(email: string, nombre: string) {
 
     const html = await render(
-      WelcomeEmail({ nombre })
+      WelcomeEmail({ nombre: nombre.split(' ')[0] })
     );
 
     return sendMail(

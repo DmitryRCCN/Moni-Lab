@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import api from '../api'
 import { useAuth } from '../context/AuthContext'
+import  Avatar  from '../components/avatar'
 
 type ProfileData = {
   id: string
@@ -20,6 +21,14 @@ export default function Profile() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { initializing } = useAuth()
+
+const equipped = {
+    base: "mono_zombie",
+    expression: "bigote_millonario",
+    clothing: "traje_negocios",
+    accessory: "corona_oro"
+  };
+
 
   useEffect(() => {
     let mounted = true
@@ -62,8 +71,15 @@ export default function Profile() {
         <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
           
           {/* EL CÍRCULO (Arreglado con shrink-0) */}
-          <div className="w-28 h-28 rounded-full bg-gradient-to-br from-yellow-300 to-orange-500 flex items-center justify-center text-3xl font-bold text-slate-900 shadow-lg shrink-0 border-4 border-white/10">
-            {initials}
+          <div className="w-32 h-32 rounded-3xl bg-emerald-900/40 border-4 border-white/10 overflow-hidden shadow-inner flex items-center justify-center">
+          
+        <Avatar 
+          baseId={equipped.base}
+          expressionId={equipped.expression}
+          clothingId={equipped.clothing}
+          accessoryId={equipped.accessory}
+          className="w-full h-full"
+        />
           </div>
 
           <div className="flex-1">

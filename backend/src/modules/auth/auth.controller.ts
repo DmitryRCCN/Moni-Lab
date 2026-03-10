@@ -3,7 +3,8 @@ import { registerSchema, loginSchema } from './auth.schema';
 import { registerUser, loginUser, refreshAccessToken, revokeRefreshToken } from './auth.service';
 import { z } from 'zod';
 import { env } from '../../config/env';
-z
+import { mailService } from '../mail/mail.service';
+
 const refreshSchema = z.object({
   refreshToken: z.string().optional(),
 });
@@ -21,6 +22,11 @@ export async function register(req: Request, res: Response) {
   try {
     const data = registerSchema.parse(req.body);
     const result = await registerUser(data);
+
+    //  Disparar correo de bienvenida (Sin await para no retrasar la respuesta al cliente)
+    mailService.sendWelcomeEmail(data.email, data.nombre).catch(err => {
+      console.error('Error enviando correo de bienvenida:', err);
+    });
     
     res.cookie('refreshToken', result.refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
     res.status(201).json({ accessToken: result.accessToken, user: result.user });
