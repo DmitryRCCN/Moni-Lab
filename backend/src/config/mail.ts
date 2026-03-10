@@ -8,8 +8,12 @@ const resendClient = new Resend(apiKey || '');
 
 export const sendMail = async (to: string, subject: string, html: string) => {
   try {
+    // Limpiamos posibles comillas
+    const fromValue = (process.env.RESEND_FROM || 'Moni-Lab <noreply@mail.monilab.com.mx>')
+      .replace(/['"]+/g, ''); // Esto elimina comillas simples y dobles
+
     const response = await resendClient.emails.send({
-      from: process.env.RESEND_FROM || 'Moni-Lab <noreply@yourdomain.com>',
+      from: fromValue,
       to,
       subject,
       html,
