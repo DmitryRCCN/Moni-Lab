@@ -1,7 +1,21 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import api, { setAccessToken, refreshAccessTokenViaCookie } from '../api'
 
-type User = { id: string; email: string; nombre?: string }
+// --- TIPOS PARA EL AVATAR ---
+type EquippedItems = {
+  base: string;
+  expression?: string | null;
+  clothing?: string | null;
+  accessory?: string | null;
+}
+
+// Actualizamos el tipo User para incluir equipped
+type User = { 
+  id: string; 
+  email: string; 
+  nombre?: string;
+  equipped?: EquippedItems;
+}
 
 type AuthContextValue = {
   user: User | null
@@ -26,6 +40,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [accessToken, setAccessTokenState] = useState<string | null>(null)
   const [initializing, setInitializing] = useState(true)
 
+  // Sincronización entre pestañas
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'moni_user') {
@@ -37,40 +52,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => window.removeEventListener('storage', onStorage)
   }, [])
 
-  // Al montar, intentar obtener un access token desde la cookie (refreshToken)
+  // Al montar, intentar obtener un access token y el perfil
   useEffect(() => {
     let mounted = true;
-    (async () => {
+    
+    const initAuth = async () => {
       try {
         const token = await refreshAccessTokenViaCookie()
         if (!mounted) return
+        
         setAccessToken(token)
         setAccessTokenState(token)
-        // Obtener perfil del usuario y sincronizar estado
+
+        // Obtener perfil del usuario (esto ya trae el 'equipped' gracias al service)
         const profile = await api('/usuario/me')
         if (!mounted) return
-        // el backend puede devolver { user: {...} } (me.route) o directamente el objeto de usuario
+
         const u = profile?.user ?? profile
         if (u?.id) {
           localStorage.setItem('moni_user', JSON.stringify(u))
           setUser(u)
         }
-      } catch {
-      // Si llega aquí (error 401), el usuario simplemente no está logueado.
-      // Limpiamos basura vieja del localStorage por seguridad
-      localStorage.removeItem('moni_user');
-      setUser(null);
-    } finally {
-      if (mounted) setInitializing(false);
-    }
-  })();
+      } catch (error) {
+        // Si hay error 401 o de red, limpiamos estado
+        if (mounted) {
+          localStorage.removeItem('moni_user');
+          setUser(null);
+        }
+      } finally {
+        if (mounted) setInitializing(false);
+      }
+    };
 
-  return () => { mounted = false };
-}, []);
+    initAuth();
+
+    return () => { mounted = false };
+  }, []);
 
   function loginFromResponse(res: any) {
     if (res?.accessToken) {
-      // No persistir access token en localStorage: usar cookie + memoria
       setAccessToken(res.accessToken)
       setAccessTokenState(res.accessToken)
     }
@@ -84,7 +104,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       await api('/auth/logout', { method: 'POST' })
     } catch {
-      // ignore network errors on logout
+      // Ignorar errores de red al cerrar sesión
     }
     localStorage.removeItem('moni_access')
     localStorage.removeItem('moni_user')

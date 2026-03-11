@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import Avatar from '../components/avatar'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
@@ -91,8 +92,22 @@ export default function Navbar() {
                 `${baseLink} ${isActive ? activeStyle : inactiveStyle}`
               }
             >
-              <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center text-emerald-900 font-bold text-xs shadow-inner">
-                {(user.nombre || 'U').slice(0,2).toUpperCase()}
+              {/* Contenedor del Avatar centrado */}
+              <div className="w-10 h-10 rounded-xl bg-emerald-900/30 flex items-center justify-center overflow-hidden border border-white/10 shadow-inner">
+                {user.equipped ? (
+                  <Avatar 
+                    baseId={user.equipped.base}
+                    expressionId={user.equipped.expression ?? undefined}
+                    clothingId={user.equipped.clothing ?? undefined}
+                    accessoryId={user.equipped.accessory ?? undefined}
+                    className="h-full w-full" 
+                  />
+                ) : (
+                  // Fallback por si los datos aún no cargan
+                  <span className="text-xs font-bold text-white">
+                    {user.nombre?.slice(0,1).toUpperCase()}
+                  </span>
+                )}
               </div>
               <span className="hidden md:inline font-medium">Perfil</span>
             </NavLink>
