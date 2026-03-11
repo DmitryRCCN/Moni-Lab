@@ -70,16 +70,15 @@ const equipped = {
       <div className="moni-panel p-6 md:p-8">
         <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
           
-          {/* EL CÍRCULO (Arreglado con shrink-0) */}
-          <div className="w-32 h-32 rounded-3xl bg-emerald-900/40 border-4 border-white/10 overflow-hidden shadow-inner flex items-center justify-center">
-          
-        <Avatar 
-          baseId={equipped.base}
-          expressionId={equipped.expression}
-          clothingId={equipped.clothing}
-          accessoryId={equipped.accessory}
-          className="w-full h-full"
-        />
+          {/* EL CÍRCULO (Ajustado para centrar) */}
+          <div className="w-32 h-32 rounded-3xl bg-emerald-900/40 border-4 border-white/10 overflow-hidden shadow-inner flex items-center justify-center p-2">
+            <Avatar 
+              baseId={equipped.base}
+              expressionId={equipped.expression}
+              clothingId={equipped.clothing}
+              accessoryId={equipped.accessory}
+              className="h-full aspect-square" 
+            />
           </div>
 
           <div className="flex-1">

@@ -56,29 +56,36 @@ export async function getUserById(userId: string) {
  */
 export async function getUserProfile(userId: string) {
   const user = await getUserById(userId);
-
-  // Calcular nivel actual dinámicamente basado en actividades completadas
   const currentLevel = await calculateCurrentLevel(userId);
 
-  // Obtener estadísticas del usuario
-  const statsResult = await db.execute({
+  // Obtenemos solo los items que el usuario tiene EQUIPADOS
+  // Unimos con la tabla 'item' para saber el 'tipo' (base, clothing, etc.)
+  const equippedResult = await db.execute({
     sql: `
-      SELECT 
-        SUM(CASE WHEN estado = 'completada' THEN 1 ELSE 0 END) as completadas,
-        AVG(mejor_puntaje) as puntaje_promedio
-      FROM progreso_actividad
-      WHERE id_usuario = ?
+      SELECT i.id_item, i.tipo 
+      FROM usuario_item ui
+      JOIN item i ON ui.id_item = i.id_item
+      WHERE ui.id_usuario = ? AND ui.equipado = true
     `,
     args: [userId],
   });
 
-  // OBTENER LOS ITEMS COMPRADOS (Añade esta parte)
-  const itemsResult = await db.execute({
-    sql: `
-      SELECT id_item, equipado 
-      FROM usuario_item 
-      WHERE id_usuario = ?
-    `,
+  // Transformamos la lista en un objeto organizado por tipo
+  const equipped: Record<string, string | null> = {
+    base: 'mono_robot', // Default por si no tiene nada
+    expression: null,
+    clothing: null,
+    accessory: null
+  };
+
+  equippedResult.rows.forEach((row: any) => {
+    equipped[row.tipo] = row.id_item;
+  });
+
+  const statsResult = await db.execute({
+    sql: `SELECT SUM(CASE WHEN estado = 'completada' THEN 1 ELSE 0 END) as completadas,
+                 AVG(mejor_puntaje) as puntaje_promedio
+          FROM progreso_actividad WHERE id_usuario = ?`,
     args: [userId],
   });
 
@@ -87,7 +94,7 @@ export async function getUserProfile(userId: string) {
   return {
     ...user,
     nivel_actual: currentLevel,
-    items_comprados: itemsResult.rows || [],
+    equipped,
     estadisticas: {
       leccionesCompletadas: stats?.completadas || 0,
       puntajePromedio: stats?.puntaje_promedio ? parseFloat(stats.puntaje_promedio) : 0,

@@ -299,7 +299,11 @@ export default function Avatar({
     <svg 
       viewBox="0 0 24 24" 
       className={className}
-      style={{ imageRendering: 'pixelated' }}
+      style={{ 
+          imageRendering: 'pixelated',
+          display: 'block',
+          margin: 'auto'    
+        }}
       xmlns="http://www.w3.org/2000/svg"
       shapeRendering="crispEdges"
     >
