@@ -58,8 +58,13 @@ export async function getUserProfile(userId: string) {
   const user = await getUserById(userId);
   const currentLevel = await calculateCurrentLevel(userId);
 
-  // Obtenemos solo los items que el usuario tiene EQUIPADOS
-  // Unimos con la tabla 'item' para saber el 'tipo' (base, clothing, etc.)
+  // 1. OBTENER TODOS LOS ITEMS COMPRADOS (Para la tienda/inventario)
+  const allPurchasedResult = await db.execute({
+    sql: `SELECT id_item FROM usuario_item WHERE id_usuario = ?`,
+    args: [userId],
+  });
+
+  // 2. OBTENER SOLO LOS EQUIPADOS (Para el Avatar)
   const equippedResult = await db.execute({
     sql: `
       SELECT i.id_item, i.tipo 
@@ -70,9 +75,8 @@ export async function getUserProfile(userId: string) {
     args: [userId],
   });
 
-  // Transformamos la lista en un objeto organizado por tipo
   const equipped: Record<string, string | null> = {
-    base: 'mono_robot', // Default por si no tiene nada
+    base: 'mono_robot',
     expression: null,
     clothing: null,
     accessory: null
@@ -82,6 +86,7 @@ export async function getUserProfile(userId: string) {
     equipped[row.tipo] = row.id_item;
   });
 
+  // Estadísticas...
   const statsResult = await db.execute({
     sql: `SELECT SUM(CASE WHEN estado = 'completada' THEN 1 ELSE 0 END) as completadas,
                  AVG(mejor_puntaje) as puntaje_promedio
@@ -95,6 +100,7 @@ export async function getUserProfile(userId: string) {
     ...user,
     nivel_actual: currentLevel,
     equipped,
+    items_comprados: allPurchasedResult.rows, 
     estadisticas: {
       leccionesCompletadas: stats?.completadas || 0,
       puntajePromedio: stats?.puntaje_promedio ? parseFloat(stats.puntaje_promedio) : 0,

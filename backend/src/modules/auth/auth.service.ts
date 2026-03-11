@@ -2,15 +2,12 @@ import bcrypt from 'bcrypt';
 import { db } from '../../db/client';
 import { signAccessToken, signRefreshToken, hashToken, verifyRefreshToken } from '../../utils/jwt';
 import { v4 as uuid } from 'uuid';
+import { getUserProfile } from '../usuario/usuario.service';
 
 interface AuthResponse {
   accessToken: string;
   refreshToken: string;
-  user: {
-    id: string;
-    email: string;
-    nombre: string;
-  };
+  user: any;
 }
 
 export async function registerUser(data: {
@@ -45,14 +42,13 @@ export async function registerUser(data: {
     args: [refreshTokenId, userId, refreshTokenHash, expiresAt],
   });
 
+  // --- Obtenemos el perfil completo recién creado ---
+  const userFullProfile = await getUserProfile(userId);
+
   return {
     accessToken,
     refreshToken,
-    user: {
-      id: userId,
-      email: data.email,
-      nombre: data.nombre,
-    },
+    user: userFullProfile, // Devolvemos el perfil completo con estadísticas e items comprados (aunque estará vacío al ser nuevo)
   };
 }
 
@@ -86,14 +82,13 @@ export async function loginUser(nombre: string, password: string): Promise<AuthR
     args: [refreshTokenId, user.id, refreshTokenHash, expiresAt],
   });
 
+  // --- Obtenemos el perfil completo con ítems y monedas ---
+  const userFullProfile = await getUserProfile(user.id);
+
   return {
     accessToken,
     refreshToken,
-    user: {
-      id: user.id,
-      email: user.email,
-      nombre: user.nombre,
-    },
+    user: userFullProfile,
   };
 }
 
