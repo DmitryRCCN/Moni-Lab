@@ -3,26 +3,17 @@ import { useEffect, useState } from 'react'
 import api from '../api'
 import { useAuth } from '../context/AuthContext'
 import Avatar from '../components/avatar'
+import EquipModal from '../components/equipModal'
 
-// Tipo alineado con la respuesta de getUserProfile del Service
 type ProfileData = {
   id: string
   email: string
   nombre: string
   monedas_virtuales?: number
   nivel_actual?: string
-  equipped?: {
-    background: { id: string };
-    base:       { id: string };
-    clothing:   { id: string };
-    eyes:       { id: string };
-    hair:       { id: string };
-    accessory:  { id: string };
-  };
-  estadisticas?: {
-    leccionesCompletadas?: number
-    puntajePromedio?: number
-  }
+  equipped?: any
+  estadisticas?: any
+  items_comprados?: any[]
 }
 
 export default function Profile() {
@@ -30,9 +21,6 @@ export default function Profile() {
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState<string | null>(null)
   const [showEquipEditor, setShowEquipEditor] = useState(false)
-  const [items, setItems] = useState<any[]>([])
-  const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set())
-  const [notification, setNotification] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
   const { initializing }      = useAuth()
 
   useEffect(() => {
@@ -40,10 +28,30 @@ export default function Profile() {
     async function load() {
       setLoading(true)
       try {
-        const res = await api('/usuario/me') // Asumiendo que este endpoint llama a getUserProfile
+        // Pedimos los items y el usuario al mismo tiempo para reconstruir el Avatar al recargar
+        const [profileRes, itemsRes] = await Promise.all([api('/usuario/me'), api('/items')]);
         if (!mounted) return
-        // Ajustamos la asignación según la estructura del service
-        setData(res?.user ?? res)
+        
+        const userData = profileRes?.user || profileRes
+        const allItems = itemsRes || []
+        
+        // Construimos el objeto "equipped" traduciendo el "equipado: true" a la estructura de Avatar.
+        const dynamicallyEquipped: any = { ...userData.equipped };
+        const purchased = userData?.items_comprados || [];
+        
+        purchased.forEach((purchasedItem: any) => {
+          const isEquipped = purchasedItem.equipado === true || purchasedItem.equipado === 1 || String(purchasedItem.equipado) === 'true' || String(purchasedItem.equipado) === '1';
+          
+          if (isEquipped) {
+            const itemDef = allItems.find((it: any) => String(it.id_item) === String(purchasedItem.id_item));
+            if (itemDef) {
+              dynamicallyEquipped[itemDef.tipo] = { id: itemDef.id_item, svg: itemDef.svg_capa };
+            }
+          }
+        });
+        
+        userData.equipped = dynamicallyEquipped;
+        setData(userData)
       } catch (err: any) {
         if (!mounted) return
         setError(err.message || 'Error al cargar perfil')
@@ -55,24 +63,19 @@ export default function Profile() {
     return () => { mounted = false }
   }, [initializing])
 
-  useEffect(() => {
-    if (!showEquipEditor) return
-    let mounted = true
-    async function load() {
-      try {
-        const [itemsRes, profileRes] = await Promise.all([api('/items'), api('/usuario/me')])
-        if (!mounted) return
-        setItems(itemsRes || [])
-        const userData = profileRes?.user || profileRes
-        const purchased = userData?.items_comprados?.map((i: any) => String(i.id_item)) || []
-        setOwnedIds(new Set(purchased))
-      } catch (err) {
-        console.error(err)
-      }
-    }
-    load()
-    return () => { mounted = false }
-  }, [showEquipEditor])
+  // Función que el Modal llama para actualizar el Avatar sin tener que refrescar
+  const handleAvatarUpdate = (item: any) => {
+    setData((prevData) => {
+      if (!prevData) return prevData;
+      return {
+        ...prevData,
+        equipped: {
+          ...prevData.equipped,
+          [item.tipo]: { id: item.id_item, svg: item.svg_capa }
+        }
+      };
+    });
+  };
 
   if (loading) return <div className="text-center py-10 opacity-50 text-white">Cargando...</div>
   if (error)   return <div className="text-center py-10 text-red-400">{error}</div>
@@ -81,19 +84,16 @@ export default function Profile() {
   return (
     <div className="animate-in fade-in duration-500 space-y-6 max-w-4xl mx-auto p-4">
 
-      {/* ── PERFIL PRINCIPAL ──────────────────────────────────────────────── */}
       <div className="moni-panel p-6 mb-6">
         <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
 
-          {/* Avatar Dinámico */}
           <div className="w-32 h-32 shrink-0 rounded-3xl bg-emerald-900/40 border-4 border-white/10 overflow-hidden shadow-xl flex items-center justify-center">
             <Avatar 
-              equipped={data.equipped} // Pasamos el objeto completo del backend
+              equipped={data.equipped} 
               className="w-full h-full" 
             />
           </div>
 
-          {/* Info */}
           <div className="flex-1">
             <h2 className="text-3xl font-black text-yellow-400 mb-1">{data.nombre}</h2>
             <p className="text-white/60 mb-4">{data.email}</p>
@@ -107,60 +107,31 @@ export default function Profile() {
             </div>
           </div>
 
-          <Link
-            to="/store"
-            className="w-full md:w-auto px-6 py-3 bg-white text-emerald-800 font-bold rounded-xl hover:bg-yellow-300 transition-all text-center"
-          >
-            Tienda
-          </Link>
-          <button
-            onClick={() => setShowEquipEditor(true)}
-            className="ml-3 px-4 py-2 bg-emerald-500 text-white font-bold rounded-lg hover:bg-emerald-400 transition-all"
-          >
-            Editar avatar
-          </button>
+          {/* Botones rediseñados para verse consistentes y reaccionar igual */}
+          <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
+            <Link
+              to="/store"
+              className="w-full sm:w-auto px-6 py-3 bg-white text-emerald-800 font-bold rounded-xl hover:bg-yellow-300 transition-all text-center"
+            >
+              Tienda
+            </Link>
+            <button
+              onClick={() => setShowEquipEditor(true)}
+              className="w-full sm:w-auto px-6 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-400 transition-all text-center shadow-md"
+            >
+              Editar avatar
+            </button>
+          </div>
         </div>
       </div>
 
       {showEquipEditor && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl shadow-2xl w-full max-w-3xl text-center">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-2xl font-bold">Editar equipamiento</h3>
-              <button onClick={() => setShowEquipEditor(false)} className="px-3 py-2 bg-white/5 rounded-lg">Cerrar</button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-              {items.filter(it => ownedIds.has(String(it.id_item))).length === 0 && (
-                <div className="col-span-full text-white/40">No tienes items</div>
-              )}
-              {items.filter(it => ownedIds.has(String(it.id_item))).map(it => (
-                <div key={it.id_item} className="p-4 bg-white/5 rounded-xl flex flex-col items-center">
-                  <div className="w-24 h-24 mb-2"><Avatar equipped={{ [it.tipo]: { id: it.id_item, svg: it.svg_capa }, base: { id: 'base_peach' } } as any} className="w-full h-full" /></div>
-                  <div className="font-bold">{it.nombre}</div>
-                  <div className="text-sm text-white/50 mb-2">{it.tipo}</div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={async () => {
-                        try {
-                          await api(`/items/${it.id_item}/equipar`, { method: 'POST' })
-                          setNotification({ msg: `Equipado: ${it.nombre}`, type: 'success' })
-                        } catch (err: any) {
-                          setNotification({ msg: 'No se pudo equipar', type: 'error' })
-                        }
-                      }}
-                      className="px-3 py-2 bg-emerald-500 rounded-lg font-bold"
-                    >
-                      Equipar
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <EquipModal 
+          onClose={() => setShowEquipEditor(false)} 
+          onAvatarUpdate={handleAvatarUpdate} 
+        />
       )}
 
-      {/* ── ESTADÍSTICAS (Mismo estilo) ────────────────────────────────────── */}
       <div className="moni-panel p-6 mb-6">
         <h3 className="text-xl font-bold text-yellow-400 mb-6 flex items-center gap-2">
           📊 Estadísticas

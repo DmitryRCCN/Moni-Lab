@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import api from '../api'
 import Avatar from '../components/avatar'
+import EquipModal from '../components/equipModal'
 
 type Item = { 
   id_item: string; 
@@ -21,7 +22,6 @@ export default function Store() {
   const [equipPromptItem, setEquipPromptItem] = useState<Item | null>(null)
   const [activeTab, setActiveTab] = useState<'shop' | 'inventory'>('shop')
   const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set())
-  const [equippedIds, setEquippedIds] = useState<Set<string>>(new Set())
   const [userCoins, setUserCoins] = useState<number | null>(null)
   const [notification, setNotification] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
 
@@ -39,17 +39,11 @@ export default function Store() {
 
         setItems(itemsRes || [])
         
-        // ---DETECCIÓN DE ITEMS PROPIOS ---
-        // Buscamos las monedas y los items tanto en la raíz como dentro de 'user'
         const userData = profileRes?.user || profileRes
         setUserCoins(userData?.monedas_virtuales ?? 0)
         
-        // Mapeamos los IDs asegurándonos de que sean Strings para la comparación
         const purchased = userData?.items_comprados?.map((i: any) => String(i.id_item)) || []
         setOwnedIds(new Set(purchased))
-        // IDs de items equipados
-        const equipped = (userData?.items_comprados || []).filter((i: any) => i.equipado).map((i: any) => String(i.id_item))
-        setEquippedIds(new Set(equipped))
 
       } catch (err: any) {
         if (mounted) setError(err.message || 'Error cargando la tienda')
@@ -77,9 +71,6 @@ export default function Store() {
   async function confirmPurchase() {
     if (!selected) return
     
-    // --- CIERRE DEL MODAL ---
-    // Guardamos la referencia y cerramos el modal inmediatamente para que 
-    // el usuario vea la notificación mientras el proceso ocurre de fondo
     const itemToBuy = selected
     setSelected(null) 
     
@@ -89,14 +80,12 @@ export default function Store() {
       
       if (res?.monedas_restantes !== undefined) setUserCoins(res.monedas_restantes)
       
-      // Actualizamos el set de IDs comprados
       setOwnedIds(prev => {
         const next = new Set(prev)
         next.add(String(itemToBuy.id_item))
         return next
       })
       setNotification({ msg: `¡Éxito! Has adquirido ${itemToBuy.nombre}`, type: 'success' })
-      // Abrir prompt para preguntar si desea equiparlo ahora
       setEquipPromptItem(itemToBuy)
     } catch (err: any) {
       setNotification({ msg: 'No se pudo completar la compra', type: 'error' })
@@ -107,7 +96,6 @@ export default function Store() {
 
   if (loading) return <div className="p-8 text-center text-white/50">Cargando tienda...</div>
   
-  // Filtrado de items según el Set de IDs
   const shopItems = items.filter(item => !ownedIds.has(String(item.id_item)))
   const inventoryItems = items.filter(item => ownedIds.has(String(item.id_item)))
 
@@ -139,9 +127,9 @@ export default function Store() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowEquipEditor(true)}
-              className="mr-3 px-4 py-2 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-400 shadow-md"
+              className="mr-3 px-6 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-400 transition-all shadow-md"
             >
-              Editar equipamiento
+              Editar avatar
             </button>
             <div className="bg-white/5 px-6 py-3 rounded-2xl border border-white/10 flex items-center gap-3">
               <span className="text-yellow-400 text-xl font-bold">🪙</span>
@@ -212,10 +200,10 @@ export default function Store() {
       )}
 
       {equipPromptItem && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl shadow-2xl w-full max-w-sm text-center">
             <h4 className="text-lg font-bold mb-2">¿Deseas equipar este ítem ahora?</h4>
-            <p className="text-white/60 mb-4">{equipPromptItem.nombre}</p>
+            <p className="text-white/60 mb-6">{equipPromptItem.nombre}</p>
             <div className="flex gap-3 justify-center">
               <button
                 onClick={async () => {
@@ -223,27 +211,18 @@ export default function Store() {
                   setEquipPromptItem(null)
                   try {
                     await api(`/items/${item.id_item}/equipar`, { method: 'POST' })
-                    // actualizar estado local: des-equipar otros del mismo tipo
-                    setEquippedIds(prev => {
-                      const next = new Set(Array.from(prev))
-                      // quitamos otros del mismo tipo: buscar en items
-                      const others = items.filter(it => it.tipo === item.tipo).map(it => String(it.id_item))
-                      others.forEach(o => next.delete(o))
-                      next.add(String(item.id_item))
-                      return next
-                    })
                     setNotification({ msg: `Equipo aplicado: ${item.nombre}`, type: 'success' })
                   } catch (err: any) {
                     setNotification({ msg: 'No se pudo equipar el item', type: 'error' })
                   }
                 }}
-                className="px-4 py-2 bg-emerald-500 rounded-lg font-bold"
+                className="w-full py-3 bg-emerald-500 text-slate-900 rounded-xl font-bold"
               >
                 Sí
               </button>
               <button
                 onClick={() => setEquipPromptItem(null)}
-                className="px-4 py-2 bg-white/5 rounded-lg font-bold"
+                className="w-full py-3 bg-white/5 text-white rounded-xl font-bold"
               >
                 No gracias
               </button>
@@ -252,53 +231,11 @@ export default function Store() {
         </div>
       )}
 
+      {/* Renderizamos el modal aislado de componentes */}
       {showEquipEditor && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl shadow-2xl w-full max-w-3xl text-center">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-2xl font-bold">Editar equipamiento</h3>
-              <button onClick={() => setShowEquipEditor(false)} className="px-3 py-2 bg-white/5 rounded-lg">Cerrar</button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-              {inventoryItems.length === 0 && (
-                <div className="col-span-full text-white/40">No tienes items</div>
-              )}
-
-              {inventoryItems.map(it => (
-                <div key={it.id_item} className="p-4 bg-white/5 rounded-xl flex flex-col items-center">
-                  <div className="w-24 h-24 mb-2"><Avatar equipped={{ [it.tipo]: { id: it.id_item, svg: it.svg_capa }, base: { id: 'base_peach' } } as any} className="w-full h-full" /></div>
-                  <div className="font-bold">{it.nombre}</div>
-                  <div className="text-sm text-white/50 mb-2">{it.tipo}</div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={async () => {
-                        try {
-                          await api(`/items/${it.id_item}/equipar`, { method: 'POST' })
-                          // actualizar estado local
-                          setEquippedIds(prev => {
-                            const next = new Set(Array.from(prev))
-                            // quitar otros del mismo tipo
-                            const others = items.filter(item => item.tipo === it.tipo).map(item => String(item.id_item))
-                            others.forEach(o => next.delete(o))
-                            next.add(String(it.id_item))
-                            return next
-                          })
-                          setNotification({ msg: `Equipado: ${it.nombre}`, type: 'success' })
-                        } catch (err: any) {
-                          setNotification({ msg: 'No se pudo equipar', type: 'error' })
-                        }
-                      }}
-                      className="px-3 py-2 bg-emerald-500 rounded-lg font-bold"
-                    >
-                      Equipar
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <EquipModal 
+          onClose={() => setShowEquipEditor(false)} 
+        />
       )}
     </div>
   )
@@ -306,20 +243,14 @@ export default function Store() {
 
 function ItemCard({ item, onBuy, isOwned }: { item: Item & { svg_capa?: string }; onBuy?: () => void; isOwned: boolean }) {
   const previewEquipped: any = {
-    // Si el item es ropa, ojos, pelo, etc., le ponemos una base de piel melocotón 
-    // de fondo para que no se vea el item "flotando" en la nada.
     base: item.tipo === 'base' 
       ? { id: item.id_item, svg: item.svg_capa } 
-      : { id: 'base_peach' }, // ID por defecto de AVATAR_DATA
-    
-    // Asignamos el item actual a su categoría correspondiente
+      : { id: 'base_peach' }, 
     [item.tipo]: { id: item.id_item, svg: item.svg_capa }
   };
 
   return (
     <div className="group bg-white/5 border border-white/5 p-6 rounded-3xl flex flex-col items-center">
-      
-      {/* Contenedor de la renderización */}
       <div className="w-32 h-32 rounded-2xl bg-emerald-500/10 mb-4 flex items-center justify-center overflow-hidden">
         <Avatar 
           equipped={previewEquipped} 
@@ -327,7 +258,7 @@ function ItemCard({ item, onBuy, isOwned }: { item: Item & { svg_capa?: string }
         />
       </div>
 
-      <h3 className="text-lg font-bold mb-1">{item.nombre}</h3>
+      <h3 className="text-lg font-bold mb-1 text-center">{item.nombre}</h3>
       <p className="text-xs text-white/40 uppercase mb-4">{item.tipo}</p>
 
       {isOwned ? (

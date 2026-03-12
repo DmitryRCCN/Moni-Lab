@@ -60,7 +60,7 @@ export async function getUserProfile(userId: string) {
 
   // 1. OBTENER TODOS LOS ITEMS COMPRADOS (Para la tienda/inventario)
   const allPurchasedResult = await db.execute({
-    sql: `SELECT id_item FROM usuario_item WHERE id_usuario = ?`,
+    sql: `SELECT id_item, equipado FROM usuario_item WHERE id_usuario = ?`,
     args: [userId],
   });
 
