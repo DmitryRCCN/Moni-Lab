@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import api from '../api'
 import Avatar from '../components/avatar'
 
@@ -16,8 +17,11 @@ export default function Store() {
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<Item | null>(null)
   const [purchasing, setPurchasing] = useState(false)
+  const [showEquipEditor, setShowEquipEditor] = useState(false)
+  const [equipPromptItem, setEquipPromptItem] = useState<Item | null>(null)
   const [activeTab, setActiveTab] = useState<'shop' | 'inventory'>('shop')
   const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set())
+  const [equippedIds, setEquippedIds] = useState<Set<string>>(new Set())
   const [userCoins, setUserCoins] = useState<number | null>(null)
   const [notification, setNotification] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
 
@@ -43,6 +47,9 @@ export default function Store() {
         // Mapeamos los IDs asegurándonos de que sean Strings para la comparación
         const purchased = userData?.items_comprados?.map((i: any) => String(i.id_item)) || []
         setOwnedIds(new Set(purchased))
+        // IDs de items equipados
+        const equipped = (userData?.items_comprados || []).filter((i: any) => i.equipado).map((i: any) => String(i.id_item))
+        setEquippedIds(new Set(equipped))
 
       } catch (err: any) {
         if (mounted) setError(err.message || 'Error cargando la tienda')
@@ -53,6 +60,12 @@ export default function Store() {
     loadData()
     return () => { mounted = false }
   }, [])
+
+  const location = useLocation()
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    if (params.get('edit') === '1') setShowEquipEditor(true)
+  }, [location.search])
 
   useEffect(() => {
     if (notification) {
@@ -82,8 +95,9 @@ export default function Store() {
         next.add(String(itemToBuy.id_item))
         return next
       })
-      
       setNotification({ msg: `¡Éxito! Has adquirido ${itemToBuy.nombre}`, type: 'success' })
+      // Abrir prompt para preguntar si desea equiparlo ahora
+      setEquipPromptItem(itemToBuy)
     } catch (err: any) {
       setNotification({ msg: 'No se pudo completar la compra', type: 'error' })
     } finally {
@@ -122,9 +136,17 @@ export default function Store() {
             <p className="text-white/40 text-sm">Personaliza tu experiencia</p>
           </div>
           
-          <div className="bg-white/5 px-6 py-3 rounded-2xl border border-white/10 flex items-center gap-3">
-            <span className="text-yellow-400 text-xl font-bold">🪙</span>
-            <span className="text-2xl font-black text-white">{userCoins?.toLocaleString() ?? 0}</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowEquipEditor(true)}
+              className="mr-3 px-4 py-2 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-400 shadow-md"
+            >
+              Editar equipamiento
+            </button>
+            <div className="bg-white/5 px-6 py-3 rounded-2xl border border-white/10 flex items-center gap-3">
+              <span className="text-yellow-400 text-xl font-bold">🪙</span>
+              <span className="text-2xl font-black text-white">{userCoins?.toLocaleString() ?? 0}</span>
+            </div>
           </div>
         </div>
 
@@ -184,6 +206,96 @@ export default function Store() {
               >
                 Cancelar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {equipPromptItem && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl shadow-2xl w-full max-w-sm text-center">
+            <h4 className="text-lg font-bold mb-2">¿Deseas equipar este ítem ahora?</h4>
+            <p className="text-white/60 mb-4">{equipPromptItem.nombre}</p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={async () => {
+                  const item = equipPromptItem
+                  setEquipPromptItem(null)
+                  try {
+                    await api(`/items/${item.id_item}/equipar`, { method: 'POST' })
+                    // actualizar estado local: des-equipar otros del mismo tipo
+                    setEquippedIds(prev => {
+                      const next = new Set(Array.from(prev))
+                      // quitamos otros del mismo tipo: buscar en items
+                      const others = items.filter(it => it.tipo === item.tipo).map(it => String(it.id_item))
+                      others.forEach(o => next.delete(o))
+                      next.add(String(item.id_item))
+                      return next
+                    })
+                    setNotification({ msg: `Equipo aplicado: ${item.nombre}`, type: 'success' })
+                  } catch (err: any) {
+                    setNotification({ msg: 'No se pudo equipar el item', type: 'error' })
+                  }
+                }}
+                className="px-4 py-2 bg-emerald-500 rounded-lg font-bold"
+              >
+                Sí
+              </button>
+              <button
+                onClick={() => setEquipPromptItem(null)}
+                className="px-4 py-2 bg-white/5 rounded-lg font-bold"
+              >
+                No gracias
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEquipEditor && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl shadow-2xl w-full max-w-3xl text-center">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl font-bold">Editar equipamiento</h3>
+              <button onClick={() => setShowEquipEditor(false)} className="px-3 py-2 bg-white/5 rounded-lg">Cerrar</button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+              {inventoryItems.length === 0 && (
+                <div className="col-span-full text-white/40">No tienes items</div>
+              )}
+
+              {inventoryItems.map(it => (
+                <div key={it.id_item} className="p-4 bg-white/5 rounded-xl flex flex-col items-center">
+                  <div className="w-24 h-24 mb-2"><Avatar equipped={{ [it.tipo]: { id: it.id_item, svg: it.svg_capa }, base: { id: 'base_peach' } } as any} className="w-full h-full" /></div>
+                  <div className="font-bold">{it.nombre}</div>
+                  <div className="text-sm text-white/50 mb-2">{it.tipo}</div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={async () => {
+                        try {
+                          await api(`/items/${it.id_item}/equipar`, { method: 'POST' })
+                          // actualizar estado local
+                          setEquippedIds(prev => {
+                            const next = new Set(Array.from(prev))
+                            // quitar otros del mismo tipo
+                            const others = items.filter(item => item.tipo === it.tipo).map(item => String(item.id_item))
+                            others.forEach(o => next.delete(o))
+                            next.add(String(it.id_item))
+                            return next
+                          })
+                          setNotification({ msg: `Equipado: ${it.nombre}`, type: 'success' })
+                        } catch (err: any) {
+                          setNotification({ msg: 'No se pudo equipar', type: 'error' })
+                        }
+                      }}
+                      className="px-3 py-2 bg-emerald-500 rounded-lg font-bold"
+                    >
+                      Equipar
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

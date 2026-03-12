@@ -19,9 +19,25 @@ export async function postPurchaseHandler(req: Request, res: Response) {
 
     const rawId = req.params.id;
     const id = Array.isArray(rawId) ? String(rawId[0]) : String(rawId);
-    const result = await service.purchaseItem(String(userId), id);
+    const equip = !!req.body?.equip;
+    const result = await service.purchaseItem(String(userId), id, equip);
     res.json(result);
   } catch (err: any) {
     res.status(400).json({ error: err.message || 'Error al procesar compra' });
+  }
+}
+
+export async function postEquipHandler(req: Request, res: Response) {
+  try {
+    const anyReq: any = req;
+    const userId = anyReq.user?.userId;
+    if (!userId) return res.status(401).json({ error: 'No autorizado' });
+
+    const rawId = req.params.id;
+    const id = Array.isArray(rawId) ? String(rawId[0]) : String(rawId);
+    const result = await service.equipItem(String(userId), id);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'Error al equipar item' });
   }
 }

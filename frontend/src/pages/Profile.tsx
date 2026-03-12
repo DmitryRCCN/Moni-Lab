@@ -29,6 +29,10 @@ export default function Profile() {
   const [data, setData]       = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState<string | null>(null)
+  const [showEquipEditor, setShowEquipEditor] = useState(false)
+  const [items, setItems] = useState<any[]>([])
+  const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set())
+  const [notification, setNotification] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
   const { initializing }      = useAuth()
 
   useEffect(() => {
@@ -50,6 +54,25 @@ export default function Profile() {
     if (!initializing) load()
     return () => { mounted = false }
   }, [initializing])
+
+  useEffect(() => {
+    if (!showEquipEditor) return
+    let mounted = true
+    async function load() {
+      try {
+        const [itemsRes, profileRes] = await Promise.all([api('/items'), api('/usuario/me')])
+        if (!mounted) return
+        setItems(itemsRes || [])
+        const userData = profileRes?.user || profileRes
+        const purchased = userData?.items_comprados?.map((i: any) => String(i.id_item)) || []
+        setOwnedIds(new Set(purchased))
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    load()
+    return () => { mounted = false }
+  }, [showEquipEditor])
 
   if (loading) return <div className="text-center py-10 opacity-50 text-white">Cargando...</div>
   if (error)   return <div className="text-center py-10 text-red-400">{error}</div>
@@ -90,8 +113,52 @@ export default function Profile() {
           >
             Tienda
           </Link>
+          <button
+            onClick={() => setShowEquipEditor(true)}
+            className="ml-3 px-4 py-2 bg-emerald-500 text-white font-bold rounded-lg hover:bg-emerald-400 transition-all"
+          >
+            Editar avatar
+          </button>
         </div>
       </div>
+
+      {showEquipEditor && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl shadow-2xl w-full max-w-3xl text-center">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl font-bold">Editar equipamiento</h3>
+              <button onClick={() => setShowEquipEditor(false)} className="px-3 py-2 bg-white/5 rounded-lg">Cerrar</button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+              {items.filter(it => ownedIds.has(String(it.id_item))).length === 0 && (
+                <div className="col-span-full text-white/40">No tienes items</div>
+              )}
+              {items.filter(it => ownedIds.has(String(it.id_item))).map(it => (
+                <div key={it.id_item} className="p-4 bg-white/5 rounded-xl flex flex-col items-center">
+                  <div className="w-24 h-24 mb-2"><Avatar equipped={{ [it.tipo]: { id: it.id_item, svg: it.svg_capa }, base: { id: 'base_peach' } } as any} className="w-full h-full" /></div>
+                  <div className="font-bold">{it.nombre}</div>
+                  <div className="text-sm text-white/50 mb-2">{it.tipo}</div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={async () => {
+                        try {
+                          await api(`/items/${it.id_item}/equipar`, { method: 'POST' })
+                          setNotification({ msg: `Equipado: ${it.nombre}`, type: 'success' })
+                        } catch (err: any) {
+                          setNotification({ msg: 'No se pudo equipar', type: 'error' })
+                        }
+                      }}
+                      className="px-3 py-2 bg-emerald-500 rounded-lg font-bold"
+                    >
+                      Equipar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── ESTADÍSTICAS (Mismo estilo) ────────────────────────────────────── */}
       <div className="moni-panel p-6 mb-6">
