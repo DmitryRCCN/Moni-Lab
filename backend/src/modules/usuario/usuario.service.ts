@@ -67,7 +67,7 @@ export async function getUserProfile(userId: string) {
   // 2. OBTENER SOLO LOS EQUIPADOS (Para el Avatar)
   const equippedResult = await db.execute({
     sql: `
-      SELECT i.id_item, i.tipo 
+      SELECT i.id_item, i.tipo, i.svg_capa 
       FROM usuario_item ui
       JOIN item i ON ui.id_item = i.id_item
       WHERE ui.id_usuario = ? AND ui.equipado = true
@@ -75,15 +75,20 @@ export async function getUserProfile(userId: string) {
     args: [userId],
   });
 
-  const equipped: Record<string, string | null> = {
-    base: 'mono_robot',
-    expression: null,
-    clothing: null,
-    accessory: null
+// Inicializamos las capas
+  const equipped: Record<string, { id: string, svg: string | null }> = {
+    background: { id: 'bg_default', svg: null },
+    base:       { id: 'base_default', svg: null },
+    clothing:   { id: 'body_default', svg: null },
+    eyes:       { id: 'eyes_default', svg: null },
+    hair:       { id: 'hair_default', svg: null },
+    accessory:  { id: 'acc_default', svg: null }
   };
 
   equippedResult.rows.forEach((row: any) => {
-    equipped[row.tipo] = row.id_item;
+    if (equipped[row.tipo]) {
+      equipped[row.tipo] = { id: row.id_item, svg: row.svg_capa };
+    }
   });
 
   // Estadísticas...

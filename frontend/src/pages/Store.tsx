@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
 import api from '../api'
+import Avatar from '../components/avatar'
 
-type Item = { id_item: string; nombre: string; tipo: string; precio: number }
+type Item = { 
+  id_item: string; 
+  nombre: string; 
+  tipo: string; 
+  precio: number; 
+  svg_capa?: string
+}
 
 export default function Store() {
   const [items, setItems] = useState<Item[]>([])
@@ -185,18 +192,39 @@ export default function Store() {
   )
 }
 
-function ItemCard({ item, onBuy, isOwned }: { item: Item; onBuy?: () => void; isOwned: boolean }) {
+function ItemCard({ item, onBuy, isOwned }: { item: Item & { svg_capa?: string }; onBuy?: () => void; isOwned: boolean }) {
+  const previewEquipped: any = {
+    // Si el item es ropa, ojos, pelo, etc., le ponemos una base de piel melocotón 
+    // de fondo para que no se vea el item "flotando" en la nada.
+    base: item.tipo === 'base' 
+      ? { id: item.id_item, svg: item.svg_capa } 
+      : { id: 'base_peach' }, // ID por defecto de AVATAR_DATA
+    
+    // Asignamos el item actual a su categoría correspondiente
+    [item.tipo]: { id: item.id_item, svg: item.svg_capa }
+  };
+
   return (
     <div className="group bg-white/5 border border-white/5 p-6 rounded-3xl flex flex-col items-center">
-      <div className="w-32 h-32 rounded-2xl bg-emerald-500/10 mb-4 flex items-center justify-center text-5xl">
-        {item.tipo === 'skin' ? '👤' : '✨'}
+      
+      {/* Contenedor de la renderización */}
+      <div className="w-32 h-32 rounded-2xl bg-emerald-500/10 mb-4 flex items-center justify-center overflow-hidden">
+        <Avatar 
+          equipped={previewEquipped} 
+          className="w-full h-full" 
+        />
       </div>
+
       <h3 className="text-lg font-bold mb-1">{item.nombre}</h3>
       <p className="text-xs text-white/40 uppercase mb-4">{item.tipo}</p>
+
       {isOwned ? (
         <span className="text-emerald-400 font-bold text-sm">Adquirido</span>
       ) : (
-        <button onClick={onBuy} className="w-full py-3 bg-amber-400 text-slate-900 font-bold rounded-xl">
+        <button 
+          onClick={onBuy} 
+          className="w-full py-3 bg-amber-400 text-slate-900 font-bold rounded-xl hover:bg-amber-300 transition-colors"
+        >
           {item.precio} monedas
         </button>
       )}

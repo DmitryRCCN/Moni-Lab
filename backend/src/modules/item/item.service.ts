@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid';
 
 export async function getAllItems() {
   const res = await db.execute({
-    sql: `SELECT id_item, nombre, tipo, precio FROM item ORDER BY nombre ASC`,
+    sql: `SELECT id_item, nombre, tipo, precio, svg_capa FROM item ORDER BY nombre ASC`,
   });
   return res.rows || [];
 }

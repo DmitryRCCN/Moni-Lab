@@ -85,31 +85,38 @@ export default function Navbar() {
               </NavLink>
             ))}
 
-            {/* PERFIL  */}
-            <NavLink
-              to="/profile"
-              className={({ isActive }) =>
-                `${baseLink} ${isActive ? activeStyle : inactiveStyle}`
-              }
+            {/* BOTÓN DE PERFIL DINÁMICO Y RESPONSIVE */}
+            <NavLink 
+              to="/profile" 
+              className={({ isActive }) => `
+                group flex items-center rounded-full transition-all duration-200 border border-white/10
+                ${isActive ? "bg-white/20 border-white/40" : "bg-white/5 hover:bg-white/10"}
+                p-1 md:pr-4  /* Padding mínimo en móvil, extra a la derecha en PC */
+              `}
             >
-              {/* Contenedor del Avatar centrado */}
-              <div className="w-10 h-10 rounded-xl bg-emerald-900/30 flex items-center justify-center overflow-hidden border border-white/10 shadow-inner">
-                {user.equipped ? (
+              {/* Contenedor del Avatar (Siempre visible) */}
+              <div className="w-10 h-10 rounded-full bg-emerald-900/40 border-2 border-emerald-500/30 overflow-hidden flex items-center justify-center transition-transform group-hover:scale-110 flex-shrink-0">
+                {user?.equipped ? (
                   <Avatar 
-                    baseId={user.equipped.base}
-                    expressionId={user.equipped.expression ?? undefined}
-                    clothingId={user.equipped.clothing ?? undefined}
-                    accessoryId={user.equipped.accessory ?? undefined}
-                    className="h-full w-full" 
+                    equipped={user.equipped} 
+                    className="w-full h-full" 
                   />
                 ) : (
-                  // Fallback por si los datos aún no cargan
-                  <span className="text-xs font-bold text-white">
-                    {user.nombre?.slice(0,1).toUpperCase()}
-                  </span>
+                  <div className="w-full h-full bg-slate-800 animate-pulse flex items-center justify-center text-xs opacity-50">
+                    ...
+                  </div>
                 )}
               </div>
-              <span className="hidden md:inline font-medium">Perfil</span>
+
+              {/* Texto del Perfil (SOLO VISIBLE EN PC) */}
+              <div className="hidden md:flex flex-col ml-3">
+                <span className="text-[10px] text-white/50 font-bold uppercase tracking-tighter leading-none mb-1">
+                  Mi Perfil
+                </span>
+                <span className="text-sm font-bold text-white leading-none truncate max-w-[100px]">
+                  {user?.nombre || 'Usuario'}
+                </span>
+              </div>
             </NavLink>
 
             {/* LOGOUT */}

@@ -2,29 +2,27 @@ import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import api from '../api'
 import { useAuth } from '../context/AuthContext'
-import Avatar, { type AvatarEquipped } from '../components/avatar'
+import Avatar from '../components/avatar'
 
+// Tipo alineado con la respuesta de getUserProfile del Service
 type ProfileData = {
   id: string
   email: string
   nombre: string
   monedas_virtuales?: number
   nivel_actual?: string
-  // Si en el futuro guardas el equipped en el backend, añade este campo:
-  // avatar?: AvatarEquipped
+  equipped?: {
+    background: { id: string };
+    base:       { id: string };
+    clothing:   { id: string };
+    eyes:       { id: string };
+    hair:       { id: string };
+    accessory:  { id: string };
+  };
   estadisticas?: {
     leccionesCompletadas?: number
     puntajePromedio?: number
   }
-}
-
-// ─── Config del avatar equipado ───────────────────────────────────────────────
-// Cuando conectes con el backend, reemplaza esto por data.avatar
-const DEFAULT_AVATAR: AvatarEquipped = {
-  bodyId: "body_suit_black",   // Camiseta Azul
-  baseId: "base_pale",         // Piel Melocotón
-  eyesId: "necklace_pearl",      // Gafas Negras (estilo Coddy)
-  hairId: "hair_none",         // Quiff Castaño (estilo Coddy)
 }
 
 export default function Profile() {
@@ -33,17 +31,14 @@ export default function Profile() {
   const [error, setError]     = useState<string | null>(null)
   const { initializing }      = useAuth()
 
-  // En el futuro puedes guardar el equipped del usuario en el estado:
-  // const [equipped, setEquipped] = useState<AvatarEquipped>(DEFAULT_AVATAR)
-  const equipped = DEFAULT_AVATAR
-
   useEffect(() => {
     let mounted = true
     async function load() {
       setLoading(true)
       try {
-        const res = await api('/usuario/me')
+        const res = await api('/usuario/me') // Asumiendo que este endpoint llama a getUserProfile
         if (!mounted) return
+        // Ajustamos la asignación según la estructura del service
         setData(res?.user ?? res)
       } catch (err: any) {
         if (!mounted) return
@@ -67,14 +62,11 @@ export default function Profile() {
       <div className="moni-panel p-6 mb-6">
         <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
 
-          {/* Avatar */}
+          {/* Avatar Dinámico */}
           <div className="w-32 h-32 shrink-0 rounded-3xl bg-emerald-900/40 border-4 border-white/10 overflow-hidden shadow-xl flex items-center justify-center">
-            <Avatar
-              bodyId={equipped.bodyId}
-              baseId={equipped.baseId}
-              eyesId={equipped.eyesId}
-              hairId={equipped.hairId}
-              className="w-full h-full"
+            <Avatar 
+              equipped={data.equipped} // Pasamos el objeto completo del backend
+              className="w-full h-full" 
             />
           </div>
 
@@ -84,7 +76,7 @@ export default function Profile() {
             <p className="text-white/60 mb-4">{data.email}</p>
             <div className="flex flex-wrap justify-center md:justify-start gap-3">
               <div className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-emerald-400 text-sm font-bold">
-                Nivel {data.nivel_actual ?? '1.0'}
+                Nivel {data.nivel_actual ?? '0.0'}
               </div>
               <div className="px-4 py-2 bg-amber-500/20 border border-amber-500/30 rounded-xl text-amber-300 text-sm font-bold">
                 🪙 {data.monedas_virtuales?.toLocaleString() ?? 0}
@@ -101,14 +93,22 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* ── ESTADÍSTICAS ──────────────────────────────────────────────────── */}
+      {/* ── ESTADÍSTICAS (Mismo estilo) ────────────────────────────────────── */}
       <div className="moni-panel p-6 mb-6">
         <h3 className="text-xl font-bold text-yellow-400 mb-6 flex items-center gap-2">
           📊 Estadísticas
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <StatItem label="Lecciones" value={data.estadisticas?.leccionesCompletadas ?? 0}                      icon="📚" />
-          <StatItem label="Puntaje"   value={Math.round((data.estadisticas?.puntajePromedio ?? 0) * 100) / 100} icon="🎯" />
+          <StatItem 
+            label="Lecciones" 
+            value={data.estadisticas?.leccionesCompletadas ?? 0} 
+            icon="📚" 
+          />
+          <StatItem 
+            label="Puntaje"   
+            value={Math.round((data.estadisticas?.puntajePromedio ?? 0) * 100) / 100} 
+            icon="🎯" 
+          />
         </div>
       </div>
 
