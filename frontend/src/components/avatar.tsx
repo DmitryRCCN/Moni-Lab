@@ -154,11 +154,11 @@ export default function Avatar({
 
   const layers = [
     backgroundElements,
-    clothingElements,
     baseElements,
     eyesElements,
-    accessoryElements,
     hairElements,
+    clothingElements,
+    accessoryElements,
   ];
 
   return (

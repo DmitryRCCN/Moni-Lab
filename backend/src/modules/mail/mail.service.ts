@@ -41,16 +41,14 @@ export class MailService {
     email: string,
     nombre: string,
     progreso: number,
-    actividadesCompletadas: number,
-    actividadesTotales: number
+    actividadesSemanales: any[]
   ) {
 
     const html = await render(
       TutorReportEmail({
         nombre,
         progreso,
-        actividadesCompletadas,
-        actividadesTotales
+        actividadesSemanales
       })
     );
 
