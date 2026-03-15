@@ -6,10 +6,12 @@ export async function getActividadById(id: string) {
     sql: `
       SELECT a.id_actividad, a.id_nodo, a.tipo_actividad, a.puntos_otorgados, a.es_aleatorio, a.orden_secuencial,
              l.cuerpo_texto, l.url_multimedia,
-             e.nivel_dificultad, e.minimo_aprobatorio, e.es_de_salto
+             e.nivel_dificultad, e.minimo_aprobatorio, e.es_de_salto,
+             m.titulo_pantalla, m.historia_intro, m.config_json, m.retroalimentacion_json
       FROM actividad a
       LEFT JOIN lectura l ON l.id_actividad = a.id_actividad
       LEFT JOIN ejercicio e ON e.id_actividad = a.id_actividad
+      LEFT JOIN minijuego m ON m.id_actividad = a.id_actividad
       WHERE a.id_actividad = ?
     `,
     args: [id],
@@ -29,6 +31,14 @@ export async function getActividadById(id: string) {
     orden_secuencial: r.orden_secuencial,
     lectura: r.cuerpo_texto ? { cuerpo_texto: r.cuerpo_texto, url_multimedia: r.url_multimedia } : null,
     ejercicio: r.nivel_dificultad ? { nivel_dificultad: r.nivel_dificultad, minimo_aprobatorio: r.minimo_aprobatorio, es_de_salto: !!r.es_de_salto } : null,
+    minijuego: r.config_json
+      ? {
+          titulo_pantalla: r.titulo_pantalla,
+          historia_intro: r.historia_intro,
+          config_json: r.config_json,
+          retroalimentacion_json: r.retroalimentacion_json,
+        }
+      : null,
   };
 }
 

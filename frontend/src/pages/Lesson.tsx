@@ -2,6 +2,8 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import api from '../api'
 import Exercise from '../components/Exercise'
+import MinigameEngine from '../components/minigames/MinigameEngine'
+import type { MinigameConfig, MinigameFeedback } from '../components/minigames/types'
 
 export default function Lesson() {
   const params = useParams()
@@ -12,6 +14,8 @@ export default function Lesson() {
   const id = stateActivityId || params.id
 
   const [actividad, setActividad] = useState<any | null>(null)
+  const [minigameConfig, setMinigameConfig] = useState<MinigameConfig | null>(null)
+  const [minigameFeedback, setMinigameFeedback] = useState<MinigameFeedback[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -30,7 +34,29 @@ export default function Lesson() {
       }
       try {
         const res = await api(`/actividad/${id}`)
-        if (mounted) setActividad(res)
+        if (mounted) {
+          setActividad(res)
+
+          // Si la actividad es un minijuego, parseamos la configuración y las retroalimentaciones
+          if (res?.minijuego?.config_json) {
+            try {
+              const parsedConfig = JSON.parse(res.minijuego.config_json) as MinigameConfig
+              setMinigameConfig(parsedConfig)
+            } catch {
+              // Ignoramos si no se puede parsear, el error se muestra como parte de la actividad.
+              setMinigameConfig(null)
+            }
+          }
+
+          if (res?.minijuego?.retroalimentacion_json) {
+            try {
+              const parsedFeedback = JSON.parse(res.minijuego.retroalimentacion_json) as MinigameFeedback[]
+              setMinigameFeedback(parsedFeedback)
+            } catch {
+              setMinigameFeedback([])
+            }
+          }
+        }
       } catch (err: any) {
         if (mounted) setError(err.message || 'No se encontró la actividad')
       } finally {
@@ -69,15 +95,45 @@ export default function Lesson() {
     }
   }
 
+  const handleMinigameFinish = async (finalScore: number) => {
+    if (!minigameConfig) return
+    const maxScore =
+      minigameConfig.tipo === 'PICK_N'
+      ? minigameConfig.elementos.filter(e => e.es_correcto).length
+      : minigameConfig.tipo === 'SEQUENTIAL_CHOICE'
+      ? minigameConfig.pasos.length
+      : minigameConfig.tipo === 'CLASSIFY'
+      ? minigameConfig.items.length
+        : 0
+    const percent = maxScore > 0 ? Math.round((finalScore / maxScore) * 100) : 0
+    try {
+      await api('/intento', {
+        method: 'POST',
+        body: {
+          id_actividad: id,
+          puntaje_obtenido: percent,
+          detalle_respuestas: JSON.stringify({ score: finalScore, maxScore }),
+        },
+      })
+    } catch (err: any) {
+      console.warn('No se pudo guardar el intento de minijuego:', err?.message || err)
+    }
+  }
+
   if (loading) return <div className="p-8 text-white">Cargando actividad...</div>
   if (error) return <div className="p-8 text-red-300">{error}</div>
   if (!actividad) return <div className="p-8 text-white">Actividad no disponible</div>
 
+  const title =
+    actividad.tipo_actividad === 'lectura'
+      ? '📖 Lectura'
+      : actividad.tipo_actividad === 'minijuego'
+      ? '🎮 Minijuego'
+      : '✏️ Ejercicio'
+
   return (
     <div className="p-8 max-w-3xl mx-auto text-white">
-      <h1 className="text-3xl font-bold mb-4">
-        {actividad.tipo_actividad === 'lectura' ? '📖 Lectura' : '✏️ Ejercicio'}
-      </h1>
+      <h1 className="text-3xl font-bold mb-4">{title}</h1>
 
       {actividad.tipo_actividad === 'lectura' && actividad.lectura ? (
         <div className="moni-panel p-6 animate-in fade-in duration-300">
@@ -112,6 +168,12 @@ export default function Lesson() {
             )}
           </div>
         </div>
+      ) : actividad.tipo_actividad === 'minijuego' && minigameConfig ? (
+        <MinigameEngine
+          config={minigameConfig}
+          feedback={minigameFeedback}
+          onFinish={handleMinigameFinish}
+        />
       ) : (
         <Exercise ejercicio={actividad.ejercicio} activityId={actividad.id_actividad} />
       )}
