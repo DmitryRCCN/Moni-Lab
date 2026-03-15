@@ -20,7 +20,7 @@ function AppContent() {
     <div className="min-h-screen flex flex-col bg-transparent text-white">
       <Navbar />
       
-      <main className="flex-1 pt-28 pb-20 px-4 w-full max-w-5xl mx-auto">
+      <main className="flex-1 pt-28 pb-10 px-4 w-full max-w-5xl mx-auto">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/lesson/:id" element={<RequireAuth><Lesson /></RequireAuth>} />
@@ -37,6 +37,7 @@ function AppContent() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+      <Footer />
     </div>
   )
 }
@@ -47,7 +48,6 @@ function App() {
       <BrowserRouter>
         <div className="relative w-full overflow-x-hidden">
           <AppContent />
-          <Footer />
         </div>
       </BrowserRouter>
     </AuthProvider>
