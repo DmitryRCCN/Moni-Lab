@@ -50,7 +50,7 @@ export default function CategorizeGame({ config, onComplete }: Props) {
                     <div className="mt-1 text-xs text-white/40">Elige una categoría</div>
                   )}
                 </div>
-                {assignedCategory ? (
+                {assignedCategory && submitted ? (
                   <span
                     className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
                       isCorrect ? 'bg-emerald-500/30 text-emerald-200' : 'bg-red-500/30 text-red-200'
@@ -59,6 +59,8 @@ export default function CategorizeGame({ config, onComplete }: Props) {
                     <CheckCircle2 className="h-4 w-4" />
                     {isCorrect ? 'Correcto' : 'Incorrecto'}
                   </span>
+                ) : assignedCategory && !submitted ? (
+                  <div className="text-xs text-white/40">Asignado</div>
                 ) : null}
               </div>
 
@@ -90,9 +92,10 @@ export default function CategorizeGame({ config, onComplete }: Props) {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-sm text-white/70">
-          Correctas: {correctCount} / {config.items.length}
+         
         </div>
         <button
+        
           type="button"
           disabled={!canSubmit || submitted}
           onClick={handleFinish}

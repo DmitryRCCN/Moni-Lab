@@ -1,11 +1,13 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import confetti from 'canvas-confetti'
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { MinigameConfig, MinigameFeedback } from './types'
 import MochilaGame from './MochilaGame'
 import DecisionGame from './DecisionGame'
 import SavingsGame from './SavingsGame'
 import CategorizeGame from './CategorizeGame'
+import ShopCalculator from './ShopCalculator'
 
 export type MinigameEngineProps = {
   config: MinigameConfig
@@ -14,7 +16,9 @@ export type MinigameEngineProps = {
 }
 
 export default function MinigameEngine({ config, feedback, onFinish }: MinigameEngineProps) {
+  const navigate = useNavigate()
   const [finalScore, setFinalScore] = useState<number | null>(null)
+  const [buttonEnabled, setButtonEnabled] = useState(false)
 
   const maxScore = useMemo(() => {
     switch (config.tipo) {
@@ -26,6 +30,8 @@ export default function MinigameEngine({ config, feedback, onFinish }: MinigameE
         return config.pasos?.length || 0
       case 'CATEGORIZE':
         return config.items?.length || 0
+      case 'SHOP_CALCULATOR':
+        return config.escenarios?.length || 0
       default:
         return 0
     }
@@ -40,28 +46,31 @@ export default function MinigameEngine({ config, feedback, onFinish }: MinigameE
   useEffect(() => {
     if (finalScore === null) return
     if (finalScore === maxScore) {
-        var duration = 5 * 1000;
-        var animationEnd = Date.now() + duration;
-        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+        const duration = 5 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
 
-        function randomInRange(min, max) {
+        function randomInRange(min: number, max: number) {
         return Math.random() * (max - min) + min;
         }
 
-        var interval = setInterval(function() {
-        var timeLeft = animationEnd - Date.now();
+        const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
 
         if (timeLeft <= 0) {
             return clearInterval(interval);
         }
 
-        var particleCount = 50 * (timeLeft / duration);
+        const particleCount = 50 * (timeLeft / duration);
         // since particles fall down, start a bit higher than random
         confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
         confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
         }, 250);
     }
     onFinish(finalScore)
+    // Habilitar el botón después de 3 segundos
+    const timer = setTimeout(() => setButtonEnabled(true), 3000)
+    return () => clearTimeout(timer)
   }, [finalScore, maxScore, onFinish])
 
   const handleComplete = (score: number) => {
@@ -77,13 +86,28 @@ export default function MinigameEngine({ config, feedback, onFinish }: MinigameE
         {finalScore !== null ? (
           <motion.div
             key="final"
-            className="rounded-xl bg-white/10 p-6 text-center"
+            className="rounded-xl bg-white/10 p-6 text-center space-y-6"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
-            <p className="text-lg font-semibold mb-4">Resultado: {finalScore} / {maxScore}</p>
-            <p className="text-sm text-white/80">{finalMessage}</p>
+            <div>
+              <p className="text-lg font-semibold mb-4">Resultado: {finalScore} / {maxScore}</p>
+              <p className="text-sm text-white/80">{finalMessage}</p>
+            </div>
+            <div className="border-t border-white/10 pt-6 flex justify-center">
+              <button
+                onClick={() => navigate('/path')}
+                disabled={!buttonEnabled}
+                className={`px-8 py-3 rounded-xl text-white font-semibold transition-all ${
+                  buttonEnabled
+                    ? 'bg-emerald-500 hover:bg-emerald-400 hover:scale-105 cursor-pointer'
+                    : 'bg-gray-600 text-white/50 cursor-not-allowed'
+                }`}
+              >
+                {buttonEnabled ? 'Volver a la Ruta de Aprendizaje' : 'Cargando...'}
+              </button>
+            </div>
           </motion.div>
         ) : (
           <motion.div
@@ -100,8 +124,10 @@ export default function MinigameEngine({ config, feedback, onFinish }: MinigameE
               <SavingsGame config={config} onComplete={handleComplete} />
             ) : config.tipo === 'CATEGORIZE' ? (
               <CategorizeGame config={config} onComplete={handleComplete} />
+            ) : config.tipo === 'SHOP_CALCULATOR' ? (
+              <ShopCalculator config={config} onComplete={handleComplete} />
             ) : (
-              <div>Tipo de minijuego no soportado: {config.tipo}</div>
+              <div>Tipo de minijuego no soportado</div>
             )}
           </motion.div>
         )}
