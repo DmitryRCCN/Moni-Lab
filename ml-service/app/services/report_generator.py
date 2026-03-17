@@ -1,67 +1,100 @@
 from fpdf import FPDF
 import datetime
-import pandas as pd
+import unicodedata
 
 class MoniLabPDF(FPDF):
     def header(self):
-        # Rectángulo verde de encabezado
-        self.set_fill_color(16, 185, 129) # Verde Moni-Lab
+        self.set_fill_color(16, 185, 129) 
         self.rect(0, 0, 210, 35, 'F')
-        
-        self.set_font('helvetica', 'B', 20)
+        self.set_font('Arial', 'B', 20)
         self.set_text_color(255, 255, 255)
         self.cell(0, 15, 'MONI-LAB ANALYTICS', 0, 1, 'C')
-        self.set_font('helvetica', '', 11)
-        self.cell(0, 5, 'Reporte Semanal de Minería de Datos Académicos', 0, 1, 'C')
-        self.ln(20)
+        self.ln(10)
 
-    def footer(self):
-        self.set_y(-15)
-        self.set_font('helvetica', 'I', 8)
-        self.set_text_color(128, 128, 128)
-        self.cell(0, 10, f'Página {self.page_no()} | Generado automáticamente por ML-Service', 0, 0, 'C')
+def safe_str(text):
+    if not text: return ""
+    text = str(text)
+    text = "".join(c for c in unicodedata.normalize('NFD', text)
+                  if unicodedata.category(c) != 'Mn')
+    return text.encode('ascii', 'ignore').decode('ascii')
 
 def generate_pdf(df, plot_path, recommendations):
-    pdf = MoniLabPDF()
+    # Margen de 20mm para dar mucho espacio
+    pdf = MoniLabPDF(orientation='P', unit='mm', format='A4')
+    pdf.set_margins(20, 20, 20)
     pdf.add_page()
     
-    # 1. Resumen Ejecutivo
-    pdf.set_text_color(31, 41, 55) # Gris oscuro
-    pdf.set_font('helvetica', 'B', 14)
-    pdf.cell(0, 10, f"Resumen Ejecutivo - {datetime.date.today()}", ln=True)
-    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+    # --- SECCION 1: RESUMEN ---
+    pdf.set_font('Arial', 'B', 14)
+    pdf.set_text_color(31, 41, 55)
+    pdf.cell(0, 10, safe_str(f"Reporte Estrategico - {datetime.date.today()}"), ln=1)
     pdf.ln(5)
 
-    # 2. Tabla de Estadísticas (Calculada aquí para evitar errores de tipos)
-    pdf.set_font('helvetica', 'B', 11)
-    pdf.set_fill_color(243, 244, 246) # Gris muy claro
-    
-    # Encabezados de tabla
-    pdf.cell(40, 10, "Cluster", 1, 0, 'C', True)
-    pdf.cell(50, 10, "Puntaje Prom.", 1, 0, 'C', True)
-    pdf.cell(50, 10, "Intentos Prom.", 1, 1, 'C', True)
-    
-    pdf.set_font('helvetica', '', 10)
-    stats = df.groupby('cluster')[['promedio_puntaje', 'total_intentos']].mean()
-    for cluster, row in stats.iterrows():
-        pdf.cell(40, 10, f"Perfil {int(cluster)}", 1, 0, 'C')
-        pdf.cell(50, 10, f"{row['promedio_puntaje']:.1f}", 1, 0, 'C')
-        pdf.cell(50, 10, f"{row['total_intentos']:.1f}", 1, 1, 'C')
-
-    # 3. Gráficas de Colab
+    # --- SECCION 2: GRAFICA ---
+    if plot_path:
+        # Centramos la imagen manualmente
+        pdf.image(plot_path, x=25, w=160) 
     pdf.ln(10)
-    pdf.set_font('helvetica', 'B', 14)
-    pdf.cell(0, 10, "Evidencia de Segmentación", ln=True)
-    pdf.image(plot_path, x=10, w=190)
-    
-    # 4. Recomendaciones
-    pdf.ln(5)
-    pdf.set_font('helvetica', 'B', 14)
-    pdf.cell(0, 10, "Recomendaciones Estratégicas", ln=True)
-    pdf.set_font('helvetica', '', 11)
-    for rec in recommendations:
-        pdf.multi_cell(0, 8, f"- {rec}")
 
-    pdf_file = "reporte_analisis.pdf"
-    pdf.output(pdf_file)
-    return pdf_file
+    # --- SECCION 3: RECOMENDACIONES (CORREGIDO) ---
+    pdf.set_font('Arial', 'B', 12)
+    pdf.set_fill_color(240, 240, 240)
+    pdf.cell(0, 10, " Recomendaciones Estrategicas:", ln=1, fill=True)
+    pdf.ln(2)
+    
+    pdf.set_font('Arial', '', 10)
+    pdf.set_text_color(50, 50, 50)
+    
+    for rec in recommendations:
+        pdf.set_x(20)
+        # Título de la alerta
+        pdf.set_font('Arial', 'B', 10)
+        pdf.multi_cell(170, 7, safe_str(rec['mensaje']), align='L')
+        
+        # Si hay evidencia (actividades que triggerearon la alerta)
+        if rec['evidencia'] is not None:
+            pdf.ln(1)
+            pdf.set_font('Courier', '', 8) # Fuente monoespaciada para que parezca código/datos
+            pdf.set_text_color(100, 100, 100)
+            
+            # Dibujar sub-tabla de evidencia
+            for _, row in rec['evidencia'].iterrows():
+                pdf.set_x(25) # Un poco más de sangría
+                linea = f"{row['id_actividad']:<10} {row['topico'][:20]:<25} {int(row['total_intentos']):>5} intentos {row['promedio_puntaje']:>6.1f}%"
+                pdf.cell(160, 5, safe_str(linea), ln=1)
+            
+            pdf.set_text_color(0, 0, 0) # Reset color
+            pdf.ln(4)
+        else:
+            pdf.ln(2)
+
+    # --- SECCION 4: TABLA ---
+    pdf.add_page()
+    pdf.set_font('Arial', 'B', 12)
+    pdf.set_text_color(31, 41, 55)
+    pdf.cell(0, 10, "Listado Detallado de Actividades", ln=1)
+    pdf.ln(5)
+    
+    # Encabezados (Ancho total 170mm: 20+80+35+35)
+    pdf.set_font('Arial', 'B', 9)
+    pdf.set_fill_color(16, 185, 129)
+    pdf.set_text_color(255, 255, 255)
+    
+    pdf.cell(20, 8, "ID", 1, 0, 'C', True)
+    pdf.cell(80, 8, "Topico", 1, 0, 'C', True)
+    pdf.cell(35, 8, "Intentos", 1, 0, 'C', True)
+    pdf.cell(35, 8, "Puntaje", 1, 1, 'C', True)
+
+    # Filas
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_font('Arial', '', 8)
+    for _, row in df.sort_values('cluster').iterrows():
+        pdf.set_x(20) # Reset X por seguridad en cada fila
+        pdf.cell(20, 7, safe_str(row['id_actividad']), 1, 0, 'C')
+        pdf.cell(80, 7, safe_str(row['topico'])[:40], 1, 0, 'L')
+        pdf.cell(35, 7, str(int(row['total_intentos'])), 1, 0, 'C')
+        pdf.cell(35, 7, f"{row['promedio_puntaje']:.1f}", 1, 1, 'C')
+
+    output_path = "reporte_analisis.pdf"
+    pdf.output(output_path)
+    return output_path

@@ -2,6 +2,7 @@ import { render } from "@react-email/render";
 import WelcomeEmail from "../../shared/mail/react/templates/WelcomeEmail";
 import LowPerformanceEmail from "../../shared/mail/react/templates/LowPerformanceEmail";
 import TutorReportEmail from "../../shared/mail/react/templates/TutorReportEmail";
+import TutorBatchEmail from "../../shared/mail/react/templates/TutorBatchEmail";
 import { sendMail } from "../../config/mail";
 
 export class MailService {
@@ -37,28 +38,41 @@ export class MailService {
     );
   }
 
-  async sendTutorReport(
-    email: string,
-    nombre: string,
+  async renderReportHtmlForPdf(
+    nombreEstudiante: string,
     progreso: number,
     actividadesSemanales: any[]
-  ) {
-
-    const html = await render(
+  ): Promise<string> {
+    return await render(
       TutorReportEmail({
-        nombre,
+        nombre: nombreEstudiante,
         progreso,
         actividadesSemanales
       })
     );
-
-    return sendMail(
-      email,
-      "Reporte de progreso - Moni-Lab",
-      html
-    );
   }
 
+// Esta es la nueva función que envía el correo global al tutor con los PDFs
+  async sendTutorBatchReport(
+    emailTutor: string,
+    nombreTutor: string,
+    adjuntosPdf: { filename: string; content: Buffer }[]
+  ) {
+    const html = await render(
+      TutorBatchEmail({
+        nombreTutor,
+        cantidadEstudiantes: adjuntosPdf.length
+      })
+    );
+
+    // Asegúrate de que tu función 'sendMail' en config/mail soporte recibir el 4to parámetro (attachments)
+    return sendMail(
+      emailTutor,
+      `Reporte Semanal de Estudiantes - Moni-Lab 📊`,
+      html,
+      adjuntosPdf // Pasamos los adjuntos a tu configurador de correo
+    );
+  }
 }
 
 export const mailService = new MailService();
