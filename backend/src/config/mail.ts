@@ -6,18 +6,31 @@ const apiKey = process.env.RESEND_API_KEY || process.env.RESEND_ACCESS_TOKEN;
 if (!apiKey) console.warn('RESEND_API_KEY not provided — emails will fail in runtime');
 const resendClient = new Resend(apiKey || '');
 
-export const sendMail = async (to: string, subject: string, html: string) => {
+// AÑADIMOS EL PARÁMETRO attachments (Opcional por si se usa la función para otros correos)
+export const sendMail = async (
+  to: string, 
+  subject: string, 
+  html: string, 
+  attachments?: { filename: string, content: Buffer }[] 
+) => {
   try {
-    // Limpiamos posibles comillas
     const fromValue = (process.env.RESEND_FROM || 'Moni-Lab <noreply@mail.monilab.com.mx>')
-      .replace(/['"]+/g, ''); // Esto elimina comillas simples y dobles
+      .replace(/['"]+/g, ''); 
 
-    const response = await resendClient.emails.send({
+    // Opciones base del correo
+    const mailOptions: any = {
       from: fromValue,
       to,
       subject,
       html,
-    });
+    };
+
+    // Si pasamos adjuntos (como los PDFs), los agregamos a las opciones de Resend
+    if (attachments && attachments.length > 0) {
+      mailOptions.attachments = attachments;
+    }
+
+    const response = await resendClient.emails.send(mailOptions);
     return response;
   } catch (error) {
     console.error('Error sending email:', error);
