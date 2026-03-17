@@ -5,15 +5,23 @@ import Exercise from '../components/Exercise'
 import MinigameEngine from '../components/minigames/MinigameEngine'
 import type { MinigameConfig, MinigameFeedback } from '../components/minigames/types'
 
+type Actividad = {
+  tipo_actividad: string
+  lectura?: { cuerpo_texto: string; url_multimedia?: string }
+  ejercicio?: { nivel_dificultad: string; minimo_aprobatorio: number; es_de_salto: boolean }
+  minijuego?: { titulo_pantalla: string; historia_intro: string; config_json: string; retroalimentacion_json: string }
+  id_actividad: string
+}
+
 export default function Lesson() {
   const params = useParams()
   const location = useLocation()
   const navigate = useNavigate()
   
-  const stateActivityId = (location.state as any)?.activityId as string | undefined
+  const stateActivityId = (location.state as { activityId?: string })?.activityId
   const id = stateActivityId || params.id
 
-  const [actividad, setActividad] = useState<any | null>(null)
+  const [actividad, setActividad] = useState<Actividad | null>(null)
   const [minigameConfig, setMinigameConfig] = useState<MinigameConfig | null>(null)
   const [minigameFeedback, setMinigameFeedback] = useState<MinigameFeedback[]>([])
   const [loading, setLoading] = useState(true)
@@ -57,8 +65,8 @@ export default function Lesson() {
             }
           }
         }
-      } catch (err: any) {
-        if (mounted) setError(err.message || 'No se encontró la actividad')
+      } catch (err: unknown) {
+        if (mounted) setError(err instanceof Error ? err.message : 'No se encontró la actividad')
       } finally {
         if (mounted) setLoading(false)
       }
@@ -88,8 +96,8 @@ export default function Lesson() {
       setSuccess(true)
       // Redirigir a Path después de 2 segundos
       setTimeout(() => navigate('/path'), 2000)
-    } catch (err: any) {
-      alert(err.message || "Error al completar lectura")
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Error al completar lectura")
     } finally {
       setIsCompleting(false)
     }
@@ -100,10 +108,14 @@ export default function Lesson() {
     const maxScore =
       minigameConfig.tipo === 'PICK_N'
       ? minigameConfig.elementos.filter(e => e.es_correcto).length
-      : minigameConfig.tipo === 'SEQUENTIAL_CHOICE'
+      : minigameConfig.tipo === 'SEQUENTIAL_DECISION'
       ? minigameConfig.pasos.length
-      : minigameConfig.tipo === 'CLASSIFY'
+      : minigameConfig.tipo === 'SAVINGS_PATH'
+      ? minigameConfig.pasos.length
+        : minigameConfig.tipo === 'CATEGORIZE'
       ? minigameConfig.items.length
+      : minigameConfig.tipo === 'SHOP_CALCULATOR'
+      ? minigameConfig.escenarios.length
         : 0
     const percent = maxScore > 0 ? Math.round((finalScore / maxScore) * 100) : 0
     try {
@@ -115,8 +127,8 @@ export default function Lesson() {
           detalle_respuestas: JSON.stringify({ score: finalScore, maxScore }),
         },
       })
-    } catch (err: any) {
-      console.warn('No se pudo guardar el intento de minijuego:', err?.message || err)
+    } catch (err: unknown) {
+      console.warn('No se pudo guardar el intento de minijuego:', err instanceof Error ? err?.message : err)
     }
   }
 

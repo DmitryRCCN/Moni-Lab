@@ -62,21 +62,18 @@ export default function MochilaGame({ config, onComplete }: Props) {
                   <div className="font-semibold text-white">{element.nombre}</div>
                   {element.img && <div className="text-xs text-white/60">{element.img}</div>}
                 </div>
-                {isSelected ? (
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/70 text-sm font-bold text-white">
-                    ✓
+                {isSelected && submitted ? (
+                  <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white ${
+                    isCorrect ? 'bg-emerald-500/70' : 'bg-red-500/70'
+                  }`}>
+                    {isCorrect ? '✓' : '✗'}
+                  </span>
+                ) : isSelected ? (
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-500/50 text-sm font-bold text-white/50">
+                    •
                   </span>
                 ) : null}
               </div>
-              {submitted && isSelected ? (
-                <div
-                  className={`mt-3 rounded-full px-3 py-1 text-xs font-semibold ${
-                    isCorrect ? 'bg-emerald-500/30 text-emerald-200' : 'bg-red-500/30 text-red-200'
-                  }`}
-                >
-                  {isCorrect ? '¡Bien!' : 'No era necesario'}
-                </div>
-              ) : null}
             </motion.button>
           )
         })}
@@ -95,7 +92,7 @@ export default function MochilaGame({ config, onComplete }: Props) {
       </div>
 
       {submitted && score !== null ? (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-center">
+        <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-center space-y-3">
           <p className="font-semibold">
             Obtuviste {score} / {config.elementos.filter(e => e.es_correcto).length}
           </p>
@@ -104,6 +101,9 @@ export default function MochilaGame({ config, onComplete }: Props) {
           ) : (
             <p className="text-sm text-white/70">Revisa tus elecciones, puedes intentarlo de nuevo.</p>
           )}
+          <div className="pt-3 border-t border-white/10">
+            <p className="text-xs text-white/50 mb-2">✓ = Correcta | ✗ = No era necesaria</p>
+          </div>
         </div>
       ) : null}
     </div>

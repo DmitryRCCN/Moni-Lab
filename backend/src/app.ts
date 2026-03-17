@@ -11,10 +11,12 @@ import actividadRoutes from './modules/actividad/actividad.routes';
 import itemRoutes from './modules/item/item.routes';
 import mailRoutes from './modules/mail/mail.routes';
 import { initMailScheduler } from './modules/mail/scheduler';
+import { initCleanupJobs } from './services/mantenimiento/cleanup.service';
 
 const app = express();
 
 initMailScheduler(); // Iniciar el scheduler para envíos de correo programados
+initCleanupJobs();
 
 app.use(express.json());
 app.use(cookieParser());

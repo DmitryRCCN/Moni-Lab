@@ -3,7 +3,10 @@ export type MinigameFeedback = {
   msg: string
 }
 
-export type MinigameConfig = PickNConfig | SequentialDecisionConfig | SavingsPathConfig | CategorizeConfig
+export type MinigameConfig = (PickNConfig | SequentialDecisionConfig | SavingsPathConfig | CategorizeConfig | ShopCalculatorConfig) & {
+  titulo: string
+  descripcion?: string
+}
 
 export type PickNConfig = {
   tipo: 'PICK_N'
@@ -46,5 +49,19 @@ export type CategorizeConfig = {
   items: Array<{
     nombre: string
     correcta: string
+  }>
+}
+
+export type ShopCalculatorConfig = {
+  tipo: 'SHOP_CALCULATOR'
+  escenarios: Array<{
+    id: number
+    cliente: string
+    articulo: string
+    precio: number
+    paga_con: number
+    pregunta: string
+    cambio_correcto: number
+    insuficiente: boolean
   }>
 }
