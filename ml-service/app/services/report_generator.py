@@ -54,7 +54,7 @@ def generate_pdf(df, plot_path, recommendations):
         # Si hay evidencia (actividades que triggerearon la alerta)
         if rec['evidencia'] is not None:
             pdf.ln(1)
-            pdf.set_font('Courier', '', 8) # Fuente monoespaciada para que parezca código/datos
+            pdf.set_font('Courier', '', 8)
             pdf.set_text_color(100, 100, 100)
             
             # Dibujar sub-tabla de evidencia

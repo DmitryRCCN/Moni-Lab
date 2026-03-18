@@ -4,6 +4,7 @@ import api from '../api'
 import { useAuth } from '../context/AuthContext'
 import Avatar from '../components/avatar'
 import EquipModal from '../components/equipModal'
+import EditProfileModal from '../components/editProfileModal'
 
 type ProfileData = {
   id: string
@@ -21,6 +22,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState<string | null>(null)
   const [showEquipEditor, setShowEquipEditor] = useState(false)
+  const [showEditProfile, setShowEditProfile] = useState(false)
   const { initializing }      = useAuth()
 
   useEffect(() => {
@@ -77,6 +79,10 @@ export default function Profile() {
     });
   };
 
+  const handleProfileUpdate = (newName: string) => {
+    setData((prev) => prev ? { ...prev, nombre: newName } : prev);
+  };
+
   if (loading) return <div className="text-center py-10 opacity-50 text-white">Cargando...</div>
   if (error)   return <div className="text-center py-10 text-red-400">{error}</div>
   if (!data)   return <div className="text-center py-10 opacity-50 text-white">No disponible</div>
@@ -107,8 +113,8 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Botones rediseñados para verse consistentes y reaccionar igual */}
-          <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
+          {/* Botones rediseñados */}
+          <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3 mt-4 md:mt-0">
             <Link
               to="/store"
               className="w-full sm:w-auto px-6 py-3 bg-white text-emerald-800 font-bold rounded-xl hover:bg-yellow-300 transition-all text-center"
@@ -121,14 +127,30 @@ export default function Profile() {
             >
               Editar avatar
             </button>
+            {/* NUEVO BOTÓN PARA EDITAR PERFIL */}
+            <button
+              onClick={() => setShowEditProfile(true)}
+              className="w-full sm:w-auto px-6 py-3 bg-amber-500 text-slate-900 font-bold rounded-xl hover:bg-amber-400 transition-all text-center shadow-md"
+            >
+              Editar perfil
+            </button>
           </div>
         </div>
       </div>
 
+      {/* Renderizado de Modales */}
       {showEquipEditor && (
         <EquipModal 
           onClose={() => setShowEquipEditor(false)} 
           onAvatarUpdate={handleAvatarUpdate} 
+        />
+      )}
+
+      {showEditProfile && (
+        <EditProfileModal
+          user={{ id: data.id, nombre: data.nombre }}
+          onClose={() => setShowEditProfile(false)}
+          onSuccess={handleProfileUpdate}
         />
       )}
 

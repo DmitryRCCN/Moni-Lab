@@ -1,20 +1,23 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, ReactNode} from 'react'
 import api, { setAccessToken, refreshAccessTokenViaCookie } from '../api'
 
 // --- TIPOS PARA EL AVATAR ---
 type EquippedItems = {
-  base: string;
-  expression?: string | null;
-  clothing?: string | null;
-  accessory?: string | null;
+  background?: { id: string; svg?: string | null };
+  base?:       { id: string; svg?: string | null };
+  clothing?:   { id: string; svg?: string | null };
+  eyes?:       { id: string; svg?: string | null };
+  hair?:       { id: string; svg?: string | null };
+  accessory?:  { id: string; svg?: string | null };
 }
 
-// Actualizamos el tipo User para incluir equipped
 type User = { 
   id: string; 
   email: string; 
   nombre?: string;
   equipped?: EquippedItems;
+  monedas_virtuales?: number;
+  experiencia_total?: number;
 }
 
 type AuthContextValue = {
@@ -22,12 +25,13 @@ type AuthContextValue = {
   accessToken: string | null
   loginFromResponse: (res: any) => void
   logout: () => Promise<void>
+  updateUserData: (data: Partial<User>) => void // Definido en el tipo
   initializing: boolean
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(() => {
     try {
       const s = localStorage.getItem('moni_user')
@@ -61,10 +65,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const token = await refreshAccessTokenViaCookie()
         if (!mounted) return
         
+        // Sincronizamos con el módulo de la API y el estado de React
         setAccessToken(token)
         setAccessTokenState(token)
 
-        // Obtener perfil del usuario (esto ya trae el 'equipped' gracias al service)
         const profile = await api('/usuario/me')
         if (!mounted) return
 
@@ -74,7 +78,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUser(u)
         }
       } catch (error) {
-        // Si hay error 401 o de red, limpiamos estado
         if (mounted) {
           localStorage.removeItem('moni_user');
           setUser(null);
@@ -85,9 +88,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     initAuth();
-
     return () => { mounted = false };
   }, []);
+
+  // Función para actualizar datos sin cerrar sesión
+  const updateUserData = (data: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const updated = { ...prev, ...data };
+      localStorage.setItem('moni_user', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   function loginFromResponse(res: any) {
     if (res?.accessToken) {
@@ -104,7 +116,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       await api('/auth/logout', { method: 'POST' })
     } catch {
-      // Ignorar errores de red al cerrar sesión
+      // Ignorar errores de red
     }
     localStorage.removeItem('moni_access')
     localStorage.removeItem('moni_user')
@@ -114,7 +126,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, loginFromResponse, logout, initializing }}>
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        accessToken, 
+        loginFromResponse, 
+        logout, 
+        updateUserData,
+        initializing 
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )
