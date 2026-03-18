@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 type Activity = {
   id_actividad: string
@@ -43,6 +43,50 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
   const [pulsing, setPulsing] = useState<Record<string, boolean>>({})
   const carouselRef = useRef<HTMLDivElement>(null)
 
+  // EFECTO PARA AUTO-CENTRAR LA ACTIVIDAD ACTUAL
+  useEffect(() => {
+    if (!nodes.length || Object.keys(progress).length === 0) return;
+
+    let targetId: string | null = null;
+    let lastCompletedId: string | null = null;
+
+    const sortedNodes = [...nodes].sort((a, b) => a.orden_secuencial - b.orden_secuencial);
+    
+    // Recorremos los nodos para encontrar dónde se quedó el usuario
+    for (const node of sortedNodes) {
+      const sortedActs = [...node.activities].sort((a, b) => (a.orden_secuencial ?? 1) - (b.orden_secuencial ?? 1));
+      
+      for (const act of sortedActs) {
+        const estado = progress[act.id_actividad] || 'bloqueada';
+        
+        if (estado === 'completada') {
+          lastCompletedId = act.id_actividad;
+        }
+        // La primera actividad "disponible" es nuestro objetivo principal
+        if (estado === 'disponible' && !targetId) {
+          targetId = act.id_actividad;
+        }
+      }
+    }
+
+    // Si no hay disponibles, vamos a la última completada
+    const idToScroll = targetId || lastCompletedId;
+
+    if (idToScroll) {
+      // Usamos un pequeño timeout para asegurar que React ya dibujó el HTML
+      setTimeout(() => {
+        const element = document.getElementById(`activity-${idToScroll}`);
+        if (element && carouselRef.current) {
+          element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center', // Evita que la página entera haga scroll vertical
+            inline: 'center'  // Centra la bolita horizontalmente
+          });
+        }
+      }, 300); // 300ms da tiempo perfecto para que termine la animación de entrada
+    }
+  }, [nodes, progress]);
+
   function triggerPulse(id: string) {
     setPulsing(prev => ({ ...prev, [id]: true }))
     setTimeout(() => {
@@ -73,10 +117,15 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
     const nextIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1
 
     if (nextIndex >= 0 && nextIndex < slides.length) {
-      slides[nextIndex].scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center'
+      const targetSlide = slides[nextIndex]
+      
+      // Calculamos la posición horizontal exacta para dejar la unidad en el centro
+      const scrollPos = targetSlide.offsetLeft - (container.clientWidth / 2) + (targetSlide.clientWidth / 2)
+
+      // Usamos scrollTo en el CONTENEDOR, así la ventana principal no hace scroll vertical
+      container.scrollTo({
+        left: scrollPos,
+        behavior: 'smooth'
       })
     }
   }
@@ -157,7 +206,7 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
                     )
 
                     return (
-                      <div key={activity.id_actividad} className="relative flex items-center justify-center w-full">
+                      <div key={activity.id_actividad} id={`activity-${activity.id_actividad}`} className="relative flex items-center justify-center w-full">
                         <div className={`absolute w-32 ${isLeft ? 'right-1/2 mr-12 sm:mr-24 text-right' : 'left-1/2 ml-12 sm:ml-24 text-left'}`}>
                           <p className={`font-bold text-lg ${isLocked ? 'text-white/20' : estado === 'completada' ? 'text-teal-500' : 'text-emerald-400'}`}>
                             {numero}
