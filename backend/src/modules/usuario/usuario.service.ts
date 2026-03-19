@@ -60,34 +60,28 @@ export async function getUserProfile(userId: string) {
 
   // 1. OBTENER TODOS LOS ITEMS COMPRADOS (Para la tienda/inventario)
   const allPurchasedResult = await db.execute({
-    sql: `SELECT id_item, equipado FROM usuario_item WHERE id_usuario = ?`,
-    args: [userId],
-  });
-
-  // 2. OBTENER SOLO LOS EQUIPADOS (Para el Avatar)
-  const equippedResult = await db.execute({
     sql: `
-      SELECT i.id_item, i.tipo, i.svg_capa 
+      SELECT ui.id_item, ui.equipado, i.nombre, i.tipo, i.svg_capa 
       FROM usuario_item ui
       JOIN item i ON ui.id_item = i.id_item
-      WHERE ui.id_usuario = ? AND ui.equipado = true
+      WHERE ui.id_usuario = ?
     `,
     args: [userId],
   });
 
-// Inicializamos las capas
-  const equipped: Record<string, { id: string, svg: string | null }> = {
-    background: { id: 'bg_default', svg: null },
-    base:       { id: 'base_default', svg: null },
-    clothing:   { id: 'body_default', svg: null },
-    eyes:       { id: 'eyes_default', svg: null },
-    hair:       { id: 'hair_default', svg: null },
-    accessory:  { id: 'acc_default', svg: null }
-  };
+  // 2. CONSTRUIR EL OBJETO "EQUIPPED" DINÁMICAMENTE
+  // Solo los que tienen equipado = true (o 1 en SQLite)
+  const equipped: Record<string, { id: string, svg: string | null }> = {};
 
-  equippedResult.rows.forEach((row: any) => {
-    if (equipped[row.tipo]) {
-      equipped[row.tipo] = { id: row.id_item, svg: row.svg_capa };
+  allPurchasedResult.rows.forEach((row: any) => {
+    // Manejamos que SQLite puede devolver 1/0 o true/false
+    const isEquipped = row.equipado === 1 || row.equipado === true || row.equipado === 'true';
+    
+    if (isEquipped) {
+      equipped[row.tipo] = { 
+        id: row.id_item, 
+        svg: row.svg_capa || null 
+      };
     }
   });
 

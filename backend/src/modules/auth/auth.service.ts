@@ -10,6 +10,17 @@ interface AuthResponse {
   user: any;
 }
 
+// Definimos los ítems básicos que todo usuario recibe al iniciar
+// Deben coincidir con lo que haya en la tabla 'item'
+const BASIC_ITEMS = [
+  'sky_blue',    // background
+  'base_peach',  // base
+  'shirt_red',   // clothing
+  'default_eyes',// eyes
+  'short_brown', // hair
+  'none'         // accessory
+];
+
 export async function registerUser(data: {
   email: string;
   password: string;
@@ -18,6 +29,7 @@ export async function registerUser(data: {
   const hashedPassword = await bcrypt.hash(data.password, 10);
   const userId = uuid();
 
+  // 1. Crear el usuario base
   await db.execute({
     sql: `
       INSERT INTO usuarios (id, email, password, nombre)
@@ -26,7 +38,19 @@ export async function registerUser(data: {
     args: [userId, data.email, hashedPassword, data.nombre],
   });
 
-  // Generar tokens
+  // 2. Asignar ítems al inventario (adquirirlos) y EQUIPARLOS directamente
+  // Usamos la tabla 'usuario_item' con equipado = true
+  for (const itemId of BASIC_ITEMS) {
+    await db.execute({
+      sql: `
+        INSERT INTO usuario_item (id_usuario, id_item, equipado) 
+        VALUES (?, ?, ?)
+      `,
+      args: [userId, itemId, true],
+    });
+  }
+
+  // 3. Generar tokens
   const accessToken = signAccessToken(userId);
   const refreshTokenId = uuid();
   const refreshToken = signRefreshToken(userId, refreshTokenId);
@@ -42,13 +66,13 @@ export async function registerUser(data: {
     args: [refreshTokenId, userId, refreshTokenHash, expiresAt],
   });
 
-  // --- Obtenemos el perfil completo recién creado ---
+  // 4. Obtener el perfil completo del usuario recién creado  
   const userFullProfile = await getUserProfile(userId);
 
   return {
     accessToken,
     refreshToken,
-    user: userFullProfile, // Devolvemos el perfil completo con estadísticas e items comprados (aunque estará vacío al ser nuevo)
+    user: userFullProfile, // Devolvemos el perfil completo con estadísticas e items comprados
   };
 }
 

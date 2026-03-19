@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import api from '../api'
 import Avatar from '../components/avatar'
 import EquipModal from '../components/equipModal'
+import { useAuth } from '../context/AuthContext'
 
 type Item = { 
   id_item: string; 
@@ -13,6 +14,8 @@ type Item = {
 }
 
 export default function Store() {
+  const { user, updateUserData } = useAuth();
+  
   const [items, setItems] = useState<Item[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -22,7 +25,6 @@ export default function Store() {
   const [equipPromptItem, setEquipPromptItem] = useState<Item | null>(null)
   const [activeTab, setActiveTab] = useState<'shop' | 'inventory'>('shop')
   const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set())
-  const [userCoins, setUserCoins] = useState<number | null>(null)
   const [notification, setNotification] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
 
   useEffect(() => {
@@ -34,17 +36,16 @@ export default function Store() {
           api('/items'),
           api('/usuario/me')
         ])
-
         if (!mounted) return
 
         setItems(itemsRes || [])
-        
         const userData = profileRes?.user || profileRes
-        setUserCoins(userData?.monedas_virtuales ?? 0)
+        
+        // Sincronizamos monedas iniciales con el contexto por si acaso
+        updateUserData({ monedas_virtuales: userData?.monedas_virtuales ?? 0 });
         
         const purchased = userData?.items_comprados?.map((i: any) => String(i.id_item)) || []
         setOwnedIds(new Set(purchased))
-
       } catch (err: any) {
         if (mounted) setError(err.message || 'Error cargando la tienda')
       } finally {
@@ -70,15 +71,17 @@ export default function Store() {
 
   async function confirmPurchase() {
     if (!selected) return
-    
     const itemToBuy = selected
     setSelected(null) 
-    
     setPurchasing(true)
+    
     try {
       const res = await api(`/items/${itemToBuy.id_item}/comprar`, { method: 'POST' })
       
-      if (res?.monedas_restantes !== undefined) setUserCoins(res.monedas_restantes)
+      // --- SINCRONIZACIÓN DE MONEDAS ---
+      if (res?.monedas_restantes !== undefined) {
+        updateUserData({ monedas_virtuales: res.monedas_restantes });
+      }
       
       setOwnedIds(prev => {
         const next = new Set(prev)
@@ -118,9 +121,7 @@ export default function Store() {
       <div className="moni-panel p-6">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold   text-yellow-400 mb-3">
-              Moni-Store
-            </h1>
+            <h1 className="text-3xl font-bold text-yellow-400 mb-3">Moni-Store</h1>
             <p className="text-white/40 text-sm">Personaliza tu experiencia</p>
           </div>
           
@@ -131,9 +132,12 @@ export default function Store() {
             >
               Editar avatar
             </button>
+            {/* Las monedas ahora vienen del USER GLOBAL para ser consistentes */}
             <div className="bg-white/5 px-6 py-3 rounded-2xl border border-white/10 flex items-center gap-3">
               <span className="text-yellow-400 text-xl font-bold">🪙</span>
-              <span className="text-2xl font-black text-white">{userCoins?.toLocaleString() ?? 0}</span>
+              <span className="text-2xl font-black text-white">
+                {(user?.monedas_virtuales || 0).toLocaleString()}
+              </span>
             </div>
           </div>
         </div>
@@ -184,9 +188,10 @@ export default function Store() {
             <div className="flex flex-col gap-3">
               <button 
                 onClick={confirmPurchase} 
-                className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-black rounded-2xl transition-all"
+                disabled={purchasing}
+                className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-black rounded-2xl transition-all disabled:opacity-50"
               >
-                Confirmar
+                {purchasing ? 'Procesando...' : 'Confirmar'}
               </button>
               <button 
                 onClick={() => setSelected(null)} 
@@ -211,6 +216,14 @@ export default function Store() {
                   setEquipPromptItem(null)
                   try {
                     await api(`/items/${item.id_item}/equipar`, { method: 'POST' })
+                    
+                    // --- SINCRONIZACIÓN DE AVATAR ---
+                    const nuevoEquipamiento = { 
+                      ...user?.equipped, 
+                      [item.tipo]: { id: item.id_item, svg: item.svg_capa } 
+                    };
+                    updateUserData({ equipped: nuevoEquipamiento });
+
                     setNotification({ msg: `Equipo aplicado: ${item.nombre}`, type: 'success' })
                   } catch (err: any) {
                     setNotification({ msg: 'No se pudo equipar el item', type: 'error' })
@@ -231,16 +244,14 @@ export default function Store() {
         </div>
       )}
 
-      {/* Renderizamos el modal aislado de componentes */}
       {showEquipEditor && (
-        <EquipModal 
-          onClose={() => setShowEquipEditor(false)} 
-        />
+        <EquipModal onClose={() => setShowEquipEditor(false)} />
       )}
     </div>
   )
 }
 
+// ItemCards
 function ItemCard({ item, onBuy, isOwned }: { item: Item & { svg_capa?: string }; onBuy?: () => void; isOwned: boolean }) {
   const previewEquipped: any = {
     base: item.tipo === 'base' 
@@ -252,22 +263,14 @@ function ItemCard({ item, onBuy, isOwned }: { item: Item & { svg_capa?: string }
   return (
     <div className="group bg-white/5 border border-white/5 p-6 rounded-3xl flex flex-col items-center">
       <div className="w-32 h-32 rounded-2xl bg-emerald-500/10 mb-4 flex items-center justify-center overflow-hidden">
-        <Avatar 
-          equipped={previewEquipped} 
-          className="w-full h-full" 
-        />
+        <Avatar equipped={previewEquipped} className="w-full h-full" />
       </div>
-
       <h3 className="text-lg font-bold mb-1 text-center">{item.nombre}</h3>
       <p className="text-xs text-white/40 uppercase mb-4">{item.tipo}</p>
-
       {isOwned ? (
         <span className="text-emerald-400 font-bold text-sm">Adquirido</span>
       ) : (
-        <button 
-          onClick={onBuy} 
-          className="w-full py-3 bg-amber-400 text-slate-900 font-bold rounded-xl hover:bg-amber-300 transition-colors"
-        >
+        <button onClick={onBuy} className="w-full py-3 bg-amber-400 text-slate-900 font-bold rounded-xl hover:bg-amber-300 transition-colors">
           {item.precio} monedas
         </button>
       )}
