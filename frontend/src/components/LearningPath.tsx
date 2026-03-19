@@ -50,33 +50,35 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
     }, 300)
   }
 
-  // SCROLL MEJORADO PARA CENTRAR LA SECCIÓN
-  const scroll = (direction: 'left' | 'right') => {
+  // SCROLL ACTUALIZADO PARA EJE VERTICAL (ARRIBA/ABAJO)
+  const scroll = (direction: 'up' | 'down') => {
     if (!carouselRef.current) return
     const container = carouselRef.current
 
     const slides = Array.from(container.children) as HTMLElement[]
     if (slides.length === 0) return
 
-    const currentScroll = container.scrollLeft
+    // Ahora leemos la posición vertical
+    const currentScroll = container.scrollTop
     let currentIndex = 0
     let minDiff = Infinity
 
     slides.forEach((slide, index) => {
-      const diff = Math.abs(slide.offsetLeft - currentScroll)
+      // Comparamos usando offsetTop para el eje Y
+      const diff = Math.abs(slide.offsetTop - currentScroll)
       if (diff < minDiff) {
         minDiff = diff
         currentIndex = index
       }
     })
 
-    const nextIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1
+    const nextIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
 
     if (nextIndex >= 0 && nextIndex < slides.length) {
       slides[nextIndex].scrollIntoView({
         behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center'
+        block: 'start', // Alinea la sección al inicio del contenedor
+        inline: 'nearest'
       })
     }
   }
@@ -92,10 +94,11 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
   const sortedNodes = [...nodes].sort((a, b) => a.orden_secuencial - b.orden_secuencial)
 
   return (
-    <div className="w-full flex flex-col items-center justify-center py-4 gap-6">
+    <div className="w-full flex flex-col items-center justify-center py-4 gap-4">
       
+      {/* Botón Arriba */}
       <button 
-        onClick={() => scroll('left')}
+        onClick={() => scroll('up')}
         className="z-30 p-3 text-emerald-400 bg-gray-900/80 backdrop-blur-md rounded-full transition-all hover:scale-110 active:scale-95 shadow-lg border border-gray-700"
         aria-label="Sección anterior"
       >
@@ -104,9 +107,10 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
         </svg>
       </button>
 
+      {/* Contenedor principal: ahora es flex-col, overflow-y-auto y tiene una altura fija (h-[70vh]) */}
       <div 
         ref={carouselRef}
-        className="flex w-full overflow-x-auto snap-x snap-mandatory py-4
+        className="flex flex-col w-full h-[70vh] overflow-y-auto snap-y snap-mandatory py-4 gap-24
                    [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
         {sortedNodes.map((node) => {
@@ -119,9 +123,11 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
           return (
             <div 
               key={node.id_nodo} 
-              className="min-w-full flex-shrink-0 snap-center flex flex-col items-center relative px-4 sm:px-14 md:px-24"
+              // Cambiamos snap-center por snap-start para que el título siempre quede arriba al hacer scroll
+              className="w-full flex-shrink-0 snap-start flex flex-col items-center relative px-4 sm:px-14 md:px-24 pb-12"
             >
               <div className="flex flex-col items-center mb-10">
+                <img src={theme.mascotUrl} alt={`Mascota unidad ${node.orden_secuencial}`} className="w-28 h-28 object-contain mb-4 drop-shadow-xl" />
                 <h3 className={`text-2xl font-black ${theme.colorTitle} text-center px-4 tracking-wide uppercase`}>
                   Unidad {node.orden_secuencial}: {node.titulo}
                 </h3>
@@ -187,8 +193,9 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
         })}
       </div>
 
+      {/* Botón Abajo */}
       <button 
-        onClick={() => scroll('right')}
+        onClick={() => scroll('down')}
         className="z-30 p-3 text-emerald-400 bg-gray-900/80 backdrop-blur-md rounded-full transition-all hover:scale-110 active:scale-95 shadow-lg border border-gray-700"
         aria-label="Siguiente sección"
       >
