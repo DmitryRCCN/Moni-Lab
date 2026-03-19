@@ -21,21 +21,39 @@ type Props = {
   progress?: Record<string, 'bloqueada' | 'disponible' | 'completada'>
 }
 
-const THEMES: Record<number, { colorTitle: string; lineGradient: string; mascotUrl: string }> = {
+// 1. AÑADIMOS "decorations" AL TEMA
+// El número de la izquierda indica DESPUÉS DE QUÉ ACTIVIDAD (índice 0, 1, 2...) aparecerá la imagen
+const THEMES: Record<number, { 
+  colorTitle: string; 
+  lineGradient: string; 
+  mascotUrl: string;
+  decorations?: Record<number, string>; // Nuevo: Índice de la actividad -> Ruta de la imagen
+}> = {
   1: {
     colorTitle: 'text-blue-400',
     lineGradient: 'from-blue-400/20 via-blue-400/50 to-blue-400/20',
-    mascotUrl: '/assets/mono-leyendo.png',
+    mascotUrl: '/assets/mono-leyendo.png', // La imagen del mono leyendo estilo Duolingo
+    decorations: {
+      0: '/assets/mono-emoji-confundido.png', // Aparece al lado del primer nodo
+      2: '/assets/libro-moneda.png'           // Aparece al lado del tercer nodo (el libro con la moneda en lugar del búho)
+    }
   },
   2: {
     colorTitle: 'text-yellow-400',
     lineGradient: 'from-yellow-400/20 via-orange-400/50 to-yellow-400/20',
     mascotUrl: '/assets/mono-emoji-confundido.png',
+    decorations: {
+      1: '/assets/mono-leyendo.png' // Puedes reutilizar imágenes en diferentes posiciones
+    }
   },
   3: {
     colorTitle: 'text-purple-400',
     lineGradient: 'from-purple-400/20 via-pink-400/50 to-purple-400/20',
     mascotUrl: '/assets/libro-moneda.png',
+    decorations: {
+      0: '/assets/mono-leyendo.png',
+      3: '/assets/mono-emoji-confundido.png'
+    }
   }
 }
 
@@ -50,7 +68,6 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
     }, 300)
   }
 
-  // SCROLL ACTUALIZADO PARA EJE VERTICAL (ARRIBA/ABAJO)
   const scroll = (direction: 'up' | 'down') => {
     if (!carouselRef.current) return
     const container = carouselRef.current
@@ -58,13 +75,11 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
     const slides = Array.from(container.children) as HTMLElement[]
     if (slides.length === 0) return
 
-    // Ahora leemos la posición vertical
     const currentScroll = container.scrollTop
     let currentIndex = 0
     let minDiff = Infinity
 
     slides.forEach((slide, index) => {
-      // Comparamos usando offsetTop para el eje Y
       const diff = Math.abs(slide.offsetTop - currentScroll)
       if (diff < minDiff) {
         minDiff = diff
@@ -77,7 +92,7 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
     if (nextIndex >= 0 && nextIndex < slides.length) {
       slides[nextIndex].scrollIntoView({
         behavior: 'smooth',
-        block: 'start', // Alinea la sección al inicio del contenedor
+        block: 'start',
         inline: 'nearest'
       })
     }
@@ -96,7 +111,6 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
   return (
     <div className="w-full flex flex-col items-center justify-center py-4 gap-4">
       
-      {/* Botón Arriba */}
       <button 
         onClick={() => scroll('up')}
         className="z-30 p-3 text-emerald-400 bg-gray-900/80 backdrop-blur-md rounded-full transition-all hover:scale-110 active:scale-95 shadow-lg border border-gray-700"
@@ -107,7 +121,6 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
         </svg>
       </button>
 
-      {/* Contenedor principal: ahora es flex-col, overflow-y-auto y tiene una altura fija (h-[70vh]) */}
       <div 
         ref={carouselRef}
         className="flex flex-col w-full h-[70vh] overflow-y-auto snap-y snap-mandatory py-4 gap-24
@@ -123,7 +136,6 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
           return (
             <div 
               key={node.id_nodo} 
-              // Cambiamos snap-center por snap-start para que el título siempre quede arriba al hacer scroll
               className="w-full flex-shrink-0 snap-start flex flex-col items-center relative px-4 sm:px-14 md:px-24 pb-12"
             >
               <div className="flex flex-col items-center mb-10">
@@ -141,6 +153,7 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
                   .map((activity, actIndex) => {
                     const estado = progress[activity.id_actividad] || 'bloqueada'
                     const isLocked = estado === 'bloqueada'
+                    // isLeft determina si el NÚMERO va a la izquierda o derecha
                     const isLeft = actIndex % 2 === 0
 
                     let colorClass = 'bg-gradient-to-br from-emerald-400 to-teal-500 border-emerald-300'
@@ -164,12 +177,28 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
 
                     return (
                       <div key={activity.id_actividad} className="relative flex items-center justify-center w-full">
+                        
+                        {/* 1. NÚMERO LATERAL */}
                         <div className={`absolute w-32 ${isLeft ? 'right-1/2 mr-12 sm:mr-24 text-right' : 'left-1/2 ml-12 sm:ml-24 text-left'}`}>
                           <p className={`font-bold text-lg ${isLocked ? 'text-white/20' : estado === 'completada' ? 'text-teal-500' : 'text-emerald-400'}`}>
                             {numero}
                           </p>
                         </div>
 
+                        {/* 2. IMAGEN DECORATIVA AL LADO OPUESTO DEL NÚMERO */}
+                        {theme.decorations && theme.decorations[actIndex] && (
+                          <div className={`absolute top-1/2 transform -translate-y-1/2 pointer-events-none z-20 
+                                          ${isLeft ? 'left-1/2 ml-16 sm:ml-28' : 'right-1/2 mr-16 sm:mr-28'}`}>
+                            <img 
+                              src={theme.decorations[actIndex]} 
+                              alt="Decoración de la ruta" 
+                              // Agregamos una ligera animación flotante (animate-pulse o similar) si lo deseas
+                              className="w-20 h-20 sm:w-28 sm:h-28 object-contain drop-shadow-xl hover:scale-110 transition-transform" 
+                            />
+                          </div>
+                        )}
+
+                        {/* 3. BOTÓN PRINCIPAL */}
                         {isLocked ? (
                           <div className="cursor-not-allowed opacity-60">
                             {ButtonContent}
@@ -193,7 +222,6 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
         })}
       </div>
 
-      {/* Botón Abajo */}
       <button 
         onClick={() => scroll('down')}
         className="z-30 p-3 text-emerald-400 bg-gray-900/80 backdrop-blur-md rounded-full transition-all hover:scale-110 active:scale-95 shadow-lg border border-gray-700"
