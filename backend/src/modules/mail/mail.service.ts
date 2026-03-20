@@ -3,6 +3,8 @@ import WelcomeEmail from "../../shared/mail/react/templates/WelcomeEmail";
 import LowPerformanceEmail from "../../shared/mail/react/templates/LowPerformanceEmail";
 import TutorReportEmail from "../../shared/mail/react/templates/TutorReportEmail";
 import TutorBatchEmail from "../../shared/mail/react/templates/TutorBatchEmail";
+import ConfirmChangeEmail from "../../shared/mail/react/templates/ConfirmChangeEmail";
+import ResetPasswordEmail from "../../shared/mail/react/templates/ResetPasswordEmail";
 import { sendMail } from "../../config/mail";
 
 export class MailService {
@@ -52,7 +54,7 @@ export class MailService {
     );
   }
 
-// Esta es la nueva función que envía el correo global al tutor con los PDFs
+// Envía el correo global al tutor con los PDFs
   async sendTutorBatchReport(
     emailTutor: string,
     nombreTutor: string,
@@ -72,6 +74,33 @@ export class MailService {
       html,
       adjuntosPdf // Pasamos los adjuntos a tu configurador de correo
     );
+  }
+
+  async sendConfirmUpdateEmail(
+    email: string, 
+    nombreActual: string, 
+    nuevoNombre: string, 
+    token: string, 
+    cambiaPass: boolean
+  ) {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const confirmLink = `${frontendUrl}/confirm-update?token=${token}`;
+    
+    const html = await render(
+      ConfirmChangeEmail({ 
+        nombreActual, 
+        nuevoNombre, 
+        link: confirmLink, 
+        cambiaPass 
+      })
+    );
+
+    return sendMail(email, "Confirma tus cambios de perfil 🛡️", html);
+  }
+
+  async sendResetPasswordEmail(email: string, nombre: string, code: string) {
+    const html = await render(ResetPasswordEmail({ nombre, code }));
+    return sendMail(email, "Código de recuperación 🔑", html);
   }
 }
 

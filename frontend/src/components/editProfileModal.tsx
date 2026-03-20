@@ -49,37 +49,23 @@ export default function EditProfileModal({ user, onClose, onSuccess }: EditProfi
     setLoading(true);
 
     try {
-      // Solo enviamos la contraseña si el usuario decidió cambiarla
-      const bodyPayload: any = { nombre: username };
-      if (password) {
-        bodyPayload.password = password;
-      }
+      const bodyPayload = { 
+        id_usuario: user.id, 
+        nuevo_nombre: username, 
+        nueva_password: password || undefined 
+      };
 
-      await api(`/usuario/${user.id}`, {
-        method: 'PUT',
+      // 1. Enviamos la SOLICITUD de cambio
+      await api('/auth/request-profile-update', {
+        method: 'POST',
         body: bodyPayload,
       });
 
-      // --- SINCRONIZACIÓN GLOBAL ---
-      updateUserData({ nombre: username });
-
-      setSuccessMsg('¡Perfil actualizado con éxito!');
-      onSuccess(username); // Actualizamos la UI principal
+      // 2. Avisamos al usuario
+      setSuccessMsg('Te enviamos un correo. Por favor, confirma los cambios para que se apliquen.');
       
-      // Cerramos el modal automáticamente después de un momento
-      setTimeout(() => {
-        onClose();
-      }, 1500);
-
-    } catch (err: any) {
-      // Obtenemos el mensaje de error del backend
-      const rawError = err.message || '';
-
-      if (rawError.includes('UNIQUE constraint failed: usuarios.nombre')) {
-        setError('Ese nombre de usuario ya está en uso. ¡Prueba con otro!');
-      } else {
-        setError('Ocurrió un error inesperado. Inténtalo de nuevo más tarde.');
-      }
+    } catch (err) {
+      setError('No pudimos procesar la solicitud.');
     } finally {
       setLoading(false);
     }

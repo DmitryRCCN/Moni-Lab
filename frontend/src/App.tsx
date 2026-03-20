@@ -8,6 +8,8 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import RegisterUser from './pages/RegisterUser'
+import ForgotPassword from './pages/ForgotPassword';
+import ConfirmUpdate from './pages/ConfirmUpdate';
 import TermCond from './pages/TermCond'
 import Privacy from './pages/Privacy'
 import About from './pages/About'
@@ -31,6 +33,8 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/register/user" element={<RegisterUser />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/confirm-update" element={<ConfirmUpdate />} />
           <Route path="/terms" element={<TermCond />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/about" element={<About />} />

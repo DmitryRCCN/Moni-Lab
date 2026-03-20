@@ -152,6 +152,14 @@ export default function Login() {
           >
             Entrar
           </button>
+          <p className="text-xs text-center mt-2">
+            <Link 
+              to="/forgot-password" 
+              className="text-yellow-300/70 hover:text-yellow-300 transition-colors"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </p>
 
         </form>
 
