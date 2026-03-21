@@ -131,7 +131,7 @@ export default function ForgotPassword() {
                 value={code} 
                 onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} // Solo números, max 6
                 placeholder="000000"
-                className="w-48 text-center text-3xl tracking-[0.5em] p-3 rounded bg-black/60 border border-emerald-500/50 text-white focus:outline-none focus:border-yellow-400 font-mono" 
+                className="w-full max-w-[16rem] text-center text-3xl tracking-[0.5em] p-3 rounded bg-black/60 border border-emerald-500/50 text-white focus:outline-none focus:border-yellow-400 font-mono"
                 required 
               />
             </div>

@@ -8,7 +8,8 @@ import {
   forgotPassword,       
   verifyResetCode, 
   resetPassword,   
-  confirmAction         
+  confirmAction,
+  updateNameDirect        
 } from './auth.controller';
 
 const router = Router();
@@ -23,5 +24,6 @@ router.post('/forgot-password', forgotPassword);
 router.post('/verify-reset-code', verifyResetCode);
 router.post('/reset-password', resetPassword);
 router.post('/confirm-action', confirmAction);
+router.post('/update-name-direct', updateNameDirect);
 
 export default router;
