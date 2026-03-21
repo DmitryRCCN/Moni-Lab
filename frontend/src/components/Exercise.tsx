@@ -19,6 +19,7 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
   const navigate = useNavigate()
   const [preguntas, setPreguntas] = useState<Pregunta[]>([])
   const [intentoId, setIntentoId] = useState<string | null>(null)
+  const [modo, setModo] = useState<'SALTO' | 'NORMAL'>('NORMAL')
   const [current, setCurrent] = useState(0)
   const [selected, setSelected] = useState<string | null>(null)
   const [answers, setAnswers] = useState<Array<{ id: string; selected: string; correct: boolean; puntos: number }>>([])
@@ -39,6 +40,7 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
         if (!mounted) return
         setIntentoId(res.id_intento ?? null)
         setPreguntas(res.preguntas || [])
+        setModo((res.modo || 'NORMAL') as 'SALTO' | 'NORMAL')
       } catch (err: any) {
         if (mounted) setError(err.message || 'Error')
       } finally {
@@ -171,10 +173,23 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
   // 3. VISTA DE PREGUNTA ACTUAL
   const q = preguntas[current]
   const opciones = parseOptions(q.opciones || '[]')
+  
+  const modoStyle = modo === 'SALTO' 
+    ? 'bg-yellow-500/20 border-yellow-400 text-yellow-300' 
+    : 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
+  
+  const modoClearStyle = modo === 'SALTO'
+    ? 'Reto de Salto ⚡'
+    : 'Modo Normal ✏️'
 
   return (
     <div className="moni-panel p-6 max-w-3xl mx-auto animate-in fade-in duration-300">
-       <h2 className="text-xl font-semibold mb-3">Pregunta {current + 1} / {preguntas.length}</h2>
+       <div className="flex items-center justify-between gap-3 mb-4">
+         <h2 className="text-xl font-semibold">Pregunta {current + 1} / {preguntas.length}</h2>
+         <div className={`px-3 py-1 text-sm rounded-full border ${modoStyle}`}>
+           {modoClearStyle}
+         </div>
+       </div>
        <div className="mt-2 text-white/900 text-lg mb-6">{q?.enunciado}</div>
 
        <div className="grid gap-3">

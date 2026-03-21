@@ -95,6 +95,8 @@ CREATE TABLE IF NOT EXISTS ejercicio (
   dificultad_min INTEGER DEFAULT 1,
   dificultad_max INTEGER DEFAULT 10,
   cantidad_preguntas INTEGER DEFAULT 5,
+  jump_cantidad_preguntas INTEGER DEFAULT 15,
+  jump_dificultad_min INTEGER DEFAULT 2,
   FOREIGN KEY (id_actividad) REFERENCES actividad(id_actividad) ON DELETE CASCADE
 );
 

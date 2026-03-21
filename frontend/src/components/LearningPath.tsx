@@ -6,6 +6,7 @@ type Activity = {
   tipo_actividad: string
   orden_secuencial?: number
   estado?: 'bloqueada' | 'disponible' | 'completada'
+  es_de_salto?: boolean
 }
 
 type Step = {
@@ -152,16 +153,42 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
                   .sort((a, b) => (a.orden_secuencial ?? 1) - (b.orden_secuencial ?? 1))
                   .map((activity, actIndex) => {
                     const estado = progress[activity.id_actividad] || 'bloqueada'
-                    const isLocked = estado === 'bloqueada'
+                    const isEsDeSalto = activity.es_de_salto ?? false
+                    
+                    // Lógica de desbloqueo para exámenes de salto: SIEMPRE desbloqueados
+                    let isLocked = false
+                    if (isEsDeSalto) {
+                      isLocked = false // Los exámenes de salto siempre están disponibles
+                    } else {
+                      isLocked = estado === 'bloqueada'
+                    }
+                    
+                    // Determinar si todos los ejercicios previos están completados (para cambiar etiqueta)
+                    const allPreviousCompleted = node.activities
+                      .filter((a) => (a.orden_secuencial ?? 0) < (activity.orden_secuencial ?? 0))
+                      .every((a) => progress[a.id_actividad] === 'completada')
+                    
+                    // Para exámenes de salto, mostrar "Examen Final" si todas las previas están completadas
+                    const isExamenFinal = isEsDeSalto && allPreviousCompleted
+                    
                     // isLeft determina si el NÚMERO va a la izquierda o derecha
                     const isLeft = actIndex % 2 === 0
 
                     let colorClass = 'bg-gradient-to-br from-emerald-400 to-teal-500 border-emerald-300'
-                    if (estado === 'bloqueada') colorClass = 'bg-gray-700 border-gray-600 text-white/30 shadow-none'
-                    if (estado === 'disponible') colorClass = 'bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]'
+                    if (estado === 'bloqueada' && !isEsDeSalto) colorClass = 'bg-gray-700 border-gray-600 text-white/30 shadow-none'
+                    if (estado === 'disponible' && !isEsDeSalto) colorClass = 'bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]'
                     if (estado === 'completada') colorClass = 'bg-teal-700 border-teal-500 text-white/80'
+                    
+                    // Colores especiales para exámenes de salto
+                    if (isEsDeSalto && !isExamenFinal) colorClass = 'bg-yellow-500 border-yellow-400 text-white shadow-[0_0_15px_rgba(234,179,8,0.5)]'
+                    if (isEsDeSalto && isExamenFinal) colorClass = 'bg-purple-600 border-purple-400 text-white shadow-[0_0_15px_rgba(147,51,234,0.5)]'
 
                     const numero = `${node.orden_secuencial}.${activity.orden_secuencial ?? 1}`
+                    
+                    // Determinar el ícono según el tipo de actividad y si es examen de salto
+                    let icon = activity.tipo_actividad === 'lectura' ? '📖' : '✏️'
+                    if (isEsDeSalto && !isExamenFinal) icon = '⚡'
+                    if (isEsDeSalto && isExamenFinal) icon = '🏆'
 
                     const ButtonContent = (
                       <div
@@ -171,7 +198,7 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
                             : !isLocked ? 'hover:scale-110' : ''
                         }`}
                       >
-                        {activity.tipo_actividad === 'lectura' ? '📖' : '✏️'}
+                        {icon}
                       </div>
                     )
 

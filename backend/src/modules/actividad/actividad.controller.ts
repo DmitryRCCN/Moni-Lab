@@ -17,7 +17,7 @@ export async function getPreguntasHandler(req: AuthRequest, res: Response) {
     if (!req.user) return res.status(401).json({ error: 'No auth' });
     const id = String(req.params.id);
     const data = await getPreguntasByEjercicio(id, String(req.user.userId));
-    res.json(data);
+    res.json({ ...data });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Error al obtener preguntas' });
   }
