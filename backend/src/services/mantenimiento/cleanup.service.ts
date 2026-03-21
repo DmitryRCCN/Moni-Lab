@@ -4,14 +4,14 @@ import { db } from '../../db/client';
 export function initCleanupJobs() {
   // Se ejecuta todos los días a las 00:00 (medianoche)
   // Puedes probar con '*/1 * * * *' para que corra cada 5 minutos si quieres testearlo
-  cron.schedule('0 0 * * *', async () => {
+  cron.schedule('55 23 * * 7', async () => {
     console.log('🧹 [CRON] Iniciando limpieza de refresh tokens inválidos...');
     
     try {
       const result = await db.execute({
         sql: `
           DELETE FROM refresh_tokens
-          WHERE revoked = 1 
+          WHERE revoked = true 
           OR expires_at < datetime('now')
         `,
         args: [],
