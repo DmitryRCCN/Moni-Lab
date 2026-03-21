@@ -148,7 +148,7 @@ export default function Profile() {
 
       {showEditProfile && (
         <EditProfileModal
-          user={{ id: data.id, nombre: data.nombre }}
+          user={{ id: data.id, nombre: data.nombre, email: data.email }}
           onClose={() => setShowEditProfile(false)}
           onSuccess={handleProfileUpdate}
         />

@@ -258,3 +258,19 @@ export async function confirmAction(req: Request, res: Response) {
     res.status(400).json({ error: 'El enlace ha expirado o es inválido.' });
   }
 }
+
+export async function updateNameDirect(req: Request, res: Response) {
+  try {
+    const { id_usuario, nuevo_nombre } = req.body;
+
+    // Actualización directa en BD
+    await db.execute({
+      sql: 'UPDATE usuarios SET nombre = ? WHERE id = ?',
+      args: [nuevo_nombre, id_usuario]
+    });
+
+    res.json({ message: 'Nombre actualizado correctamente' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al actualizar el nombre' });
+  }
+}

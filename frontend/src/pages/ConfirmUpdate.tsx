@@ -1,4 +1,3 @@
-// frontend/src/pages/ConfirmUpdate.tsx
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api';
@@ -6,8 +5,7 @@ import api from '../api';
 export default function ConfirmUpdate() {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('Verificando credenciales...');
-  const [tempPass, setTempPass] = useState<string | null>(null);
+  const [message, setMessage] = useState('Verificando confirmación...');
   const navigate = useNavigate();
   const token = searchParams.get('token');
 
@@ -15,28 +13,22 @@ export default function ConfirmUpdate() {
     const confirmAction = async () => {
       if (!token) {
         setStatus('error');
-        setMessage('Error de Protocolo: No se encontró un token de acceso.');
+        setMessage('Error de Protocolo: No se encontró un enlace válido.');
         return;
       }
 
       try {
-        // Llamada al endpoint que creamos en el auth.controller
         const response = await api('/auth/confirm-action', {
           method: 'POST',
           body: { token }
         });
 
         setStatus('success');
-        setMessage(response.message);
-        if (response.tempPassword) {
-          setTempPass(response.tempPassword);
-        } else {
-          // Si no es password reset, redirigir normal
-          setTimeout(() => navigate('/profile'), 4000);
-        }
+        setMessage(response.message || 'Tu nombre de usuario ha sido actualizado.');
+        setTimeout(() => navigate('/profile'), 4000); // Redirección limpia
       } catch (err: any) {
         setStatus('error');
-        setMessage(err.error || 'El enlace ha expirado.');
+        setMessage(err.error || 'El enlace ha expirado o es inválido.');
       }
     };
 
@@ -53,28 +45,15 @@ export default function ConfirmUpdate() {
         
         <div className="text-center space-y-6">
           <div className="text-5xl">
-            {status === 'loading' ? '⌛' : status === 'success' ? '🔓' : '❌'}
+            {status === 'loading' ? '⌛' : status === 'success' ? '✅' : '❌'}
           </div>
 
           <div>
             <h2 className="text-2xl font-black uppercase tracking-tighter">
               {status === 'loading' ? 'Procesando' : status === 'success' ? '¡Éxito!' : 'Error'}
             </h2>
-            <p className="text-white/70 mt-2 italic">{message}</p>
+            <p className="text-white/70 mt-2">{message}</p>
           </div>
-
-          {/* CUADRO DE CONTRASEÑA TEMPORAL */}
-          {tempPass && (
-            <div className="bg-black/40 p-6 rounded-2xl border border-emerald-400/30 animate-in zoom-in duration-500">
-              <p className="text-xs text-emerald-400 uppercase font-bold tracking-widest mb-2">Tu nueva clave temporal</p>
-              <div className="text-3xl font-mono tracking-widest text-white selection:bg-emerald-500">
-                {tempPass}
-              </div>
-              <p className="text-[10px] text-white/40 mt-4 italic">
-                Úsala para iniciar sesión y cámbiala en tu perfil lo antes posible.
-              </p>
-            </div>
-          )}
 
           <div className="pt-4">
             <Link 
