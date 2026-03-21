@@ -1,45 +1,54 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import api from '../api';
+import api from '../api'; // Asumiendo tu configuración de axios/fetch
+import PasswordField from '../components/passwordField';
 
-type Step = 'REQUEST' | 'VERIFY' | 'RESET' | 'SUCCESS';
+// --- PASO 1: DEFINIR INTERFACES PARA MATAR EL "ANY" ---
+interface ApiError {
+  error: string;
+}
+
+interface ForgotResponse {
+  token: string;
+}
+
+interface VerifyResponse {
+  allowToken: string;
+}
 
 export default function ForgotPassword() {
-  const [step, setStep] = useState<Step>('REQUEST');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  
-  // Datos del formulario
-  const [username, setUsername] = useState('');
+  const [step, setStep] = useState<'EMAIL' | 'VERIFY' | 'RESET' | 'SUCCESS'>('EMAIL');
   const [email, setEmail] = useState('');
+  const [nombre, setNombre] = useState('');
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  
+  const [tokens, setTokens] = useState({ reset: '', allow: '' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // Tokens
-  const [reqToken, setReqToken] = useState('');
-  const [allowToken, setAllowToken] = useState('');
+  // --- MANEJADORES ---
 
-  // PASO 1: Pedir código
-  const handleRequest = async (e: React.FormEvent) => {
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
+      // Tipamos la respuesta para evitar 'any'
       const res = await api('/auth/forgot-password', {
         method: 'POST',
-        body: { email, nombre: username }
-      }) as any;
-      setReqToken(res.token); // Guardamos el token temporal
+        body: { email, nombre }
+      }) as ForgotResponse;
+      
+      setTokens(prev => ({ ...prev, reset: res.token }));
       setStep('VERIFY');
-    } catch (err: any) {
-      setError(err.error || 'Datos incorrectos. Verifica tu usuario y correo.');
+    } catch (err) {
+      const apiErr = err as ApiError;
+      setError(apiErr.error || 'Error al enviar el código');
     } finally {
       setLoading(false);
     }
   };
 
-  // PASO 2: Verificar código
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -47,155 +56,148 @@ export default function ForgotPassword() {
     try {
       const res = await api('/auth/verify-reset-code', {
         method: 'POST',
-        body: { token: reqToken, code }
-      }) as any;
-      setAllowToken(res.allowToken); // Nos dieron permiso de cambiar la pass
+        body: { token: tokens.reset, code }
+      }) as VerifyResponse;
+
+      setTokens(prev => ({ ...prev, allow: res.allowToken }));
       setStep('RESET');
-    } catch (err: any) {
-      setError(err.error || 'Código inválido o expirado.');
+    } catch (err) {
+      const apiErr = err as ApiError;
+      setError(apiErr.error || 'Código inválido');
     } finally {
       setLoading(false);
     }
   };
 
-  // PASO 3: Nueva contraseña
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
-    if (!regex.test(newPassword)) {
-      setError('Debe incluir mayúsculas, minúsculas, números y símbolos @$!%*?& (Mín. 8 caracteres).');
-      return;
-    }
-
     setLoading(true);
-    setError('');
     try {
       await api('/auth/reset-password', {
         method: 'POST',
-        body: { allowToken, newPassword }
+        body: { allowToken: tokens.allow, newPassword }
       });
       setStep('SUCCESS');
-    } catch (err: any) {
-      setError(err.error || 'Ocurrió un error. Intenta de nuevo.');
+    } catch (err) {
+      const apiErr = err as ApiError;
+      setError(apiErr.error || 'No se pudo actualizar');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-emerald-950 p-8 rounded-2xl shadow-2xl border border-emerald-800/50 relative overflow-hidden">
+  <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+    {/* Contenedor con la estética de "Editar Perfil" */}
+    <div className="bg-[#064e3b] border-2 border-emerald-500/30 p-8 rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] w-full max-w-md relative overflow-hidden">
+      
+      {/* Botón de cerrar (estético, para que parezca un modal) */}
+      <button 
+        onClick={() => window.history.back()} 
+        className="absolute right-6 top-6 text-white/40 hover:text-white transition-colors"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      {/* Título unificado */}
+      <h2 className="text-3xl font-black text-white mb-8 text-center tracking-tight drop-shadow-md">
+        {step === 'EMAIL' && 'Recuperar Acceso'}
+        {step === 'VERIFY' && 'Verificar Código'}
+        {step === 'RESET' && 'Nueva Contraseña'}
+        {step === 'SUCCESS' && '¡Listo!'}
+      </h2>
         
-        {/* Adorno visual */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-yellow-400"></div>
-
-        <h2 className="text-2xl font-black text-emerald-400 uppercase tracking-widest mb-6 text-center">
-          Recuperación de Sistema
-        </h2>
-
-        {/* --- PASO 1: SOLICITAR --- */}
-        {step === 'REQUEST' && (
-          <form onSubmit={handleRequest} className="space-y-4">
-            <p className="text-sm text-white/70 text-center mb-6">
-              Identifícate para solicitar un código de acceso temporal.
-            </p>
-            <div>
-              <label className="text-xs uppercase tracking-wider text-white/60">Usuario</label>
-              <input value={username} onChange={e => setUsername(e.target.value)} required className="w-full mt-1 p-3 rounded bg-black/40 border border-white/10 text-white focus:outline-none focus:border-emerald-500" />
-            </div>
-            <div>
-              <label className="text-xs uppercase tracking-wider text-white/60">Correo Electrónico</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full mt-1 p-3 rounded bg-black/40 border border-white/10 text-white focus:outline-none focus:border-emerald-500" />
-            </div>
-            {error && <p className="text-rose-400 text-sm text-center font-bold">{error}</p>}
-            
-            <button disabled={loading} className="w-full mt-6 py-3 bg-emerald-600 text-white font-bold rounded hover:bg-emerald-500 transition-colors disabled:opacity-50">
-              {loading ? 'Procesando...' : 'Enviar Código'}
-            </button>
-            <Link to="/login" className="block text-center text-sm text-white/40 hover:text-white mt-4">Cancelar</Link>
+        {/* --- PASO 1: SOLICITAR CÓDIGO --- */}
+        {step === 'EMAIL' && (
+          <form onSubmit={handleSendCode} className="space-y-4">
+             <h2 className="text-2xl font-bold text-white mb-6 text-center">Recuperar Acceso</h2>
+             <input 
+                type="text" 
+                placeholder="Nombre de Usuario"
+                value={nombre}
+                onChange={e => setNombre(e.target.value)}
+                className="w-full p-3 rounded bg-black/40 border border-white/10 text-white" 
+                required 
+             />
+             <input 
+                type="email" 
+                placeholder="Correo Electrónico"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                className="w-full p-3 rounded bg-black/40 border border-white/10 text-white" 
+                required 
+             />
+             <button disabled={loading} className="w-full py-3 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-500 transition-colors">
+                {loading ? 'Enviando...' : 'Enviar Código'}
+             </button>
           </form>
         )}
 
         {/* --- PASO 2: VERIFICAR CÓDIGO --- */}
         {step === 'VERIFY' && (
-          <form onSubmit={handleVerify} className="space-y-6">
-            <div className="text-center space-y-2">
-              <p className="text-4xl">📧</p>
-              <p className="text-sm text-white/80">Hemos enviado un código de 6 dígitos a tu correo.</p>
-              <p className="text-xs text-rose-400">Expira en 5 minutos.</p>
-            </div>
-            
-            <div className="flex justify-center">
-              <input 
-                value={code} 
-                onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} // Solo números, max 6
+          <form onSubmit={handleVerify} className="space-y-4">
+             <p className="text-white/80 text-center text-sm">Ingresa el código que enviamos a tu correo.</p>
+             <input 
+                type="text" 
+                value={code}
+                onChange={e => setCode(e.target.value.toUpperCase())}
                 placeholder="000000"
-                className="w-full max-w-[16rem] text-center text-3xl tracking-[0.5em] p-3 rounded bg-black/60 border border-emerald-500/50 text-white focus:outline-none focus:border-yellow-400 font-mono"
+                className="w-full p-4 text-center text-2xl tracking-[1em] rounded bg-black/40 border border-emerald-500 text-white font-mono" 
                 required 
-              />
-            </div>
-
-            {error && <p className="text-rose-400 text-sm text-center font-bold">{error}</p>}
-            
-            <button disabled={loading || code.length < 6} className="w-full py-3 bg-yellow-500 text-slate-900 font-bold rounded hover:bg-yellow-400 transition-colors disabled:opacity-50">
-              {loading ? 'Verificando...' : 'Validar Código'}
-            </button>
-            
-            <button type="button" onClick={() => setStep('REQUEST')} className="block w-full text-center text-sm text-white/40 hover:text-white mt-2">
-              Volver atrás
-            </button>
+             />
+             <button disabled={loading} className="w-full py-3 bg-emerald-600 text-white rounded-lg font-bold">
+                {loading ? 'Verificando...' : 'Verificar'}
+             </button>
           </form>
         )}
 
-        {/* --- PASO 3: NUEVA CONTRASEÑA --- */}
+        {/* --- PASO 3: NUEVA CONTRASEÑA (REFACTOREADO) --- */}
         {step === 'RESET' && (
-          <form onSubmit={handleReset} className="space-y-4">
+          <form onSubmit={handleReset} className="space-y-6">
             <div className="text-center space-y-2 mb-6">
-              <p className="text-4xl text-emerald-400">🔓</p>
-              <p className="text-sm text-white/80">Código aceptado. Ingresa tu nueva credencial de seguridad.</p>
+              <p className="text-4xl">🔓</p>
+              <p className="text-sm text-white/80">Código aceptado. Ingresa tu nueva credencial.</p>
             </div>
 
-            <div className="relative">
-              <label className="text-xs uppercase tracking-wider text-white/60">Nueva Contraseña</label>
-              <input 
-                type={showPassword ? 'text' : 'password'}
-                value={newPassword} 
-                onChange={e => setNewPassword(e.target.value)} 
-                required 
-                className="w-full mt-1 p-3 rounded bg-black/40 border border-white/10 text-white focus:outline-none focus:border-emerald-500" 
-              />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-9 text-xs text-white/50 hover:text-white">
-                {showPassword ? 'Ocultar' : 'Mostrar'}
-              </button>
-            </div>
+            <PasswordField 
+              label="Nueva Contraseña"
+              value={newPassword}
+              onChange={setNewPassword}
+              hint="Mínimo 8 caracteres. Debe incluir mayúsculas, números y símbolos (@$!%*?&)."
+            />
 
-            <p className="text-[10px] text-white/40 leading-tight">
-              Requisito: Mínimo 8 caracteres. Debe incluir mayúsculas, minúsculas, números y al menos uno de estos símbolos: @$!%*?&
-            </p>
+            {error && <p className="text-xs text-rose-400 text-center bg-rose-400/10 py-2 rounded border border-rose-400/20">{error}</p>}
 
-            {error && <p className="text-rose-400 text-sm font-bold border border-rose-500/30 p-2 rounded bg-rose-950/50">{error}</p>}
-            
-            <button disabled={loading} className="w-full mt-4 py-3 bg-emerald-600 text-white font-bold rounded hover:bg-emerald-500 transition-colors disabled:opacity-50">
-              {loading ? 'Actualizando...' : 'Establecer Contraseña'}
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className="w-full py-4 bg-yellow-400 text-slate-900 rounded-xl font-black uppercase tracking-widest hover:bg-yellow-300 transition-all"
+            >
+              {loading ? 'Actualizando...' : 'Restablecer Ahora'}
             </button>
           </form>
         )}
-
-        {/* --- PASO 4: ÉXITO --- */}
+        {/*-- PASO 4: ÉXITO --- */}
         {step === 'SUCCESS' && (
-          <div className="text-center space-y-6 animate-in zoom-in duration-500">
-            <div className="text-6xl text-emerald-400">✅</div>
-            <div>
-              <h3 className="text-xl font-bold text-white">Sistema Actualizado</h3>
-              <p className="text-white/70 mt-2 text-sm">Tu contraseña ha sido restablecida con éxito. Ya puedes acceder al sistema.</p>
+          <div className="text-center space-y-6 animate-in zoom-in-95 duration-300">
+            <div className="flex justify-center">
+              <div className="w-20 h-20 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
             </div>
-            <Link to="/login" className="block w-full py-4 bg-yellow-500 text-slate-900 font-black rounded-lg hover:scale-105 transition-transform uppercase tracking-widest">
-              Iniciar Sesión
-            </Link>
+            <p className="text-white font-bold text-lg">Contraseña actualizada correctamente.</p>
+            <button 
+              onClick={() => window.location.href = '/login'}
+              className="w-full py-4 bg-yellow-400 text-slate-900 rounded-xl font-black uppercase tracking-widest hover:bg-yellow-300 transition-all"
+            >
+              Volver al Login
+            </button>
           </div>
         )}
-
       </div>
     </div>
   );
