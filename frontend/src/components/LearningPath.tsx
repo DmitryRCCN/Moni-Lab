@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 type Activity = {
   id_actividad: string
@@ -20,10 +20,11 @@ type Step = {
 type Props = {
   nodes?: Step[]
   progress?: Record<string, 'bloqueada' | 'disponible' | 'completada'>
+  activeNodeId?: string | null
+  activeActivityId?: string | null
 }
 
-// ÍCONOS REUTILIZABLES
-// Aquí está el ícono que me pasaste convertido a componente
+// ÍCONOS REUTILIZABLES (componentes)
 const BrainIcon = (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
     <path d="M11.7 2.805a.75.75 0 0 1 .6 0A60.65 60.65 0 0 1 22.83 8.72a.75.75 0 0 1-.231 1.337 49.948 49.948 0 0 0-9.902 3.912l-.003.002c-.114.06-.227.119-.34.18a.75.75 0 0 1-.707 0A50.88 50.88 0 0 0 7.5 12.173v-.224c0-.131.067-.248.172-.311a54.615 54.615 0 0 1 4.653-2.52.75.75 0 0 0-.65-1.352 56.123 56.123 0 0 0-4.78 2.589 1.858 1.858 0 0 0-.859 1.228 49.803 49.803 0 0 0-4.634-1.527.75.75 0 0 1-.231-1.337A60.653 60.653 0 0 1 11.7 2.805Z" />
@@ -83,9 +84,27 @@ const THEMES: Record<number, {
   }
 }
 
-export default function LearningPath({ nodes = [], progress = {} }: Props) {
+export default function LearningPath({ nodes = [], progress = {}, activeActivityId }: Props) {
   const [pulsing, setPulsing] = useState<Record<string, boolean>>({})
+  const [highlightId, setHighlightId] = useState<string | null>(null);
   const carouselRef = useRef<HTMLDivElement>(null)
+
+  // --- LÓGICA DE AUTO-SCROLL ---
+  useEffect(() => {
+    if (activeActivityId && carouselRef.current) {
+      const timer = setTimeout(() => {
+        // Buscamos el botón de la actividad específica
+        const targetAct = carouselRef.current?.querySelector(`[data-activity-id="${activeActivityId}"]`) as HTMLElement;
+        
+        if (targetAct) {
+          targetAct.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setHighlightId(activeActivityId);
+          setTimeout(() => setHighlightId(null), 2000); // Brillo más largo para que se note
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [activeActivityId]);
 
   function triggerPulse(id: string) {
     setPulsing(prev => ({ ...prev, [id]: true }))
@@ -152,10 +171,12 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
       {/* Contenedor del recorrido */}
       <div 
         ref={carouselRef}
-        className="flex flex-col w-full h-[70vh] overflow-y-auto snap-y snap-mandatory py-4 gap-24
+        className="flex flex-col w-full h-[70vh] overflow-y-auto py-10 gap-24
+                   scroll-smooth 
                    [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
         {sortedNodes.map((node) => {
+          const isHighlighted = highlightId === node.id_nodo;
           const theme = THEMES[node.orden_secuencial] || {
             colorTitle: 'text-white',
             lineGradient: 'from-emerald-400/20 via-teal-400/50 to-emerald-400/20',
@@ -164,11 +185,18 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
 
           return (
             <div 
-              key={node.id_nodo} 
+              key={node.id_nodo}
+              data-node-id={node.id_nodo}
               className="w-full flex-shrink-0 snap-start flex flex-col items-center relative px-4 sm:px-14 md:px-24 pb-12"
             >
-              {/* NUEVO CONTENEDOR TIPO BANNER (CON ÍCONOS) */}
-              <div className={`w-full max-w-2xl rounded-2xl shadow-lg mb-12 flex items-center justify-center min-h-[100px] sm:min-h-[120px] border-4 border-gray-800 ${theme.headerBg}`}>
+              {/* CONTENEDOR TIPO BANNER (CON ÍCONOS) */}
+              <div className={`
+                w-full max-w-2xl rounded-2xl shadow-lg mb-12 flex items-center justify-center 
+                min-h-[100px] sm:min-h-[120px] border-4 transition-all duration-700
+                ${isHighlighted 
+                  ? 'border-emerald-400 scale-105 shadow-[0_0_40px_rgba(52,211,153,0.6)] ring-4 ring-emerald-400/20' 
+                  : 'border-gray-800 scale-100 shadow-lg'} 
+                ${theme.headerBg}`}>
                 <div className="flex items-center gap-3 sm:gap-6 px-6 py-4">
                   
                   {/* Ícono Izquierdo Dinámico */}
@@ -200,6 +228,7 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
                 {node.activities
                   .sort((a, b) => (a.orden_secuencial ?? 1) - (b.orden_secuencial ?? 1))
                   .map((activity, actIndex) => {
+                    const isHighlighted = highlightId === activity.id_actividad;
                     const estado = progress[activity.id_actividad] || 'bloqueada'
                     const isEsDeSalto = activity.es_de_salto ?? false
                     
@@ -240,11 +269,11 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
 
                     const ButtonContent = (
                       <div
-                        className={`relative z-10 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg transition-all duration-300 border-4 ${colorClass} ${
-                          !isLocked && pulsing[activity.id_actividad]
-                            ? 'scale-125 ring-4 ring-emerald-300/40'
-                            : !isLocked ? 'hover:scale-110' : ''
-                        }`}
+                        data-activity-id={activity.id_actividad} // <-- ID para el scroll
+                        className={`relative z-10 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg transition-all duration-500 border-4 
+                          ${colorClass} 
+                          ${isHighlighted ? 'scale-125 ring-[12px] ring-emerald-400/30 shadow-[0_0_30px_rgba(52,211,153,0.8)]' : ''}
+                          ${!isLocked ? 'hover:scale-110' : ''}`}
                       >
                         {icon}
                       </div>
