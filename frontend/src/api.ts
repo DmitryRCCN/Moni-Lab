@@ -77,7 +77,7 @@ export async function api(path: string, options: ApiOptions = {}) {
         (opts.headers as Record<string, string>)['Authorization'] = `Bearer ${accessToken}`;
       }
       res = await fetchWithOpts(url, opts);
-    } catch (err) {
+    } catch (_err) {
       // no se pudo refrescar, propagar error original
     }
   }
@@ -88,7 +88,7 @@ export async function api(path: string, options: ApiOptions = {}) {
     try {
       const json = JSON.parse(text || '{}');
       throw new Error(json.error || text || res.statusText);
-    } catch (_) {
+    } catch (_err) {
       throw new Error(text || res.statusText);
     }
   }

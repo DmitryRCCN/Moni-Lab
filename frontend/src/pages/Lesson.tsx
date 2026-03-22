@@ -150,7 +150,9 @@ export default function Lesson() {
       {actividad.tipo_actividad === 'lectura' && actividad.lectura ? (
         <div className="moni-panel p-6 animate-in fade-in duration-300">
           <div className="prose prose-invert max-w-none mb-8">
-            <p className="text-lg leading-relaxed">{actividad.lectura.cuerpo_texto}</p>
+            <p className="text-lg leading-relaxed whitespace-pre-line text-justify">
+              {actividad.lectura.cuerpo_texto}
+            </p>
           </div>
 
           <div className="flex flex-col items-center gap-4 pt-6 border-t border-white/10">

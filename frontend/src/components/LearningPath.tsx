@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 type Activity = {
   id_actividad: string
@@ -20,10 +20,27 @@ type Step = {
 type Props = {
   nodes?: Step[]
   progress?: Record<string, 'bloqueada' | 'disponible' | 'completada'>
+  activeNodeId?: string | null
+  activeActivityId?: string | null
 }
 
-// 1. AÑADIMOS "decorations" AL TEMA
-// El número de la izquierda indica DESPUÉS DE QUÉ ACTIVIDAD (índice 0, 1, 2...) aparecerá la imagen
+// ÍCONOS REUTILIZABLES (componentes)
+const BrainIcon = (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path d="M11.7 2.805a.75.75 0 0 1 .6 0A60.65 60.65 0 0 1 22.83 8.72a.75.75 0 0 1-.231 1.337 49.948 49.948 0 0 0-9.902 3.912l-.003.002c-.114.06-.227.119-.34.18a.75.75 0 0 1-.707 0A50.88 50.88 0 0 0 7.5 12.173v-.224c0-.131.067-.248.172-.311a54.615 54.615 0 0 1 4.653-2.52.75.75 0 0 0-.65-1.352 56.123 56.123 0 0 0-4.78 2.589 1.858 1.858 0 0 0-.859 1.228 49.803 49.803 0 0 0-4.634-1.527.75.75 0 0 1-.231-1.337A60.653 60.653 0 0 1 11.7 2.805Z" />
+    <path d="M13.06 15.473a48.45 48.45 0 0 1 7.666-3.282c.134 1.414.22 2.843.255 4.284a.75.75 0 0 1-.46.711 47.87 47.87 0 0 0-8.105 4.342.75.75 0 0 1-.832 0 47.87 47.87 0 0 0-8.104-4.342.75.75 0 0 1-.461-.71c.035-1.442.121-2.87.255-4.286.921.304 1.83.634 2.726.99v1.27a1.5 1.5 0 0 0-.14 2.508c-.09.38-.222.753-.397 1.11.452.213.901.434 1.346.66a6.727 6.727 0 0 0 .551-1.607 1.5 1.5 0 0 0 .14-2.67v-.645a48.549 48.549 0 0 1 3.44 1.667 2.25 2.25 0 0 0 2.12 0Z" />
+    <path d="M4.462 19.462c.42-.419.753-.89 1-1.395.453.214.902.435 1.347.662a6.742 6.742 0 0 1-1.286 1.794.75.75 0 0 1-1.06-1.06Z" />
+  </svg>
+)
+
+const LightningIcon = (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path fillRule="evenodd" d="M14.615 1.595a.75.75 0 0 1 .359.852L12.982 9.75h7.268a.75.75 0 0 1 .548 1.262l-10.5 11.25a.75.75 0 0 1-1.272-.71l1.992-7.302H3.75a.75.75 0 0 1-.548-1.262l10.5-11.25a.75.75 0 0 1 .913-.143Z" clipRule="evenodd" />
+  </svg>
+)
+
+
+// 1. DICCIONARIO DE TEMAS ACTUALIZADO CON FONDOS E ÍCONOS
 const THEMES: Record<number, { 
   colorTitle: string; 
   lineGradient: string; 
@@ -58,9 +75,27 @@ const THEMES: Record<number, {
   }
 }
 
-export default function LearningPath({ nodes = [], progress = {} }: Props) {
+export default function LearningPath({ nodes = [], progress = {}, activeActivityId }: Props) {
   const [pulsing, setPulsing] = useState<Record<string, boolean>>({})
+  const [highlightId, setHighlightId] = useState<string | null>(null);
   const carouselRef = useRef<HTMLDivElement>(null)
+
+  // --- LÓGICA DE AUTO-SCROLL ---
+  useEffect(() => {
+    if (activeActivityId && carouselRef.current) {
+      const timer = setTimeout(() => {
+        // Buscamos el botón de la actividad específica
+        const targetAct = carouselRef.current?.querySelector(`[data-activity-id="${activeActivityId}"]`) as HTMLElement;
+        
+        if (targetAct) {
+          targetAct.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setHighlightId(activeActivityId);
+          setTimeout(() => setHighlightId(null), 2000); // Brillo más largo para que se note
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [activeActivityId]);
 
   function triggerPulse(id: string) {
     setPulsing(prev => ({ ...prev, [id]: true }))
@@ -127,10 +162,12 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
       {/* Contenedor del recorrido */}
       <div 
         ref={carouselRef}
-        className="flex flex-col w-full h-[70vh] overflow-y-auto snap-y snap-mandatory py-4 gap-24
+        className="flex flex-col w-full h-[70vh] overflow-y-auto py-10 gap-24
+                   scroll-smooth 
                    [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
         {sortedNodes.map((node) => {
+          const isHighlighted = highlightId === node.id_nodo;
           const theme = THEMES[node.orden_secuencial] || {
             colorTitle: 'text-emerald-400',
             lineGradient: 'from-emerald-400/20 via-teal-400/50 to-emerald-400/20',
@@ -139,14 +176,40 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
 
           return (
             <div 
-              key={node.id_nodo} 
+              key={node.id_nodo}
+              data-node-id={node.id_nodo}
               className="w-full flex-shrink-0 snap-start flex flex-col items-center relative px-4 sm:px-14 md:px-24 pb-12"
             >
-              <div className="flex flex-col items-center mb-10">
-                <img src={theme.mascotUrl} alt={`Mascota unidad ${node.orden_secuencial}`} className="w-28 h-28 object-contain mb-4 drop-shadow-xl" />
-                <h3 className={`text-2xl font-black ${theme.colorTitle} text-center px-4 tracking-wide uppercase`}>
-                  Unidad {node.orden_secuencial}: {node.titulo}
-                </h3>
+              {/* CONTENEDOR TIPO BANNER (CON ÍCONOS) */}
+              <div className={`
+                w-full max-w-2xl rounded-2xl shadow-lg mb-12 flex items-center justify-center 
+                min-h-[100px] sm:min-h-[120px] border-4 transition-all duration-700
+                ${isHighlighted 
+                  ? 'border-emerald-400 scale-105 shadow-[0_0_40px_rgba(52,211,153,0.6)] ring-4 ring-emerald-400/20' 
+                  : 'border-gray-800 scale-100 shadow-lg'} 
+                ${theme.headerBg}`}>
+                <div className="flex items-center gap-3 sm:gap-6 px-6 py-4">
+                  
+                  {/* Ícono Izquierdo Dinámico */}
+                  {theme.iconLeft && (
+                    <div className="text-white w-8 h-8 sm:w-12 sm:h-12 flex-shrink-0 drop-shadow-md">
+                      {theme.iconLeft}
+                    </div>
+                  )}
+
+                  {/* Título */}
+                  <h3 className={`text-2xl sm:text-3xl font-black ${theme.colorTitle} text-center tracking-wide uppercase drop-shadow-[0_4px_4px_rgba(0,0,0,0.3)]`}>
+                    Unidad {node.orden_secuencial}: {node.titulo}
+                  </h3>
+
+                  {/* Ícono Derecho Dinámico */}
+                  {theme.iconRight && (
+                    <div className="text-white w-8 h-8 sm:w-12 sm:h-12 flex-shrink-0 drop-shadow-md">
+                      {theme.iconRight}
+                    </div>
+                  )}
+
+                </div>
               </div>
 
               {/* Contenedor de las actividades y línea */}
@@ -156,6 +219,7 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
                 {node.activities
                   .sort((a, b) => (a.orden_secuencial ?? 1) - (b.orden_secuencial ?? 1))
                   .map((activity, actIndex) => {
+                    const isHighlighted = highlightId === activity.id_actividad;
                     const estado = progress[activity.id_actividad] || 'bloqueada'
                     const isEsDeSalto = activity.es_de_salto ?? false
                     
@@ -197,11 +261,11 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
 
                     const ButtonContent = (
                       <div
-                        className={`relative z-10 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg transition-all duration-300 border-4 ${colorClass} ${
-                          !isLocked && pulsing[activity.id_actividad]
-                            ? 'scale-125 ring-4 ring-emerald-300/40'
-                            : !isLocked ? 'hover:scale-110' : ''
-                        }`}
+                        data-activity-id={activity.id_actividad} // <-- ID para el scroll
+                        className={`relative z-10 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg transition-all duration-500 border-4 
+                          ${colorClass} 
+                          ${isHighlighted ? 'scale-125 ring-[12px] ring-emerald-400/30 shadow-[0_0_30px_rgba(52,211,153,0.8)]' : ''}
+                          ${!isLocked ? 'hover:scale-110' : ''}`}
                       >
                         {icon}
                       </div>
