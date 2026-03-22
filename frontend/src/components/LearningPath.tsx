@@ -5,7 +5,7 @@ type Activity = {
   id_actividad: string
   tipo_actividad: string
   orden_secuencial?: number
-  estado?: 'bloqueada' | 'disponible' | 'completada'
+  estado?: 'bloqueada' | 'disponible' | 'completada' | 'saltada'
   es_de_salto?: boolean
 }
 
@@ -64,42 +64,33 @@ const TrophyIcon = (
 const THEMES: Record<number, { 
   colorTitle: string; 
   lineGradient: string; 
-  headerBg: string; // Nuevo fondo para el encabezado
-  iconLeft?: JSX.Element; // Ícono izquierdo
-  iconRight?: JSX.Element; // Ícono derecho
-  decorations?: Record<number, string>;
+  mascotUrl: string;
+  decorations?: Record<number, string>; // Nuevo: Índice de la actividad -> Ruta de la imagen
 }> = {
   1: {
-    colorTitle: 'text-white',
+    colorTitle: 'text-blue-400',
     lineGradient: 'from-blue-400/20 via-blue-400/50 to-blue-400/20',
-    headerBg: 'bg-gradient-to-r from-blue-500 to-blue-400', 
-    iconLeft: BrainIcon,
-    iconRight: LightningIcon, 
+    mascotUrl: '/assets/mono-leyendo.png', // La imagen del mono leyendo estilo Duolingo
     decorations: {
-      0: '/images/monaU1.1.webp', 
-      3: '/images/monoCoin.avif',
-      6: '/images/monaRead.avif'
+      0: '/assets/mono-emoji-confundido.png', // Aparece al lado del primer nodo
+      2: '/assets/libro-moneda.png'           // Aparece al lado del tercer nodo (el libro con la moneda en lugar del búho)
     }
   },
   2: {
-    colorTitle: 'text-white',
+    colorTitle: 'text-yellow-400',
     lineGradient: 'from-yellow-400/20 via-orange-400/50 to-yellow-400/20',
-    headerBg: 'bg-gradient-to-r from-yellow-500 to-orange-400', // Gradiente amarillo/naranja
-    iconLeft: BrainIcon,
-    iconRight: BrainIcon, // Aquí usamos el mismo ícono en ambos lados
+    mascotUrl: '/assets/mono-emoji-confundido.png',
     decorations: {
-      1: '/images/mono-leyendo.png'
+      1: '/assets/mono-leyendo.png' // Puedes reutilizar imágenes en diferentes posiciones
     }
   },
   3: {
-    colorTitle: 'text-white',
+    colorTitle: 'text-purple-400',
     lineGradient: 'from-purple-400/20 via-pink-400/50 to-purple-400/20',
-    headerBg: 'bg-gradient-to-r from-purple-500 to-pink-500', // Gradiente morado
-    iconLeft: LightningIcon, 
-    iconRight: LightningIcon,
+    mascotUrl: '/assets/libro-moneda.png',
     decorations: {
-      0: '/images/mono-leyendo.png',
-      3: '/images/mono-emoji.png'
+      0: '/assets/mono-leyendo.png',
+      3: '/assets/mono-emoji-confundido.png'
     }
   }
 }
@@ -198,9 +189,9 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
         {sortedNodes.map((node) => {
           const isHighlighted = highlightId === node.id_nodo;
           const theme = THEMES[node.orden_secuencial] || {
-            colorTitle: 'text-white',
+            colorTitle: 'text-emerald-400',
             lineGradient: 'from-emerald-400/20 via-teal-400/50 to-emerald-400/20',
-            headerBg: 'bg-emerald-500' // Fondo por defecto
+            mascotUrl: '/assets/default-mascot.png'
           }
 
           return (
@@ -274,7 +265,8 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
                     let colorClass = 'bg-gradient-to-br from-emerald-400 to-teal-500 border-emerald-300'
                     if (estado === 'bloqueada' && !isEsDeSalto) colorClass = 'bg-gray-700 border-gray-600 text-white/30 shadow-none'
                     if (estado === 'disponible' && !isEsDeSalto) colorClass = 'bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]'
-                    if (estado === 'completada') colorClass = 'bg-teal-700 border-teal-500 text-white/80'
+                    // Completada o Saltada se ven igual (verde/teal)
+                    if (estado === 'completada' || estado === 'saltada') colorClass = 'bg-teal-700 border-teal-500 text-white/80'
                     
                     // Colores especiales para exámenes de salto
                     if (isEsDeSalto && !isExamenFinal) colorClass = 'bg-yellow-500 border-yellow-400 text-white shadow-[0_0_15px_rgba(234,179,8,0.5)]'
@@ -309,14 +301,15 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
                           </p>
                         </div>
 
-                        {/* Imágenes decorativas */}
+                        {/* 2. IMAGEN DECORATIVA AL LADO OPUESTO DEL NÚMERO */}
                         {theme.decorations && theme.decorations[actIndex] && (
                           <div className={`absolute top-1/2 transform -translate-y-1/2 pointer-events-none z-20 
                                           ${isLeft ? 'left-1/2 ml-16 sm:ml-28' : 'right-1/2 mr-16 sm:mr-28'}`}>
                             <img 
                               src={theme.decorations[actIndex]} 
-                              alt="Decoración" 
-                              className="w-28 h-28 sm:w-40 sm:h-40 object-contain drop-shadow-xl hover:scale-110 transition-transform" 
+                              alt="Decoración de la ruta" 
+                              // Agregamos una ligera animación flotante (animate-pulse o similar) si lo deseas
+                              className="w-20 h-20 sm:w-28 sm:h-28 object-contain drop-shadow-xl hover:scale-110 transition-transform" 
                             />
                           </div>
                         )}
