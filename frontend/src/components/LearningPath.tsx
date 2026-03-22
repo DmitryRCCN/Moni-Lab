@@ -44,33 +44,42 @@ const LightningIcon = (
 const THEMES: Record<number, { 
   colorTitle: string; 
   lineGradient: string; 
-  mascotUrl: string;
-  decorations?: Record<number, string>; // Nuevo: Índice de la actividad -> Ruta de la imagen
+  headerBg: string; // Fondo para el encabezado
+  iconLeft?: JSX.Element; // Ícono izquierdo
+  iconRight?: JSX.Element; // Ícono derecho
+  decorations?: Record<number, string>;  
 }> = {
   1: {
-    colorTitle: 'text-blue-400',
+    colorTitle: 'text-white',
     lineGradient: 'from-blue-400/20 via-blue-400/50 to-blue-400/20',
-    mascotUrl: '/assets/mono-leyendo.png', // La imagen del mono leyendo estilo Duolingo
+    headerBg: 'bg-gradient-to-r from-blue-500 to-blue-400', 
+    iconLeft: BrainIcon,
+    iconRight: LightningIcon, 
     decorations: {
-      0: '/assets/mono-emoji-confundido.png', // Aparece al lado del primer nodo
-      2: '/assets/libro-moneda.png'           // Aparece al lado del tercer nodo (el libro con la moneda en lugar del búho)
+      0: '/images/monaU1.1.webp', 
+      3: '/images/monoCoin.avif',
+      6: '/images/monaRead.avif'
     }
   },
   2: {
-    colorTitle: 'text-yellow-400',
+    colorTitle: 'text-white',
     lineGradient: 'from-yellow-400/20 via-orange-400/50 to-yellow-400/20',
-    mascotUrl: '/assets/mono-emoji-confundido.png',
+    headerBg: 'bg-gradient-to-r from-yellow-500 to-orange-400', // Gradiente amarillo/naranja
+    iconLeft: BrainIcon,
+    iconRight: BrainIcon, // Aquí usamos el mismo ícono en ambos lados
     decorations: {
-      1: '/assets/mono-leyendo.png' // Puedes reutilizar imágenes en diferentes posiciones
+      1: '/images/mono-leyendo.png'
     }
   },
   3: {
-    colorTitle: 'text-purple-400',
+    colorTitle: 'text-white',
     lineGradient: 'from-purple-400/20 via-pink-400/50 to-purple-400/20',
-    mascotUrl: '/assets/libro-moneda.png',
+    headerBg: 'bg-gradient-to-r from-purple-500 to-pink-500', // Gradiente morado
+    iconLeft: LightningIcon, 
+    iconRight: LightningIcon,
     decorations: {
-      0: '/assets/mono-leyendo.png',
-      3: '/assets/mono-emoji-confundido.png'
+      0: '/images/mono-leyendo.png',
+      3: '/images/mono-emoji.png'
     }
   }
 }
@@ -169,9 +178,9 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
         {sortedNodes.map((node) => {
           const isHighlighted = highlightId === node.id_nodo;
           const theme = THEMES[node.orden_secuencial] || {
-            colorTitle: 'text-emerald-400',
+            colorTitle: 'text-white',
             lineGradient: 'from-emerald-400/20 via-teal-400/50 to-emerald-400/20',
-            mascotUrl: '/assets/default-mascot.png'
+            headerBg: 'bg-emerald-500'
           }
 
           return (
