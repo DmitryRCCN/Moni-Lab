@@ -117,17 +117,27 @@ async function hasCompletedPreviousActivities(id_usuario: string, id_actividad: 
 }
 
 export async function getOrCreateIntento(id_usuario: string, id_actividad: string) {
-  // A. Buscar intento abierto
-  const existing = await db.execute({
-    sql: `SELECT * FROM intento_actividad WHERE id_usuario = ? AND id_actividad = ? AND puntaje_obtenido IS NULL LIMIT 1`,
+  // 0. PRIMERO: Verificar si el usuario ya completó esta actividad
+  const alreadyCompletedCheck = await db.execute({
+    sql: `SELECT estado FROM progreso_actividad WHERE id_usuario = ? AND id_actividad = ?`,
     args: [id_usuario, id_actividad],
   });
+  const userProgress = alreadyCompletedCheck.rows[0];
+  const isActivityCompleted = userProgress?.estado === 'completada' || userProgress?.estado === 'saltada';
 
-  if (existing.rows && existing.rows.length > 0) {
-    const existingRecord = existing.rows[0];
-    // Si ya existe, parsear el detalle para obtener el modo
-    const detalle = existingRecord.detalle_respuestas ? JSON.parse(existingRecord.detalle_respuestas) : {};
-    return { ...existingRecord, modo: detalle.modo || 'NORMAL' };
+  // A. Buscar intento abierto - PERO SOLO SI la actividad NO está completada
+  if (!isActivityCompleted) {
+    const existing = await db.execute({
+      sql: `SELECT * FROM intento_actividad WHERE id_usuario = ? AND id_actividad = ? AND puntaje_obtenido IS NULL LIMIT 1`,
+      args: [id_usuario, id_actividad],
+    });
+
+    if (existing.rows && existing.rows.length > 0) {
+      const existingRecord = existing.rows[0];
+      // Si ya existe, parsear el detalle para obtener el modo
+      const detalle = existingRecord.detalle_respuestas ? JSON.parse(existingRecord.detalle_respuestas) : {};
+      return { ...existingRecord, modo: detalle.modo || 'NORMAL' };
+    }
   }
 
   // B. Obtener configuración básica (es_aleatorio, topico, es_de_salto, jump configs)
@@ -172,11 +182,12 @@ export async function getOrCreateIntento(id_usuario: string, id_actividad: strin
   };
 
   // Determinar el modo si es examen de salto
+  // Si la actividad ya está completada, NUNCA debe ser SALTO (siempre es repaso normal)
   let modo = 'NORMAL';
   let cantidadPreguntas = config.cantidad_preguntas || 5;
   let dificultadMin = config.dificultad_min || 1;
 
-  if (config.es_de_salto) {
+  if (config.es_de_salto && !isActivityCompleted) {
     const completedPrevious = await hasCompletedPreviousActivities(id_usuario, id_actividad);
     if (!completedPrevious) {
       modo = 'SALTO';
