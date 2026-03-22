@@ -38,7 +38,6 @@ export default function EditProfileModal({ user, onClose, onSuccess }: EditProfi
     setLoading(true);
     setError('');
     try {
-      // Usamos un endpoint directo para el nombre (ver nota abajo sobre el backend)
       await api('/auth/update-name-direct', {
         method: 'POST',
         body: { id_usuario: user.id, nuevo_nombre: username }
@@ -115,10 +114,8 @@ export default function EditProfileModal({ user, onClose, onSuccess }: EditProfi
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-      {/* Contenedor con el verde de la Imagen 2/5/6 */}
       <div className="bg-[#064e3b] border-2 border-emerald-500/20 p-8 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-full max-w-md relative overflow-hidden">
         
-        {/* Botón Cerrar Estilizado */}
         {!successMsg && (
           <button onClick={onClose} className="absolute right-6 top-6 text-white/40 hover:text-white transition-colors">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,7 +124,6 @@ export default function EditProfileModal({ user, onClose, onSuccess }: EditProfi
           </button>
         )}
 
-        {/* Cabecera con tipografía de Moni-Lab */}
         {!successMsg && (
           <h2 className="text-3xl font-black text-white mb-8 text-center tracking-tight drop-shadow-md">
             {step === 'profile' && 'Editar Perfil'}
@@ -137,7 +133,6 @@ export default function EditProfileModal({ user, onClose, onSuccess }: EditProfi
         )}
 
         {successMsg ? (
-          /* VISTA DE ÉXITO (Imagen 7) */
           <div className="py-6 text-center animate-in zoom-in duration-300">
             <div className="w-20 h-20 bg-[#4ade80] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/20">
               <svg className="w-12 h-12 text-[#064e3b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,7 +143,6 @@ export default function EditProfileModal({ user, onClose, onSuccess }: EditProfi
           </div>
         ) : (
           <>
-            {/* VISTA PRINCIPAL */}
             {step === 'profile' && (
               <form onSubmit={handlePreUpdateName} className="space-y-6">
                 <div className="space-y-2">
@@ -175,7 +169,6 @@ export default function EditProfileModal({ user, onClose, onSuccess }: EditProfi
               </form>
             )}
 
-            {/* CONFIRMACIÓN DE NOMBRE (Imagen 1 corregida) */}
             {step === 'confirm-name' && (
               <div className="space-y-6 text-center animate-in fade-in zoom-in-95">
                 <div className="bg-black/20 p-6 rounded-2xl border border-white/5">
@@ -191,7 +184,6 @@ export default function EditProfileModal({ user, onClose, onSuccess }: EditProfi
               </div>
             )}
 
-            {/* VERIFICACIÓN (Paso 2) */}
             {step === 'verify' && (
               <form onSubmit={handleVerifyCode} className="space-y-6 animate-in slide-in-from-right-4">
                 <div className="text-center">
@@ -211,11 +203,14 @@ export default function EditProfileModal({ user, onClose, onSuccess }: EditProfi
               </form>
             )}
 
-            {/* NUEVA PASS (Paso 3) */}
             {step === 'new-password' && (
               <form onSubmit={handleResetPassword} className="space-y-6 animate-in slide-in-from-right-4">
                 <div className="flex justify-center mb-2">
-                  <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-3xl">🔐</div>
+                  <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-emerald-300">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                    </svg>
+                  </div>
                 </div>
                 
                 <div className="space-y-4">
