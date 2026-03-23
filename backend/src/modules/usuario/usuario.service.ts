@@ -40,7 +40,7 @@ async function calculateCurrentLevel(userId: string): Promise<string> {
  */
 export async function getUserById(userId: string) {
   const result = await db.execute({
-    sql: 'SELECT id, email, nombre, rol, activo, monedas_virtuales, experiencia_total, nivel_actual, created_at FROM usuarios WHERE id = ?',
+    sql: 'SELECT id, email, nombre, rol, activo, monedas_virtuales,  nivel_actual, created_at FROM usuarios WHERE id = ?',
     args: [userId],
   });
 
