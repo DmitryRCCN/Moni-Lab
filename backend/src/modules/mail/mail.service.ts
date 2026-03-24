@@ -41,15 +41,17 @@ export class MailService {
   }
 
   async renderReportHtmlForPdf(
-    nombreEstudiante: string,
-    progreso: number,
-    actividadesSemanales: any[]
+    nombre: string,
+    porcentajeProgreso: number,
+    actividadesSemanales: any[],
+    unidadesCompletadas: any[] // <--- Agregamos el cuarto argumento aquí
   ): Promise<string> {
     return await render(
       TutorReportEmail({
-        nombre: nombreEstudiante,
-        progreso,
-        actividadesSemanales
+        nombre,
+        progreso: porcentajeProgreso,
+        actividadesSemanales,
+        unidadesCompletadas, // <--- Lo pasamos a la plantilla
       })
     );
   }

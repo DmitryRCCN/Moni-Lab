@@ -4,7 +4,8 @@ import { sleep } from '../../utils/sleep';
 import puppeteer from 'puppeteer';
 
 /**
- * Obtiene el detalle de intentos y puntajes de la última semana
+ * 1. Obtiene el detalle de intentos y puntajes de la última semana.
+ * FILTRO: Ignora actividades con estado 'saltada' según la lógica de triggers.
  */
 async function getWeeklyActivityDetails(userId: string) {
   const result = await db.execute({
@@ -16,14 +17,54 @@ async function getWeeklyActivityDetails(userId: string) {
       FROM intento_actividad ia
       JOIN actividad a ON ia.id_actividad = a.id_actividad
       JOIN nodo n ON a.id_nodo = n.id_nodo
+      -- Unimos con progreso para validar el estado final
+      JOIN progreso_actividad pa ON a.id_actividad = pa.id_actividad AND ia.id_usuario = pa.id_usuario
       WHERE ia.id_usuario = ? 
         AND ia.fecha_hora >= date('now', '-7 days')
+        AND pa.estado != 'saltada'
       GROUP BY a.id_actividad
       ORDER BY ia.fecha_hora DESC
     `,
     args: [userId]
   });
   return result.rows;
+}
+
+/**
+ * 2. Obtiene las unidades (Nodos) terminadas en la semana.
+ * Determina si fue por "Salto" (examen aprobado) o "Natural".
+ */
+async function getWeeklyNodesCompleted(userId: string) {
+  const result = await db.execute({
+    sql: `
+      SELECT 
+        n.titulo,
+        -- Si existe un examen de salto completado en este nodo, el método es 'salto'
+        MAX(CASE WHEN e.es_de_salto = 1 AND pa.estado = 'completada' THEN 1 ELSE 0 END) as fue_por_salto
+      FROM nodo n
+      JOIN actividad a ON n.id_nodo = a.id_nodo
+      JOIN progreso_actividad pa ON a.id_actividad = pa.id_actividad
+      LEFT JOIN ejercicio e ON a.id_actividad = e.id_actividad
+      JOIN progreso_nodo pn ON n.id_nodo = pn.id_nodo
+      WHERE pa.id_usuario = ?
+        AND pn.id_usuario = ?
+        AND pn.estado = 'completada'
+        -- Consideramos que terminó esta semana si el último intento exitoso fue en los últimos 7 días
+        AND EXISTS (
+          SELECT 1 FROM intento_actividad ia 
+          WHERE ia.id_actividad = a.id_actividad 
+          AND ia.id_usuario = ? 
+          AND ia.fecha_hora >= date('now', '-7 days')
+        )
+      GROUP BY n.id_nodo, n.titulo
+    `,
+    args: [userId, userId, userId]
+  });
+
+  return result.rows.map(row => ({
+    titulo: String(row.titulo),
+    metodo: row.fue_por_salto === 1 ? 'salto' : 'natural'
+  }));
 }
 
 async function generarPdfDesdeHtml(html: string): Promise<Buffer> {
@@ -37,14 +78,9 @@ async function generarPdfDesdeHtml(html: string): Promise<Buffer> {
     ]
   });
   const page = await browser.newPage();
-  
-  // Establecer un viewport para asegurar el diseño
   await page.setViewport({ width: 1200, height: 800 });
-
-  // Cargamos el HTML del reporte
   await page.setContent(html, { waitUntil: 'networkidle0' });
   
-  // Imprimimos a PDF
   const pdfBuffer = await page.pdf({ 
     format: 'A4', 
     printBackground: true,
@@ -59,29 +95,21 @@ export async function processAllTutorReports() {
   console.log('--- Iniciando generación de reportes agrupados por email ---');
   
   try {
-    // 1. Obtener total global de actividades
     const totalActividadesRes = await db.execute("SELECT COUNT(*) as total FROM actividad");
     const totalGlobal = Number(totalActividadesRes.rows[0].total) || 1;
 
-    // 2. Obtener todos los usuarios que tienen un email asignado
     const usuariosRes = await db.execute(
       "SELECT id, email, nombre FROM usuarios WHERE email IS NOT NULL AND email != ''"
     );
     const todosLosUsuarios = usuariosRes.rows;
 
-    // 3. AGRUPAR POR EMAIL
-    // Creamos un mapa donde la llave es el email y el valor es la lista de usuarios (estudiantes)
     const gruposPorEmail = new Map<string, any[]>();
-
     todosLosUsuarios.forEach((u: any) => {
       const email = u.email.toLowerCase().trim();
-      if (!gruposPorEmail.has(email)) {
-        gruposPorEmail.set(email, []);
-      }
+      if (!gruposPorEmail.has(email)) gruposPorEmail.set(email, []);
       gruposPorEmail.get(email)?.push(u);
     });
 
-    // 4. PROCESAR CADA GRUPO (Cada email recibirá un solo correo)
     for (const [emailTutor, estudiantes] of gruposPorEmail.entries()) {
       try {
         console.log(`Procesando grupo para: ${emailTutor} (${estudiantes.length} estudiantes)`);
@@ -90,7 +118,7 @@ export async function processAllTutorReports() {
         for (const estudiante of estudiantes) {
           const userId = String(estudiante.id);
 
-          // Obtener progreso histórico
+          // A) Progreso histórico
           const completadasRes = await db.execute({
             sql: `SELECT COUNT(*) as total FROM progreso_actividad 
                   WHERE id_usuario = ? AND estado = 'completada'`,
@@ -99,17 +127,20 @@ export async function processAllTutorReports() {
           const completadas = Number(completadasRes.rows[0].total) || 0;
           const porcentajeProgreso = Math.round((completadas / totalGlobal) * 100);
 
-          // Obtener actividad semanal
+          // B) Actividad semanal (Sin SALTADAS)
           const actividadesSemanales = await getWeeklyActivityDetails(userId);
 
-          // Generar HTML del PDF usando la plantilla existente
+          // C) Unidades/Nodos terminados (Nuevo)
+          const unidadesCompletadas = await getWeeklyNodesCompleted(userId);
+
+          // Renderizar HTML con los nuevos datos
           const htmlReporte = await mailService.renderReportHtmlForPdf(
             estudiante.nombre,
             porcentajeProgreso,
-            actividadesSemanales as any[]
+            actividadesSemanales as any[],
+            unidadesCompletadas as any[]
           );
 
-          // Convertir a PDF
           const pdfBuffer = await generarPdfDesdeHtml(htmlReporte);
 
           adjuntosPdf.push({
@@ -118,8 +149,7 @@ export async function processAllTutorReports() {
           });
         }
 
-        // 5. Enviar el correo único con todos los adjuntos
-        // Usamos el nombre del primer estudiante o un genérico como "Tutor de Moni-Lab"
+        // Enviar correo batch
         await mailService.sendTutorBatchReport(
           emailTutor,
           "Tutor de Moni-Lab", 
@@ -131,7 +161,7 @@ export async function processAllTutorReports() {
       } catch (innerError) {
         console.error(`❌ Error con el grupo ${emailTutor}:`, innerError);
       } finally {
-        await sleep(1500); // Pausa para no saturar Resend y el CPU
+        await sleep(1500); 
       }
     }
 
