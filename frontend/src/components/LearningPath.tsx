@@ -213,7 +213,7 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
                     const numero = `${node.orden_secuencial}.${activity.orden_secuencial ?? 1}`;
                     
                     // Determinar el ícono según el tipo de actividad y si es examen de salto
-                    let icon = activity.tipo_actividad === 'lectura' ? '📖' : '✏️'
+                    let icon = activity.tipo_actividad === 'lectura' ? BookIcon : PencilIcon
                     if (isEsDeSalto && !isExamenFinal) icon = <div className="w-8 h-8 drop-shadow-sm">{LightningIcon}</div>
                     if (isEsDeSalto && isExamenFinal) icon = '🏆'
 
