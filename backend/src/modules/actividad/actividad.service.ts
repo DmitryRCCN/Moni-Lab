@@ -117,15 +117,24 @@ async function hasCompletedPreviousActivities(id_usuario: string, id_actividad: 
 }
 
 export async function getOrCreateIntento(id_usuario: string, id_actividad: string) {
-  // 0. PRIMERO: Verificar si el usuario ya completó esta actividad
-  const alreadyCompletedCheck = await db.execute({
+  // 1. VALIDACIÓN DE SEGURIDAD Y ESTADO
+  // Verificamos primero si el usuario tiene permiso para acceder a esta actividad
+  const progressCheck = await db.execute({
     sql: `SELECT estado FROM progreso_actividad WHERE id_usuario = ? AND id_actividad = ?`,
     args: [id_usuario, id_actividad],
   });
-  const userProgress = alreadyCompletedCheck.rows[0];
-  const isActivityCompleted = userProgress?.estado === 'completada' || userProgress?.estado === 'saltada';
 
-  // A. Buscar intento abierto - PERO SOLO SI la actividad NO está completada
+  const userProgress = progressCheck.rows[0];
+
+  // Si no hay registro o está bloqueada, lanzamos error inmediatamente
+  if (!userProgress || userProgress.estado === 'bloqueada') {
+    throw new Error('Esta actividad se encuentra bloqueada para tu usuario.');
+  }
+
+  const isActivityCompleted = userProgress.estado === 'completada' || userProgress.estado === 'saltada';
+
+  // 2. BUSCAR INTENTO ABIERTO (Solo si no está completada)
+  // Si la actividad ya está hecha, no buscamos intentos abiertos, vamos directo a generar uno de "repaso"
   if (!isActivityCompleted) {
     const existing = await db.execute({
       sql: `SELECT * FROM intento_actividad WHERE id_usuario = ? AND id_actividad = ? AND puntaje_obtenido IS NULL LIMIT 1`,
@@ -134,81 +143,74 @@ export async function getOrCreateIntento(id_usuario: string, id_actividad: strin
 
     if (existing.rows && existing.rows.length > 0) {
       const existingRecord = existing.rows[0];
-      // Si ya existe, parsear el detalle para obtener el modo
       const detalle = existingRecord.detalle_respuestas ? JSON.parse(existingRecord.detalle_respuestas) : {};
       return { ...existingRecord, modo: detalle.modo || 'NORMAL' };
     }
   }
 
-  // B. Obtener configuración básica (es_aleatorio, topico, es_de_salto, jump configs)
-  // Primero obtener información básica de la actividad
+  // 3. OBTENER CONFIGURACIÓN DE LA ACTIVIDAD Y NODO
   const actividadRes = await db.execute({
     sql: `SELECT a.es_aleatorio, a.id_nodo FROM actividad a WHERE a.id_actividad = ?`,
     args: [id_actividad],
   });
 
   if (!actividadRes.rows || actividadRes.rows.length === 0) {
-    throw new Error('Actividad no encontrada');
+    throw new Error('La actividad solicitada no existe.');
   }
 
-  const actividad = actividadRes.rows[0];
-  const id_nodo = actividad.id_nodo;
-  const es_aleatorio = actividad.es_aleatorio;
+  const { es_aleatorio, id_nodo } = actividadRes.rows[0];
 
-  // Obtener topico del nodo
-  const nodoRes = await db.execute({
-    sql: `SELECT n.topico FROM nodo n WHERE n.id_nodo = ?`,
-    args: [id_nodo],
-  });
+  const [nodoRes, ejercicioRes] = await Promise.all([
+    db.execute({
+      sql: `SELECT topico FROM nodo WHERE id_nodo = ?`,
+      args: [id_nodo],
+    }),
+    db.execute({
+      sql: `SELECT es_de_salto, cantidad_preguntas, dificultad_min, jump_cantidad_preguntas, jump_dificultad_min FROM ejercicio WHERE id_actividad = ?`,
+      args: [id_actividad],
+    })
+  ]);
 
   const topico = nodoRes.rows[0]?.topico || null;
-
-  // Obtener información del ejercicio
-  const ejercicioRes = await db.execute({
-    sql: `SELECT e.es_de_salto, e.cantidad_preguntas, e.dificultad_min, e.jump_cantidad_preguntas, e.jump_dificultad_min FROM ejercicio e WHERE e.id_actividad = ?`,
-    args: [id_actividad],
-  });
-
   const ejercicio = ejercicioRes.rows[0] || {};
 
   const config = {
     es_aleatorio,
     topico,
-    es_de_salto: ejercicio.es_de_salto || false,
+    es_de_salto: !!ejercicio.es_de_salto,
     cantidad_preguntas: ejercicio.cantidad_preguntas || 5,
     dificultad_min: ejercicio.dificultad_min || 1,
     jump_cantidad_preguntas: ejercicio.jump_cantidad_preguntas || 15,
     jump_dificultad_min: ejercicio.jump_dificultad_min || 2,
   };
 
-  // Determinar el modo si es examen de salto
-  // Si la actividad ya está completada, NUNCA debe ser SALTO (siempre es repaso normal)
+  // 4. DETERMINAR EL MODO (NORMAL vs SALTO)
   let modo = 'NORMAL';
-  let cantidadPreguntas = config.cantidad_preguntas || 5;
-  let dificultadMin = config.dificultad_min || 1;
+  let cantidadPreguntas = config.cantidad_preguntas;
+  let dificultadMin = config.dificultad_min;
 
+  // Solo se activa el modo SALTO si la actividad es de salto Y NO ha sido completada previamente
   if (config.es_de_salto && !isActivityCompleted) {
     const completedPrevious = await hasCompletedPreviousActivities(id_usuario, id_actividad);
     if (!completedPrevious) {
       modo = 'SALTO';
-      cantidadPreguntas = config.jump_cantidad_preguntas || 15;
-      dificultadMin = config.jump_dificultad_min || 2;
+      cantidadPreguntas = config.jump_cantidad_preguntas;
+      dificultadMin = config.jump_dificultad_min;
     }
   }
 
+  // 5. SELECCIÓN DE PREGUNTAS
   let preguntasIds: string[] = [];
 
   if (config.es_aleatorio) {
-    // Para ejercicios aleatorios, usar la cantidad de preguntas según el modo
+    // Modo Aleatorio: Filtrar por tópico o dificultad según el modo
     let sql = `SELECT id_pregunta FROM pregunta`;
     let args: any[] = [];
 
     if (modo === 'NORMAL') {
-      // Para modo NORMAL, filtrar por tópico del nodo
       sql += ` WHERE topico = ?`;
       args.push(config.topico);
     } else {
-      // Para modo SALTO, no filtrar por tópico, pero sí por dificultad mínima
       sql += ` WHERE nivel_dificultad >= ?`;
       args.push(dificultadMin);
     }
@@ -219,74 +221,50 @@ export async function getOrCreateIntento(id_usuario: string, id_actividad: strin
     const randomRes = await db.execute({ sql, args });
     preguntasIds = (randomRes.rows || []).map((r: any) => r.id_pregunta);
   } else {
-    const fixedRes = await db.execute({ sql: `SELECT id_pregunta FROM ejercicio_pregunta WHERE id_actividad = ?`, args: [id_actividad] });
+    // Modo Fijo: Preguntas enlazadas manualmente
+    const fixedRes = await db.execute({ 
+      sql: `SELECT id_pregunta FROM ejercicio_pregunta WHERE id_actividad = ?`, 
+      args: [id_actividad] 
+    });
     preguntasIds = (fixedRes.rows || []).map((r: any) => r.id_pregunta);
 
-    // Si no hay preguntas enlazadas y es ejercicio de salto, entonces se toma un fallback:
+    // FALLBACKS para Exámenes de Salto sin preguntas fijas
     if (config.es_de_salto && preguntasIds.length === 0) {
       const switchCantidad = modo === 'SALTO' ? config.jump_cantidad_preguntas : config.cantidad_preguntas;
       const switchDificultad = modo === 'SALTO' ? config.jump_dificultad_min : config.dificultad_min;
 
-      // 1) Buscar preguntas agrupadas por nodo (las que pertenecen a las actividades del mismo nodo)
-      const fallbackPorNodo = await db.execute({
-        sql: `
-          SELECT p.id_pregunta
-          FROM pregunta p
-          JOIN ejercicio_pregunta ep ON ep.id_pregunta = p.id_pregunta
-          JOIN actividad a ON a.id_actividad = ep.id_actividad
-          WHERE a.id_nodo = ? AND p.nivel_dificultad >= ?
-          ORDER BY RANDOM() LIMIT ?
-        `,
+      // Intento 1: Por Nodo y Dificultad
+      const fallbackNodo = await db.execute({
+        sql: `SELECT p.id_pregunta FROM pregunta p 
+              JOIN ejercicio_pregunta ep ON ep.id_pregunta = p.id_pregunta 
+              JOIN actividad a ON a.id_actividad = ep.id_actividad 
+              WHERE a.id_nodo = ? AND p.nivel_dificultad >= ? 
+              ORDER BY RANDOM() LIMIT ?`,
         args: [id_nodo, switchDificultad, switchCantidad],
       });
-      preguntasIds = (fallbackPorNodo.rows || []).map((r: any) => r.id_pregunta);
+      preguntasIds = (fallbackNodo.rows || []).map((r: any) => r.id_pregunta);
 
-      // 2) Si sigue vacío, intentar por tópico de nodo (caso de topicos “multi”) y dificultad
+      // Intento 2: Por Tópico general
       if (preguntasIds.length === 0 && config.topico) {
-        const fallbackPorTopico = await db.execute({
+        const fallbackTopico = await db.execute({
           sql: `SELECT id_pregunta FROM pregunta WHERE topico = ? AND nivel_dificultad >= ? ORDER BY RANDOM() LIMIT ?`,
           args: [config.topico, switchDificultad, switchCantidad],
         });
-        preguntasIds = (fallbackPorTopico.rows || []).map((r: any) => r.id_pregunta);
-      }
-
-      // 3) Si sigue vacío, usar pool general por dificultad (para no bloquear)
-      if (preguntasIds.length === 0) {
-        const fallbackGeneral = await db.execute({
-          sql: `SELECT id_pregunta FROM pregunta WHERE nivel_dificultad >= ? ORDER BY RANDOM() LIMIT ?`,
-          args: [switchDificultad, switchCantidad],
-        });
-        preguntasIds = (fallbackGeneral.rows || []).map((r: any) => r.id_pregunta);
-      }
-
-      // En la parte de los fallbacks de SALTO:
-      if (preguntasIds.length === 0) {
-        // Si no hay de nivel 2, bajamos a nivel 1 automáticamente para no romper el juego
-        console.warn(`[SALTO] No se hallaron preguntas nivel ${switchDificultad}, bajando exigencia...`);
-        
-        const fallbackFlexible = await db.execute({
-          sql: `SELECT id_pregunta FROM pregunta WHERE topico = ? OR nivel_dificultad >= 1 ORDER BY RANDOM() LIMIT ?`,
-          args: [config.topico, switchCantidad],
-        });
-        preguntasIds = (fallbackFlexible.rows || []).map((r: any) => r.id_pregunta);
-      }
-
-      if (preguntasIds.length > 0) {
-        
-        console.debug(`[SALTO] Fallback de preguntas para actividad ${id_actividad}: seleccionados ${preguntasIds.length} preguntas con modo ${modo}`);
+        preguntasIds = (fallbackTopico.rows || []).map((r: any) => r.id_pregunta);
       }
     }
   }
 
+  // 6. VALIDACIÓN FINAL Y CREACIÓN
   if (!preguntasIds || preguntasIds.length === 0) {
-    console.error(`[SALTO] No hay preguntas disponibles para actividad ${id_actividad}`);
-
-    throw new Error('No hay preguntas disponibles para este ejercicio');
+    throw new Error('No se pudieron encontrar preguntas válidas para generar este ejercicio.');
   }
 
   const id_intento = uuid();
-  // Incluir el modo en el detalle_respuestas como un campo especial
-  const detalle_inicial = JSON.stringify({ modo, preguntas: preguntasIds.map(id => ({ id_pregunta: id, respuesta_usuario: null, es_correcta: null })) });
+  const detalle_inicial = JSON.stringify({ 
+    modo, 
+    preguntas: preguntasIds.map(id => ({ id_pregunta: id, respuesta_usuario: null, es_correcta: null })) 
+  });
 
   await db.execute({
     sql: `INSERT INTO intento_actividad (id_intento, id_usuario, id_actividad, detalle_respuestas) VALUES (?, ?, ?, ?)`,
