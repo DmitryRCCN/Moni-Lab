@@ -41,7 +41,7 @@ const LightningIcon = (
 
 // ÍCONO DE LÁPIZ (Para actividades)
 const PencilIcon = (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 drop-shadow-sm">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 drop-shadow-sm">
     <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.158 3.71 3.71 1.159-1.158a2.625 2.625 0 0 0 0-3.71Zm-2.904 7.624L5.113 23.606a.75.75 0 0 1-.363.19l-4.103 1.026a.75.75 0 0 1-.904-.904l1.026-4.103a.75.75 0 0 1 .19-.363L14.674 5.74l4.153 4.153Z" />
   </svg>
 )
@@ -284,8 +284,12 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
                     const numero = `${node.orden_secuencial}.${activity.orden_secuencial ?? 1}`
                     
                     // Determinar el ícono según el tipo de actividad y si es examen de salto
-                    let icon = activity.tipo_actividad === 'lectura' ? '📖' : '✏️'
-                    if (isEsDeSalto && !isExamenFinal) icon = '⚡'
+                    let icon = activity.tipo_actividad === 'lectura' ? BookIcon : PencilIcon
+                    if (isEsDeSalto && !isExamenFinal) {
+                      // Aquí reutilizamos tu LightningIcon original, pero ajustando su tamaño para que encaje
+                      icon = <div className="w-8 h-8 drop-shadow-sm">{LightningIcon}</div>;
+                    }
+
                     if (isEsDeSalto && isExamenFinal) icon = '🏆'
 
                     const ButtonContent = (
