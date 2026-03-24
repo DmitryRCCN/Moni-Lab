@@ -22,7 +22,11 @@ def run_analysis():
     FROM actividad a
     JOIN nodo n ON a.id_nodo = n.id_nodo
     LEFT JOIN intento_actividad i ON a.id_actividad = i.id_actividad
+    -- Hacemos JOIN con progreso para conocer el estado final del usuario en esa actividad
+    LEFT JOIN progreso_actividad pa ON i.id_usuario = pa.id_usuario AND i.id_actividad = pa.id_actividad
     WHERE a.tipo_actividad = 'ejercicio'
+      -- IGNORAR las actividades que el trigger marcó como 'saltada'
+      AND (pa.estado IS NULL OR pa.estado != 'saltada')
     GROUP BY a.id_actividad
     """
     result = client.execute(query)

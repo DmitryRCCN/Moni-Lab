@@ -1,4 +1,3 @@
-import React from "react";
 import { Text, Heading, Section, Row, Column } from "@react-email/components";
 import EmailLayout from "../components/EmailLayout";
 
@@ -8,10 +7,16 @@ interface ActivityDetail {
   mejor_puntaje: number;
 }
 
+interface UnidadCompletada {
+  titulo: string;
+  metodo: 'natural' | 'salto';
+}
+
 type Props = {
   nombre: string;
   progreso: number;
   actividadesSemanales: ActivityDetail[];
+  unidadesCompletadas: UnidadCompletada[];
 };
 
 export default function TutorReportEmail({
