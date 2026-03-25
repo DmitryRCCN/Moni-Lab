@@ -38,7 +38,28 @@ const LightningIcon = (
   </svg>
 )
 
-// --- DICCIONARIO DE TEMAS ---
+// ÍCONO DE LÁPIZ (Para actividades)
+const PencilIcon = (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 drop-shadow-sm">
+    <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.158 3.71 3.71 1.159-1.158a2.625 2.625 0 0 0 0-3.71Zm-2.904 7.624L5.113 23.606a.75.75 0 0 1-.363.19l-4.103 1.026a.75.75 0 0 1-.904-.904l1.026-4.103a.75.75 0 0 1 .19-.363L14.674 5.74l4.153 4.153Z" />
+  </svg>
+)
+
+// ÍCONO DE LIBRO (Para lecturas)
+const BookIcon = (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 drop-shadow-sm">
+    <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533ZM12.75 20.636A8.214 8.214 0 0 1 18 18.75c1.68 0 3.282.515 4.75 1.407A.75.75 0 0 0 24 19.462V5.212a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z" />
+  </svg>
+)
+
+// ÍCONO DE TROFEO (Para examen final)
+const TrophyIcon = (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 drop-shadow-sm">
+    <path fillRule="evenodd" d="M5.166 2.621C5.239 2.209 5.52 2 5.84 2h12.32c.32 0 .601.209.674.621l.666 3.765A2.75 2.75 0 0 1 16.784 9.5h-1.02a4.49 4.49 0 0 1-1.39 3.012 4.5 4.5 0 0 1-4.374.878v3.111c1.545.244 2.75 1.583 2.75 3.2v.55c0 .414-.336.75-.75.75h-5.5a.75.75 0 0 1-.75-.75v-.55c0-1.617 1.205-2.956 2.75-3.2v-3.111a4.5 4.5 0 0 1-4.374-.878 4.49 4.49 0 0 1-1.39-3.012H6.216a2.75 2.75 0 0 1-2.716-3.114l.666-3.765ZM6.216 8A1.25 1.25 0 0 1 5.08 6.463l.42-2.383h.914l-.2 5.42H6.216Zm11.568 0h-.914l-.2-5.42h.914l.42 2.383A1.25 1.25 0 0 1 17.784 8Z" clipRule="evenodd" />
+  </svg>
+)
+
+// 1. DICCIONARIO DE TEMAS ACTUALIZADO CON FONDOS E ÍCONOS
 const THEMES: Record<number, { 
   colorTitle: string; 
   lineGradient: string; 
@@ -191,9 +212,10 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
 
                     const numero = `${node.orden_secuencial}.${activity.orden_secuencial ?? 1}`;
                     
-                    let icon = activity.tipo_actividad === 'lectura' ? '📖' : '✏️';
-                    if (isEsDeSalto && !isExamenFinal) icon = '⚡';
-                    if (isEsDeSalto && isExamenFinal) icon = '🏆';
+                    // Determinar el ícono según el tipo de actividad y si es examen de salto
+                    let icon = activity.tipo_actividad === 'lectura' ? BookIcon : PencilIcon
+                    if (isEsDeSalto && !isExamenFinal) icon = <div className="w-8 h-8 drop-shadow-sm">{LightningIcon}</div>
+                    if (isEsDeSalto && isExamenFinal) icon = '🏆'
 
                     const ButtonContent = (
                       <div
