@@ -352,45 +352,6 @@ export async function updateIntentoFinal(id_usuario: string, data: { id_activida
       const esDeSlato = ejercicioRes.rows[0]?.es_de_salto ?? false;
       const minimo = minimoRaw !== null ? Number(minimoRaw) : null;
       debeActualizar = minimo !== null && data.puntaje_obtenido !== undefined && data.puntaje_obtenido !== null && Number(data.puntaje_obtenido) >= minimo;
-
-      // Si es un examen de salto y el usuario lo aprobó, marcar todas las actividades del nodo como completadas
-      if (debeActualizar && esDeSlato && id_nodo) {
-        console.log(`[🚀 SALTO] Usuario ${id_usuario} aprobó examen de salto en actividad ${data.id_actividad}. Marcando todas las actividades del nodo ${id_nodo} como completadas.`);
-        
-        // Obtener todas las actividades del nodo (excepto la actual)
-        const allActivitiesRes = await db.execute({
-          sql: `SELECT id_actividad FROM actividad WHERE id_nodo = ? AND id_actividad != ?`,
-          args: [id_nodo, data.id_actividad],
-        });
-
-        const allActivities = allActivitiesRes.rows || [];
-        
-        // Insertar/actualizar el progreso de todas las actividades como completadas
-        for (const activity of allActivities) {
-          const actId = activity.id_actividad;
-          
-          // Verificar si ya existe registro de progreso
-          const existingProgress = await db.execute({
-            sql: `SELECT id_progreso FROM progreso_actividad WHERE id_usuario = ? AND id_actividad = ?`,
-            args: [id_usuario, actId],
-          });
-
-          if (!existingProgress.rows || existingProgress.rows.length === 0) {
-            // Insertar nuevo registro
-            const idp = uuid();
-            await db.execute({
-              sql: `INSERT INTO progreso_actividad (id_progreso, id_usuario, id_actividad, estado, mejor_puntaje) VALUES (?, ?, ?, 'completada', 100)`,
-              args: [idp, id_usuario, actId],
-            });
-          } else {
-            // Actualizar solo si no estaba completada
-            await db.execute({
-              sql: `UPDATE progreso_actividad SET estado = 'completada', mejor_puntaje = 100 WHERE id_usuario = ? AND id_actividad = ? AND estado != 'completada'`,
-              args: [id_usuario, actId],
-            });
-          }
-        }
-      }
     }
 
     if (debeActualizar) {

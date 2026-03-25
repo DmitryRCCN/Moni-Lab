@@ -22,7 +22,8 @@ type Props = {
 export default function TutorReportEmail({
   nombre,
   progreso,
-  actividadesSemanales
+  actividadesSemanales,
+  unidadesCompletadas
 }: Props) {
   const chartConfig = JSON.stringify({
     type: 'doughnut',
@@ -72,13 +73,34 @@ export default function TutorReportEmail({
         </Row>
       </Section>
 
+      {/* SECCIÓN NUEVA: UNIDADES (NODOS) COMPLETADAS */}
+      {unidadesCompletadas && unidadesCompletadas.length > 0 && (
+        <Section style={{ marginTop: '20px' }}>
+          <Heading as="h3" style={{ fontSize: '18px', color: '#374151' }}>
+            🏆 Unidades Dominadas esta semana
+          </Heading>
+          {unidadesCompletadas.map((unidad, i) => (
+            <div key={i} style={{ ...styles.card, marginBottom: '10px', borderLeft: '4px solid #f59e0b' }}>
+              <Text style={{ margin: 0, fontWeight: 'bold', color: '#10b981' }}>
+                Unidad: {unidad.titulo}
+              </Text>
+              <Text style={{ margin: 0, fontSize: '13px', color: '#4b5563', marginTop: '4px' }}>
+                {unidad.metodo === 'salto' 
+                  ? '⚡ Aprobada por Reto de Salto. Las actividades previas han sido validadas por competencia.'
+                  : '📖 Completada de manera natural paso a paso.'}
+              </Text>
+            </div>
+          ))}
+        </Section>
+      )}
+
       {/* SECCIÓN DE ACTIVIDAD SEMANAL */}
       <Section style={{ marginTop: '20px' }}>
         <Heading as="h3" style={{ fontSize: '18px', color: '#374151' }}>
           Actividades trabajadas esta semana
         </Heading>
         
-        {actividadesSemanales.length > 0 ? (
+        {actividadesSemanales && actividadesSemanales.length > 0 ? (
           actividadesSemanales.map((act, i) => {
             // LÓGICA DE ALERTA: Si el mejor puntaje es menor a 60
             const necesitaRefuerzo = act.mejor_puntaje < 60;
@@ -116,7 +138,7 @@ export default function TutorReportEmail({
           })
         ) : (
           <Text style={{ fontStyle: 'italic', color: '#9ca3af', textAlign: 'center' }}>
-            No se registró actividad en la plataforma durante esta semana.
+            No se registró actividad regular en la plataforma durante esta semana.
           </Text>
         )}
       </Section>
@@ -161,7 +183,6 @@ const styles = {
     padding: '12px 0',
     borderBottom: '1px solid #f3f4f6',
   },
-  // Estilos nuevos para la alerta
   alertBox: {
     marginTop: '8px',
     padding: '10px',
