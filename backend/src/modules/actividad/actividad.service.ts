@@ -309,60 +309,55 @@ export async function getPreguntasByEjercicio(id_actividad: string, id_usuario: 
 }
 
 export async function updateIntentoFinal(id_usuario: string, data: { id_actividad: string; puntaje_obtenido: number; detalle_respuestas: string }) {
-  // Buscar intento abierto
-  const current = await db.execute({ sql: `SELECT id_intento FROM intento_actividad WHERE id_usuario = ? AND id_actividad = ? AND puntaje_obtenido IS NULL`, args: [id_usuario, data.id_actividad] });
+  const current = await db.execute({ 
+    sql: `SELECT id_intento FROM intento_actividad WHERE id_usuario = ? AND id_actividad = ? AND puntaje_obtenido IS NULL`, 
+    args: [id_usuario, data.id_actividad] 
+  });
+  
   let id_intento: string;
   if (!current.rows || current.rows.length === 0) {
-    // Crear un nuevo intento si no existe uno abierto
     id_intento = uuid();
     await db.execute({
       sql: `INSERT INTO intento_actividad (id_intento, id_usuario, id_actividad, detalle_respuestas, puntaje_obtenido, fecha_hora) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       args: [id_intento, id_usuario, data.id_actividad, data.detalle_respuestas, data.puntaje_obtenido]
     });
   } else {
-    id_intento = current.rows[0].id_intento;
-    await db.execute({ sql: `UPDATE intento_actividad SET puntaje_obtenido = ?, detalle_respuestas = ?, fecha_hora = CURRENT_TIMESTAMP WHERE id_intento = ?`, args: [data.puntaje_obtenido, data.detalle_respuestas, id_intento] });
+    id_intento = current.rows[0].id_intento as string;
+    await db.execute({ 
+      sql: `UPDATE intento_actividad SET puntaje_obtenido = ?, detalle_respuestas = ?, fecha_hora = CURRENT_TIMESTAMP WHERE id_intento = ?`, 
+      args: [data.puntaje_obtenido, data.detalle_respuestas, id_intento] 
+    });
   }
 
-  // Reutilizar lógica de premios y progreso
   let awardedCoins = 0;
   try {
     const actividadRes = await db.execute({ sql: `SELECT tipo_actividad, puntos_otorgados FROM actividad WHERE id_actividad = ?`, args: [data.id_actividad] });
-    const tipoActividad = actividadRes.rows[0]?.tipo_actividad ?? null;
-    const puntosOtorgados = Number(actividadRes.rows[0]?.puntos_otorgados ?? 0);
+    const tipoActividad = actividadRes.rows[0]?.tipo_actividad;
+    const puntosOtorgados = Number(actividadRes.rows[0]?.puntos_otorgados || 0);
     
-    // Obtener id_nodo de manera segura
-    const nodoRes = await db.execute({ 
-      sql: `SELECT a.id_nodo FROM actividad a WHERE a.id_actividad = ?`, 
-      args: [data.id_actividad] 
-    });
-    const id_nodo = nodoRes.rows[0]?.id_nodo ?? null;
-
-    // Para minijuegos, siempre actualizar progreso si el intento está completado
-    // Para ejercicios, usar minimo_aprobatorio
     let debeActualizar = false;
-
     if (tipoActividad === 'minijuego') {
-      // Para minijuegos, cualquier puntaje >= 0 significa que se completó
-      debeActualizar = data.puntaje_obtenido !== undefined && data.puntaje_obtenido !== null && Number(data.puntaje_obtenido) >= 0;
-    } else if (tipoActividad === 'ejercicio') {
-      // Para ejercicios, verificar el mínimo aprobatorio
-      const ejercicioRes = await db.execute({ sql: `SELECT minimo_aprobatorio, es_de_salto FROM ejercicio WHERE id_actividad = ?`, args: [data.id_actividad] });
-      const minimoRaw = ejercicioRes.rows[0]?.minimo_aprobatorio ?? null;
-      const esDeSlato = ejercicioRes.rows[0]?.es_de_salto ?? false;
-      const minimo = minimoRaw !== null ? Number(minimoRaw) : null;
-      debeActualizar = minimo !== null && data.puntaje_obtenido !== undefined && data.puntaje_obtenido !== null && Number(data.puntaje_obtenido) >= minimo;
+      debeActualizar = data.puntaje_obtenido !== null && Number(data.puntaje_obtenido) >= 0;
+    } else {
+      const ejercicioRes = await db.execute({ sql: `SELECT minimo_aprobatorio FROM ejercicio WHERE id_actividad = ?`, args: [data.id_actividad] });
+      const minimo = Number(ejercicioRes.rows[0]?.minimo_aprobatorio || 0);
+      debeActualizar = Number(data.puntaje_obtenido) >= minimo;
     }
 
     if (debeActualizar) {
       const prev = await db.execute({ sql: `SELECT estado FROM progreso_actividad WHERE id_usuario = ? AND id_actividad = ?`, args: [id_usuario, data.id_actividad] });
-      const prevEstado = prev.rows[0]?.estado ?? null;
+      const prevEstado = prev.rows[0]?.estado;
 
       if (!prev.rows || prev.rows.length === 0) {
-        const idp = uuid();
-        await db.execute({ sql: `INSERT INTO progreso_actividad (id_progreso, id_usuario, id_actividad, estado, mejor_puntaje) VALUES (?, ?, ?, 'completada', ?)`, args: [idp, id_usuario, data.id_actividad, Number(data.puntaje_obtenido)] });
+        await db.execute({ 
+          sql: `INSERT INTO progreso_actividad (id_progreso, id_usuario, id_actividad, estado, mejor_puntaje, fecha_actualizacion) VALUES (?, ?, ?, 'completada', ?, CURRENT_TIMESTAMP)`, 
+          args: [uuid(), id_usuario, data.id_actividad, data.puntaje_obtenido] 
+        });
       } else {
-        await db.execute({ sql: `UPDATE progreso_actividad SET estado = 'completada', mejor_puntaje = ? WHERE id_usuario = ? AND id_actividad = ?`, args: [Number(data.puntaje_obtenido), id_usuario, data.id_actividad] });
+        await db.execute({ 
+          sql: `UPDATE progreso_actividad SET estado = 'completada', mejor_puntaje = ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id_usuario = ? AND id_actividad = ?`, 
+          args: [data.puntaje_obtenido, id_usuario, data.id_actividad] 
+        });
       }
 
       if (prevEstado !== 'completada' && puntosOtorgados > 0) {
@@ -371,30 +366,30 @@ export async function updateIntentoFinal(id_usuario: string, data: { id_activida
       }
     }
   } catch (e) {
-    console.warn('Error updating progreso or awarding coins:', e);
+    console.error('Error en progreso:', e);
   }
 
   const updated = await db.execute({ sql: `SELECT monedas_virtuales FROM usuarios WHERE id = ?`, args: [id_usuario] });
-  const monedas_restantes = updated.rows[0]?.monedas_virtuales ?? null;
-
-  return { id_intento, awardedCoins, monedas_restantes };
+  return { id_intento, awardedCoins, monedas_restantes: updated.rows[0]?.monedas_virtuales };
 }
 
 export async function completeLectura(id_usuario: string, id_actividad: string) {
-  const id = uuid();
-  // obtener puntos otorgados por la actividad
   const actividadRes = await db.execute({ sql: `SELECT puntos_otorgados FROM actividad WHERE id_actividad = ?`, args: [id_actividad] });
-  const puntosOtorgados = Number(actividadRes.rows[0]?.puntos_otorgados ?? 0);
+  const puntosOtorgados = Number(actividadRes.rows[0]?.puntos_otorgados || 0);
 
-  // verificar estado previo
   const prev = await db.execute({ sql: `SELECT estado FROM progreso_actividad WHERE id_usuario = ? AND id_actividad = ?`, args: [id_usuario, id_actividad] });
-  const prevEstado = prev.rows[0]?.estado ?? null;
+  const prevEstado = prev.rows[0]?.estado;
 
-  // si no existe registro de progreso, insertarlo como completado
   if (!prev.rows || prev.rows.length === 0) {
-    await db.execute({ sql: `INSERT INTO progreso_actividad (id_progreso, id_usuario, id_actividad, estado, mejor_puntaje) VALUES (?, ?, ?, 'completada', NULL)`, args: [id, id_usuario, id_actividad] });
+    await db.execute({ 
+      sql: `INSERT INTO progreso_actividad (id_progreso, id_usuario, id_actividad, estado, fecha_actualizacion) VALUES (?, ?, ?, 'completada', CURRENT_TIMESTAMP)`, 
+      args: [uuid(), id_usuario, id_actividad] 
+    });
   } else {
-    await db.execute({ sql: `UPDATE progreso_actividad SET estado = 'completada' WHERE id_usuario = ? AND id_actividad = ?`, args: [id_usuario, id_actividad] });
+    await db.execute({ 
+      sql: `UPDATE progreso_actividad SET estado = 'completada', fecha_actualizacion = CURRENT_TIMESTAMP WHERE id_usuario = ? AND id_actividad = ?`, 
+      args: [id_usuario, id_actividad] 
+    });
   }
 
   let awardedCoins = 0;
@@ -404,8 +399,6 @@ export async function completeLectura(id_usuario: string, id_actividad: string) 
   }
 
   const updated = await db.execute({ sql: `SELECT monedas_virtuales FROM usuarios WHERE id = ?`, args: [id_usuario] });
-  const monedas_restantes = updated.rows[0]?.monedas_virtuales ?? null;
-
-  return { awardedCoins, monedas_restantes };
+  return { awardedCoins, monedas_restantes: updated.rows[0]?.monedas_virtuales };
 }
 
