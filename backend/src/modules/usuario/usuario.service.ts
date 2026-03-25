@@ -87,7 +87,7 @@ export async function getUserProfile(userId: string) {
 
   // Estadísticas...
   const statsResult = await db.execute({
-    sql: `SELECT SUM(CASE WHEN estado = 'completada' THEN 1 ELSE 0 END) as completadas,
+    sql: `SELECT SUM(CASE WHEN estado = 'completada' OR estado = 'saltada' THEN 1 ELSE 0 END) as completadas,
                  AVG(mejor_puntaje) as puntaje_promedio
           FROM progreso_actividad WHERE id_usuario = ?`,
     args: [userId],

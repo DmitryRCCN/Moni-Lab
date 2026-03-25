@@ -121,7 +121,7 @@ export async function processAllTutorReports() {
           // A) Progreso histórico
           const completadasRes = await db.execute({
             sql: `SELECT COUNT(*) as total FROM progreso_actividad 
-                  WHERE id_usuario = ? AND estado = 'completada'`,
+                  WHERE id_usuario = ? AND (estado = 'completada' OR estado = 'saltada')`,
             args: [userId]
           });
           const completadas = Number(completadasRes.rows[0].total) || 0;
