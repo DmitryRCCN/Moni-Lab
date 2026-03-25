@@ -38,10 +38,7 @@ export async function registerUser(data: {
 
   // 1. Crear el usuario base
   await db.execute({
-    sql: `
-      INSERT INTO usuarios (id, email, password, nombre)
-      VALUES (?, ?, ?, ?)
-    `,
+    sql: `INSERT INTO usuarios (id, email, password, nombre) VALUES (?, ?, ?, ?)`,
     args: [userId, data.email, hashedPassword, data.nombre],
   });
 
@@ -57,29 +54,63 @@ export async function registerUser(data: {
     });
   }
 
-  // 3. Generar tokens
+  // 3. Generar tokens de sesión
   const accessToken = signAccessToken(userId);
   const refreshTokenId = uuid();
   const refreshToken = signRefreshToken(userId, refreshTokenId);
   const refreshTokenHash = hashToken(refreshToken);
 
-  // Guardar refresh token en BD (expira en 7 días)
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
   await db.execute({
-    sql: `
-      INSERT INTO refresh_tokens (id, usuario_id, token_hash, expires_at)
-      VALUES (?, ?, ?, ?)
-    `,
+    sql: `INSERT INTO refresh_tokens (id, usuario_id, token_hash, expires_at) VALUES (?, ?, ?, ?)`,
     args: [refreshTokenId, userId, refreshTokenHash, expiresAt],
   });
 
-  // 4. Obtener el perfil completo del usuario recién creado  
+  // 4. INICIALIZAR PROGRESO (Desbloqueo inicial)
+  try {
+    // Obtener el primer nodo (el que tenga el orden_secuencial más bajo)
+    const primerNodoRes = await db.execute(
+        "SELECT id_nodo FROM nodo ORDER BY orden_secuencial ASC LIMIT 1"
+    );
+    const primerNodoId = primerNodoRes.rows[0]?.id_nodo;
+
+    if (primerNodoId) {
+      // Crear registro de progreso para el primer nodo como 'disponible'
+      await db.execute({
+        sql: `INSERT INTO progreso_nodo (id_progreso, id_usuario, id_nodo, estado, mejor_puntaje) 
+              VALUES (?, ?, ?, ?, ?)`, 
+        args: [uuid(), userId, primerNodoId, 'disponible', 0],
+      });
+
+      // Obtener la primera actividad de ese nodo
+      const primeraActividadRes = await db.execute({
+        sql: "SELECT id_actividad FROM actividad WHERE id_nodo = ? ORDER BY orden_secuencial ASC LIMIT 1",
+        args: [primerNodoId]
+      });
+      
+      const primeraActividadId = primeraActividadRes.rows[0]?.id_actividad;
+
+      if (primeraActividadId) {
+        // Crear registro de progreso para la primera actividad como 'disponible'
+        await db.execute({
+          sql: `INSERT INTO progreso_actividad (id_progreso, id_usuario, id_actividad, estado, mejor_puntaje) 
+                VALUES (?, ?, ?, 'disponible', 0)`,
+          args: [uuid(), userId, primeraActividadId],
+        });
+      }
+    }
+  } catch (error) {
+    console.warn("Error al inicializar el progreso del usuario:", error);
+    // No bloqueamos el registro si falla el progreso, pero es ideal que funcione
+  }
+
+  // 5. Obtener el perfil completo del usuario recién creado
   const userFullProfile = await getUserProfile(userId);
 
   return {
     accessToken,
     refreshToken,
-    user: userFullProfile, // Devolvemos el perfil completo con estadísticas e items comprados
+    user: userFullProfile,
   };
 }
 
@@ -90,11 +121,9 @@ export async function loginUser(nombre: string, password: string): Promise<AuthR
   });
 
   const user = result.rows[0] as any;
-
   if (!user) throw new Error('Invalid credentials');
 
   const valid = await bcrypt.compare(password, user.password);
-
   if (!valid) throw new Error('Invalid credentials');
 
   // Generar tokens
@@ -103,17 +132,12 @@ export async function loginUser(nombre: string, password: string): Promise<AuthR
   const refreshToken = signRefreshToken(user.id, refreshTokenId);
   const refreshTokenHash = hashToken(refreshToken);
 
-  // Guardar refresh token en BD (expira en 7 días)
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
   await db.execute({
-    sql: `
-      INSERT INTO refresh_tokens (id, usuario_id, token_hash, expires_at)
-      VALUES (?, ?, ?, ?)
-    `,
+    sql: `INSERT INTO refresh_tokens (id, usuario_id, token_hash, expires_at) VALUES (?, ?, ?, ?)`,
     args: [refreshTokenId, user.id, refreshTokenHash, expiresAt],
   });
 
-  // --- Obtenemos el perfil completo con ítems y monedas ---
   const userFullProfile = await getUserProfile(user.id);
 
   return {
@@ -123,18 +147,13 @@ export async function loginUser(nombre: string, password: string): Promise<AuthR
   };
 }
 
-/**
- * Refresca el access token usando un refresh token válido
- */
 export async function refreshAccessToken(refreshToken: string): Promise<{
   accessToken: string;
 }> {
   try {
-    // Verificar que el refresh token sea válido
     const decoded = verifyRefreshToken(refreshToken);
     const refreshTokenHash = hashToken(refreshToken);
 
-    // Validar que existe en BD y no está revocado
     const result = await db.execute({
       sql: `
         SELECT * FROM refresh_tokens 
@@ -150,18 +169,13 @@ export async function refreshAccessToken(refreshToken: string): Promise<{
       throw new Error('Invalid or expired refresh token');
     }
 
-    // Generar nuevo access token
     const accessToken = signAccessToken(decoded.userId);
-
     return { accessToken };
   } catch (error: any) {
     throw new Error(error.message || 'Token refresh failed');
   }
 }
 
-/**
- * Revoca un refresh token (logout)
- */
 export async function revokeRefreshToken(refreshToken: string): Promise<void> {
   try {
     const decoded = verifyRefreshToken(refreshToken);
