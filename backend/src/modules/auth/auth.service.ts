@@ -12,13 +12,20 @@ interface AuthResponse {
 
 // Definimos los ítems básicos que todo usuario recibe al iniciar
 // Deben coincidir con lo que haya en la tabla 'item'
-const BASIC_ITEMS = [
-  'sky_blue',    // background
-  'base_peach',  // base
-  'shirt_red',   // clothing
-  'default_eyes',// eyes
-  'short_brown', // hair
-  'none'         // accessory
+const INITIAL_ITEMS = [
+  // Ítems EQUIPADOS por defecto (X)
+  { id: 'sky_blue', equipped: true },
+  { id: 'base_peach', equipped: true },
+  { id: 'shirt_red', equipped: true },
+  { id: 'default_eyes', equipped: true },
+  { id: 'short_brown', equipped: true },
+  { id: 'none', equipped: true }, // Accesorio vacío
+
+  // Ítems DESBLOQUEADOS pero NO equipados (Y)
+  { id: 'neon_jacket', equipped: false },
+  { id: 'cyber_visor', equipped: false },
+  { id: 'spartan_helmet', equipped: false },
+  { id: 'dark_bg', equipped: false }
 ];
 
 export async function registerUser(data: {
@@ -40,13 +47,13 @@ export async function registerUser(data: {
 
   // 2. Asignar ítems al inventario (adquirirlos) y EQUIPARLOS directamente
   // Usamos la tabla 'usuario_item' con equipado = true
-  for (const itemId of BASIC_ITEMS) {
+  for (const itemId of INITIAL_ITEMS) {
     await db.execute({
       sql: `
         INSERT INTO usuario_item (id_usuario, id_item, equipado) 
         VALUES (?, ?, ?)
       `,
-      args: [userId, itemId, true],
+      args: [userId, itemId.id, itemId.equipped],
     });
   }
 
