@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../api';
 import Avatar from './avatar';
+import { useAuth } from '../context/AuthContext';
 
 const ICONS = {
   success: (
@@ -22,6 +23,8 @@ type EquipModalProps = {
 };
 
 export default function EquipModal({ onClose, onAvatarUpdate }: EquipModalProps) {
+  const { user, updateUserData } = useAuth();
+
   const [items, setItems] = useState<any[]>([]);
   const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set());
   const [equippedIds, setEquippedIds] = useState<Set<string>>(new Set());
@@ -66,6 +69,15 @@ export default function EquipModal({ onClose, onAvatarUpdate }: EquipModalProps)
       // 1. Llamada a la API  
       await api(`/items/${item.id_item}/equipar`, { method: 'POST' });
       
+      // Creamos el nuevo objeto 'equipped' manteniendo lo que ya había
+      const newEquipped = {
+        ...user?.equipped,
+        [item.tipo]: { id: item.id_item, svg: item.svg_capa }
+      };
+
+      // Notificamos al AuthContext (esto refrescará el Navbar al instante)
+      updateUserData({ equipped: newEquipped });
+
       // 2. Actualización optimista del estado local del Modal
       setEquippedIds(prev => {
         const next = new Set(Array.from(prev));

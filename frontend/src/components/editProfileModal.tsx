@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import api from '../api';
 import PasswordField from './passwordField';
+import { useAuth } from '../context/AuthContext';
 
 type EditProfileModalProps = {
   user: { id: string; nombre: string; email?: string }; 
@@ -13,6 +14,9 @@ type EditProfileModalProps = {
 type Step = 'profile' | 'confirm-name' | 'verify' | 'new-password';
 
 export default function EditProfileModal({ user, onClose, onSuccess }: EditProfileModalProps) {
+  
+  const { updateUserData } = useAuth();
+
   const [step, setStep] = useState<Step>('profile');
   const [tokens, setTokens] = useState({ resetToken: '', allowToken: '' });
 
@@ -42,6 +46,9 @@ export default function EditProfileModal({ user, onClose, onSuccess }: EditProfi
         method: 'POST',
         body: { id_usuario: user.id, nuevo_nombre: username }
       });
+
+      updateUserData({ nombre: username }); // Actualizamos el contexto para reflejar el cambio en el Navbar
+
       setSuccessMsg(`¡Nombre actualizado a "${username}"!`);
       onSuccess(username);
       setTimeout(onClose, 1500);
