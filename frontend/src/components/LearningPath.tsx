@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState, useRef } from 'react'
+import type { JSX } from 'react';
 
 type Activity = {
   id_actividad: string
@@ -94,31 +95,51 @@ const THEMES: Record<number, {
   }
 }
 
-export default function LearningPath({ nodes = [], progress = {}, activeActivityId }: Props) {
+export default function LearningPath({ nodes = [], progress = {} }: Props) {
   const [pulsing, setPulsing] = useState<Record<string, boolean>>({})
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const carouselRef = useRef<HTMLDivElement>(null)
+  const hasAutoScrolled = useRef(false);
 
   // --- AUTO-SCROLL ---
   useEffect(() => {
-    if (activeActivityId && carouselRef.current) {
+    // Si no hay nodos, o ya hicimos scroll, evitamos correr esto
+    if (nodes.length === 0 || Object.keys(progress).length === 0 || hasAutoScrolled.current) return;
+
+    let firstAvailableActId: string | null = null;
+    const sortedNodes = [...nodes].sort((a, b) => a.orden_secuencial - b.orden_secuencial);
+
+    // Buscar la primera actividad con estado 'disponible'
+    for (const node of sortedNodes) {
+      const activities = [...node.activities].sort((a, b) => (a.orden_secuencial ?? 1) - (b.orden_secuencial ?? 1));
+      const availableAct = activities.find(a => progress[a.id_actividad] === 'disponible');
+      if (availableAct) {
+        firstAvailableActId = availableAct.id_actividad;
+        break;
+      }
+    }
+
+    // Si la encontramos, hacemos el scroll centrado a ella
+    if (firstAvailableActId && carouselRef.current) {
       const timer = setTimeout(() => {
-        const targetAct = carouselRef.current?.querySelector(`[data-activity-id="${activeActivityId}"]`) as HTMLElement;
+        const targetAct = carouselRef.current?.querySelector(`[data-activity-id="${firstAvailableActId}"]`) as HTMLElement;
         if (targetAct) {
           targetAct.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          setHighlightId(activeActivityId);
+          setHighlightId(firstAvailableActId);
           setTimeout(() => setHighlightId(null), 2000);
+          hasAutoScrolled.current = true; // Marcar como scrolleado
         }
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [activeActivityId]);
+  }, [nodes, progress]); // Solo depende de las propiedades de progreso/nodos
 
   const triggerPulse = (id: string) => {
     setPulsing(prev => ({ ...prev, [id]: true }))
     setTimeout(() => setPulsing(prev => ({ ...prev, [id]: false })), 300)
   }
 
+  // --- CORRECCIÓN DE SCROLL MANUAL ---
   const scroll = (direction: 'up' | 'down') => {
     if (!carouselRef.current) return
     const container = carouselRef.current
@@ -131,19 +152,26 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
 
     slides.forEach((slide, index) => {
       const diff = Math.abs(slide.offsetTop - currentScroll)
-      if (diff < minDiff) { minDiff = diff; currentIndex = index; }
+      if (diff < minDiff + 10) { 
+        minDiff = diff; 
+        currentIndex = index; 
+      }
     });
 
     const nextIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+    
     if (nextIndex >= 0 && nextIndex < slides.length) {
-      slides[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'start' })
+      const targetSlide = slides[nextIndex];
+      container.scrollTo({
+        top: targetSlide.offsetTop, 
+        behavior: 'smooth'
+      });
     }
   }
 
   if (!nodes.length) return <div className="text-white text-center py-10">No hay contenido disponible</div>
 
   const sortedNodes = [...nodes].sort((a, b) => a.orden_secuencial - b.orden_secuencial)
-
   return (
     <div className="w-full flex flex-col items-center justify-center py-4 gap-4">
       
@@ -154,8 +182,8 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
         </svg>
       </button>
 
-      {/* Contenedor del recorrido */}
-      <div ref={carouselRef} className="flex flex-col w-full h-[70vh] overflow-y-auto py-10 gap-24 scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      {/* Contenedor del recorrido - SE AGREGÓ 'relative' PARA CÁLCULOS EXACTOS */}
+      <div ref={carouselRef} className="relative flex flex-col w-full h-[70vh] overflow-y-auto py-10 gap-24 scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {sortedNodes.map((node) => {
           const theme = THEMES[node.orden_secuencial] || { colorTitle: 'text-white', lineGradient: 'from-emerald-400/20 via-teal-400/50 to-emerald-400/20', headerBg: 'bg-emerald-500' }
 
@@ -184,11 +212,8 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
                     const estado = progress[activity.id_actividad] || 'bloqueada';
                     const isEsDeSalto = activity.es_de_salto ?? false;
                     
-                    // --- CORRECCIÓN DE LÓGICA DE BLOQUEO ---
-                    // Ahora isLocked depende exclusivamente de la base de datos
                     const isLocked = estado === 'bloqueada';
                     
-                    // Verificar si el usuario ya pasó por todas las lecciones previas (para iconos de éxito)
                     const allPreviousCompleted = node.activities
                       .filter((a) => (a.orden_secuencial ?? 0) < (activity.orden_secuencial ?? 0))
                       .every((a) => progress[a.id_actividad] === 'completada' || progress[a.id_actividad] === 'saltada');
@@ -196,7 +221,6 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
                     const isExamenFinal = isEsDeSalto && allPreviousCompleted;
                     const isLeft = actIndex % 2 === 0;
 
-                    // --- COLORES SEGÚN ESTADO ---
                     let colorClass = 'bg-gradient-to-br from-emerald-400 to-teal-500 border-emerald-300';
                     
                     if (isLocked) {
@@ -205,14 +229,12 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
                       if (estado === 'disponible') colorClass = 'bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]';
                       if (estado === 'completada' || estado === 'saltada') colorClass = 'bg-teal-700 border-teal-500 text-white/80';
                       
-                      // Colores especiales para saltos desbloqueados
                       if (isEsDeSalto && !isExamenFinal) colorClass = 'bg-yellow-500 border-yellow-400 text-white shadow-[0_0_15px_rgba(234,179,8,0.5)]';
                       if (isEsDeSalto && isExamenFinal) colorClass = 'bg-purple-600 border-purple-400 text-white shadow-[0_0_15px_rgba(147,51,234,0.5)]';
                     }
 
                     const numero = `${node.orden_secuencial}.${activity.orden_secuencial ?? 1}`;
                     
-                    // Determinar el ícono según el tipo de actividad y si es examen de salto
                     let icon = activity.tipo_actividad === 'lectura' ? BookIcon : PencilIcon
                     if (isEsDeSalto && !isExamenFinal) icon = <div className="w-8 h-8 drop-shadow-sm">{LightningIcon}</div>
                     if (isEsDeSalto && isExamenFinal) icon = '🏆'
@@ -238,7 +260,7 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
                           </p>
                         </div>
 
-                        {/* Decoración - Forzando tamaño absoluto */}
+                        {/* Decoración */}
                         {theme.decorations && theme.decorations[actIndex] && (
                           <div className={`absolute top-1/2 transform -translate-y-1/2 pointer-events-none z-20 
                                           ${isLeft ? 'left-1/2 ml-16 sm:ml-28' : 'right-1/2 mr-16 sm:mr-28'}`}>
@@ -252,7 +274,7 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
                           </div>
                         )}
 
-                        {/* Botón con Link o Div (Bloqueado) */}
+                        {/* Botón */}
                         {isLocked ? (
                           <div className="opacity-60">{ButtonContent}</div>
                         ) : (
