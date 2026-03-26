@@ -55,10 +55,10 @@ const BookIcon = (
 
 // ÍCONO DE TROFEO (Para examen final)
 const TrophyIcon = (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 drop-shadow-sm">
-    <path fillRule="evenodd" d="M5.166 2.621C5.239 2.209 5.52 2 5.84 2h12.32c.32 0 .601.209.674.621l.666 3.765A2.75 2.75 0 0 1 16.784 9.5h-1.02a4.49 4.49 0 0 1-1.39 3.012 4.5 4.5 0 0 1-4.374.878v3.111c1.545.244 2.75 1.583 2.75 3.2v.55c0 .414-.336.75-.75.75h-5.5a.75.75 0 0 1-.75-.75v-.55c0-1.617 1.205-2.956 2.75-3.2v-3.111a4.5 4.5 0 0 1-4.374-.878 4.49 4.49 0 0 1-1.39-3.012H6.216a2.75 2.75 0 0 1-2.716-3.114l.666-3.765ZM6.216 8A1.25 1.25 0 0 1 5.08 6.463l.42-2.383h.914l-.2 5.42H6.216Zm11.568 0h-.914l-.2-5.42h.914l.42 2.383A1.25 1.25 0 0 1 17.784 8Z" clipRule="evenodd" />
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
+    <path fill-rule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 0 0-.584.859 6.753 6.753 0 0 0 6.138 5.6 6.73 6.73 0 0 0 2.743 1.346A6.707 6.707 0 0 1 9.279 15H8.54c-1.036 0-1.875.84-1.875 1.875V19.5h-.75a2.25 2.25 0 0 0-2.25 2.25c0 .414.336.75.75.75h15a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-2.25-2.25h-.75v-2.625c0-1.036-.84-1.875-1.875-1.875h-.739a6.706 6.706 0 0 1-1.112-3.173 6.73 6.73 0 0 0 2.743-1.347 6.753 6.753 0 0 0 6.139-5.6.75.75 0 0 0-.585-.858 47.077 47.077 0 0 0-3.07-.543V2.62a.75.75 0 0 0-.658-.744 49.22 49.22 0 0 0-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 0 0-.657.744Zm0 2.629c0 1.196.312 2.32.857 3.294A5.266 5.266 0 0 1 3.16 5.337a45.6 45.6 0 0 1 2.006-.343v.256Zm13.5 0v-.256c.674.1 1.343.214 2.006.343a5.265 5.265 0 0 1-2.863 3.207 6.72 6.72 0 0 0 .857-3.294Z" clip-rule="evenodd" />
   </svg>
-)
+);
 
 // 1. DICCIONARIO DE TEMAS ACTUALIZADO CON FONDOS E ÍCONOS
 const THEMES: Record<number, { 
@@ -236,8 +236,13 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
                     const numero = `${node.orden_secuencial}.${activity.orden_secuencial ?? 1}`;
                     
                     let icon = activity.tipo_actividad === 'lectura' ? BookIcon : PencilIcon
-                    if (isEsDeSalto && !isExamenFinal) icon = <div className="w-8 h-8 drop-shadow-sm">{LightningIcon}</div>
-                    if (isEsDeSalto && isExamenFinal) icon = TrophyIcon
+                    if (isEsDeSalto) {
+                      icon = (
+                        <div className="w-8 h-8 flex items-center justify-center drop-shadow-sm">
+                          {isExamenFinal ? TrophyIcon : LightningIcon}
+                        </div>
+                      );
+                    }
 
                     const ButtonContent = (
                       <div

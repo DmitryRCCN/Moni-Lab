@@ -131,8 +131,9 @@ export default function Profile() {
               <div className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-emerald-400 text-sm font-bold">
                 Nivel {data.nivel_actual ?? '0.0'}
               </div>
-              <div className="px-4 py-2 bg-amber-500/20 border border-amber-500/30 rounded-xl text-amber-300 text-sm font-bold">
-                {ICONS.coin} {data.monedas_virtuales?.toLocaleString() ?? 0}
+              <div className="px-4 py-2 bg-amber-500/20 border border-amber-500/30 rounded-xl text-amber-300 text-sm font-bold flex items-center gap-2">
+                <span className="shrink-0">{ICONS.coin}</span> 
+                <span>{data.monedas_virtuales?.toLocaleString() ?? 0}</span>
               </div>
             </div>
           </div>
