@@ -92,6 +92,22 @@ const THEMES: Record<number, {
     iconLeft: LightningIcon, 
     iconRight: LightningIcon,
     decorations: { 0: '/images/mono-leyendo.png', 3: '/images/mono-emoji.png' }
+  },
+  4: {
+    colorTitle: 'text-white',
+    lineGradient: 'from-yellow-400/20 via-orange-400/50 to-yellow-400/20',
+    headerBg: 'bg-gradient-to-r from-yellow-500 to-orange-400', 
+    iconLeft: BrainIcon,
+    iconRight: BrainIcon, 
+    decorations: { 1: '/images/mono-leyendo.png' }
+  },
+  5: {
+    colorTitle: 'text-white',
+    lineGradient: 'from-purple-400/20 via-pink-400/50 to-purple-400/20',
+    headerBg: 'bg-gradient-to-r from-purple-500 to-pink-500', 
+    iconLeft: LightningIcon, 
+    iconRight: LightningIcon,
+    decorations: { 0: '/images/mono-leyendo.png', 3: '/images/mono-emoji.png' }
   }
 }
 
