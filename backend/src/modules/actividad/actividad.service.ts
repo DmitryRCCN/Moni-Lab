@@ -143,7 +143,9 @@ export async function getOrCreateIntento(id_usuario: string, id_actividad: strin
 
     if (existing.rows && existing.rows.length > 0) {
       const existingRecord = existing.rows[0];
-      const detalle = existingRecord.detalle_respuestas ? JSON.parse(existingRecord.detalle_respuestas) : {};
+
+      const detalleRaw = existingRecord.detalle_respuestas ? String(existingRecord.detalle_respuestas) : null;
+      const detalle = detalleRaw ? JSON.parse(detalleRaw) : {};
       return { ...existingRecord, modo: detalle.modo || 'NORMAL' };
     }
   }
@@ -282,7 +284,7 @@ export async function getPreguntasByEjercicio(id_actividad: string, id_usuario: 
   let modo = 'NORMAL';
   
   if (intento.detalle_respuestas) {
-    const parsed = JSON.parse(intento.detalle_respuestas);
+    const parsed = JSON.parse(String(intento.detalle_respuestas));
     if (parsed.modo) {
       modo = parsed.modo;
       detalle = parsed.preguntas || [];
@@ -292,18 +294,19 @@ export async function getPreguntasByEjercicio(id_actividad: string, id_usuario: 
     }
   }
   
-  const ids = detalle.map((d: any) => d.id_pregunta).filter(Boolean);
-
+  const ids: string[] = detalle
+    .map((d: any) => String(d.id_pregunta)) // Convertimos a String explícitamente
+    .filter(Boolean);
   if (ids.length === 0) return { id_intento: intento.id_intento, preguntas: [], modo };
 
   const placeholders = ids.map(() => '?').join(',');
   const result = await db.execute({
     sql: `SELECT id_pregunta, enunciado, tipo_pregunta, nivel_dificultad, opciones, topico, puntos, respuesta_correcta FROM pregunta WHERE id_pregunta IN (${placeholders})`,
-    args: ids,
+    args: ids as any[],
   });
 
   const preguntasMap = new Map((result.rows || []).map((p: any) => [p.id_pregunta, p]));
-  const preguntasOrdenadas = ids.map((i: string) => preguntasMap.get(i)).filter(Boolean);
+  const preguntasOrdenadas = ids.map((i) => preguntasMap.get(i)).filter(Boolean);
 
   return { id_intento: intento.id_intento, preguntas: preguntasOrdenadas, modo };
 }
