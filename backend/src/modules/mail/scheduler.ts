@@ -8,7 +8,6 @@ export function initMailScheduler() {
     console.log('⏰ Ejecutando tarea programada de reportes...');
     await processAllTutorReports();
   }, {
-    scheduled: true,
     timezone: "America/Mexico_City"
   });
 

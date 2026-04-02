@@ -129,6 +129,7 @@ export default function ForgotPassword() {
                 className="w-full p-3 rounded bg-black/40 border border-white/10 text-white" 
                 required 
              />
+             {error && <p className="text-xs text-rose-400 text-center bg-rose-400/10 py-2 rounded border border-rose-400/20">{error}</p>}
              <button disabled={loading} className="w-full py-3 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-500 transition-colors">
                 {loading ? 'Enviando...' : 'Enviar Código'}
              </button>
@@ -147,6 +148,7 @@ export default function ForgotPassword() {
                 className="w-full p-4 text-center text-2xl tracking-[1em] rounded bg-black/40 border border-emerald-500 text-white font-mono" 
                 required 
              />
+             {error && <p className="text-xs text-rose-400 text-center bg-rose-400/10 py-2 rounded border border-rose-400/20">{error}</p>}
              <button disabled={loading} className="w-full py-3 bg-emerald-600 text-white rounded-lg font-bold">
                 {loading ? 'Verificando...' : 'Verificar'}
              </button>
@@ -156,9 +158,26 @@ export default function ForgotPassword() {
         {/* --- PASO 3: NUEVA CONTRASEÑA (REFACTOREADO) --- */}
         {step === 'RESET' && (
           <form onSubmit={handleReset} className="space-y-6">
-            <div className="text-center space-y-2 mb-6">
-              <p className="text-4xl">🔓</p>
-              <p className="text-sm text-white/80">Código aceptado. Ingresa tu nueva credencial.</p>
+            <div className="text-center space-y-4 mb-6">
+              <div className="flex justify-center">
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  strokeWidth="1.5" 
+                  stroke="currentColor" 
+                  className="w-12 h-12 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.4)]"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" 
+                  />
+                </svg>
+              </div>
+              <p className="text-sm text-white/80 px-4">
+                Código aceptado. Ingresa tu nueva credencial.
+              </p>
             </div>
 
             <PasswordField 

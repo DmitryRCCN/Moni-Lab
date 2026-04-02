@@ -85,13 +85,23 @@ export default function RegisterUser() {
         navigate('/Path')
 
       } catch (err) {
+        let safeErrorMessage = 'Error interno en el servidor. Inténtalo más tarde.';
 
         if (err instanceof Error) {
-          setError(err.message)
-        } else {
-          setError('Error en registro')
+          const rawMessage = err.message.toLowerCase();
+          
+          // Filtramos errores comunes de Base de Datos
+          if (rawMessage.includes('unique') || rawMessage.includes('duplicate')) {
+            safeErrorMessage = 'El nombre de usuario ya está en uso. Elige otro.';
+          } else if (rawMessage.includes('sqlite') || rawMessage.includes('sql') || rawMessage.includes('database')) {
+            safeErrorMessage = 'Ocurrió un error al guardar tus datos. Inténtalo más tarde.';
+          } else {
+            // Si es un error controlado (ej. "Contraseña muy corta"), lo mostramos directamente
+            safeErrorMessage = err.message; 
+          }
         }
-
+        
+        setError(safeErrorMessage);
       }
 
     },

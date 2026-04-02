@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState, useRef } from 'react'
+import type { JSX } from 'react';
 
 type Activity = {
   id_actividad: string
@@ -54,10 +55,10 @@ const BookIcon = (
 
 // ÍCONO DE TROFEO (Para examen final)
 const TrophyIcon = (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 drop-shadow-sm">
-    <path fillRule="evenodd" d="M5.166 2.621C5.239 2.209 5.52 2 5.84 2h12.32c.32 0 .601.209.674.621l.666 3.765A2.75 2.75 0 0 1 16.784 9.5h-1.02a4.49 4.49 0 0 1-1.39 3.012 4.5 4.5 0 0 1-4.374.878v3.111c1.545.244 2.75 1.583 2.75 3.2v.55c0 .414-.336.75-.75.75h-5.5a.75.75 0 0 1-.75-.75v-.55c0-1.617 1.205-2.956 2.75-3.2v-3.111a4.5 4.5 0 0 1-4.374-.878 4.49 4.49 0 0 1-1.39-3.012H6.216a2.75 2.75 0 0 1-2.716-3.114l.666-3.765ZM6.216 8A1.25 1.25 0 0 1 5.08 6.463l.42-2.383h.914l-.2 5.42H6.216Zm11.568 0h-.914l-.2-5.42h.914l.42 2.383A1.25 1.25 0 0 1 17.784 8Z" clipRule="evenodd" />
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
+    <path fillRule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 0 0-.584.859 6.753 6.753 0 0 0 6.138 5.6 6.73 6.73 0 0 0 2.743 1.346A6.707 6.707 0 0 1 9.279 15H8.54c-1.036 0-1.875.84-1.875 1.875V19.5h-.75a2.25 2.25 0 0 0-2.25 2.25c0 .414.336.75.75.75h15a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-2.25-2.25h-.75v-2.625c0-1.036-.84-1.875-1.875-1.875h-.739a6.706 6.706 0 0 1-1.112-3.173 6.73 6.73 0 0 0 2.743-1.347 6.753 6.753 0 0 0 6.139-5.6.75.75 0 0 0-.585-.858 47.077 47.077 0 0 0-3.07-.543V2.62a.75.75 0 0 0-.658-.744 49.22 49.22 0 0 0-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 0 0-.657.744Zm0 2.629c0 1.196.312 2.32.857 3.294A5.266 5.266 0 0 1 3.16 5.337a45.6 45.6 0 0 1 2.006-.343v.256Zm13.5 0v-.256c.674.1 1.343.214 2.006.343a5.265 5.265 0 0 1-2.863 3.207 6.72 6.72 0 0 0 .857-3.294Z" clipRule="evenodd" />
   </svg>
-)
+);
 
 // 1. DICCIONARIO DE TEMAS ACTUALIZADO CON FONDOS E ÍCONOS
 const THEMES: Record<number, { 
@@ -91,34 +92,70 @@ const THEMES: Record<number, {
     iconLeft: LightningIcon, 
     iconRight: LightningIcon,
     decorations: { 0: '/images/mono-leyendo.png', 3: '/images/mono-emoji.png' }
+  },
+  4: {
+    colorTitle: 'text-white',
+    lineGradient: 'from-yellow-400/20 via-orange-400/50 to-yellow-400/20',
+    headerBg: 'bg-gradient-to-r from-yellow-500 to-orange-400', 
+    iconLeft: BrainIcon,
+    iconRight: BrainIcon, 
+    decorations: { 1: '/images/mono-leyendo.png' }
+  },
+  5: {
+    colorTitle: 'text-white',
+    lineGradient: 'from-purple-400/20 via-pink-400/50 to-purple-400/20',
+    headerBg: 'bg-gradient-to-r from-purple-500 to-pink-500', 
+    iconLeft: LightningIcon, 
+    iconRight: LightningIcon,
+    decorations: { 0: '/images/mono-leyendo.png', 3: '/images/mono-emoji.png' }
   }
 }
 
-export default function LearningPath({ nodes = [], progress = {}, activeActivityId }: Props) {
+export default function LearningPath({ nodes = [], progress = {} }: Props) {
   const [pulsing, setPulsing] = useState<Record<string, boolean>>({})
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const carouselRef = useRef<HTMLDivElement>(null)
+  const hasAutoScrolled = useRef(false);
 
   // --- AUTO-SCROLL ---
   useEffect(() => {
-    if (activeActivityId && carouselRef.current) {
+    // Si no hay nodos, o ya hicimos scroll, evitamos correr esto
+    if (nodes.length === 0 || Object.keys(progress).length === 0 || hasAutoScrolled.current) return;
+
+    let firstAvailableActId: string | null = null;
+    const sortedNodes = [...nodes].sort((a, b) => a.orden_secuencial - b.orden_secuencial);
+
+    // Buscar la primera actividad con estado 'disponible'
+    for (const node of sortedNodes) {
+      const activities = [...node.activities].sort((a, b) => (a.orden_secuencial ?? 1) - (b.orden_secuencial ?? 1));
+      const availableAct = activities.find(a => progress[a.id_actividad] === 'disponible');
+      if (availableAct) {
+        firstAvailableActId = availableAct.id_actividad;
+        break;
+      }
+    }
+
+    // Si la encontramos, hacemos el scroll centrado a ella
+    if (firstAvailableActId && carouselRef.current) {
       const timer = setTimeout(() => {
-        const targetAct = carouselRef.current?.querySelector(`[data-activity-id="${activeActivityId}"]`) as HTMLElement;
+        const targetAct = carouselRef.current?.querySelector(`[data-activity-id="${firstAvailableActId}"]`) as HTMLElement;
         if (targetAct) {
           targetAct.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          setHighlightId(activeActivityId);
+          setHighlightId(firstAvailableActId);
           setTimeout(() => setHighlightId(null), 2000);
+          hasAutoScrolled.current = true; // Marcar como scrolleado
         }
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [activeActivityId]);
+  }, [nodes, progress]); // Solo depende de las propiedades de progreso/nodos
 
   const triggerPulse = (id: string) => {
     setPulsing(prev => ({ ...prev, [id]: true }))
     setTimeout(() => setPulsing(prev => ({ ...prev, [id]: false })), 300)
   }
 
+  // --- CORRECCIÓN DE SCROLL MANUAL ---
   const scroll = (direction: 'up' | 'down') => {
     if (!carouselRef.current) return
     const container = carouselRef.current
@@ -131,19 +168,26 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
 
     slides.forEach((slide, index) => {
       const diff = Math.abs(slide.offsetTop - currentScroll)
-      if (diff < minDiff) { minDiff = diff; currentIndex = index; }
+      if (diff < minDiff + 10) { 
+        minDiff = diff; 
+        currentIndex = index; 
+      }
     });
 
     const nextIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+    
     if (nextIndex >= 0 && nextIndex < slides.length) {
-      slides[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'start' })
+      const targetSlide = slides[nextIndex];
+      container.scrollTo({
+        top: targetSlide.offsetTop, 
+        behavior: 'smooth'
+      });
     }
   }
 
   if (!nodes.length) return <div className="text-white text-center py-10">No hay contenido disponible</div>
 
   const sortedNodes = [...nodes].sort((a, b) => a.orden_secuencial - b.orden_secuencial)
-
   return (
     <div className="w-full flex flex-col items-center justify-center py-4 gap-4">
       
@@ -154,8 +198,8 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
         </svg>
       </button>
 
-      {/* Contenedor del recorrido */}
-      <div ref={carouselRef} className="flex flex-col w-full h-[70vh] overflow-y-auto py-10 gap-24 scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      {/* Contenedor del recorrido - SE AGREGÓ 'relative' PARA CÁLCULOS EXACTOS */}
+      <div ref={carouselRef} className="relative flex flex-col w-full h-[70vh] overflow-y-auto py-10 gap-24 scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {sortedNodes.map((node) => {
           const theme = THEMES[node.orden_secuencial] || { colorTitle: 'text-white', lineGradient: 'from-emerald-400/20 via-teal-400/50 to-emerald-400/20', headerBg: 'bg-emerald-500' }
 
@@ -184,11 +228,8 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
                     const estado = progress[activity.id_actividad] || 'bloqueada';
                     const isEsDeSalto = activity.es_de_salto ?? false;
                     
-                    // --- CORRECCIÓN DE LÓGICA DE BLOQUEO ---
-                    // Ahora isLocked depende exclusivamente de la base de datos
                     const isLocked = estado === 'bloqueada';
                     
-                    // Verificar si el usuario ya pasó por todas las lecciones previas (para iconos de éxito)
                     const allPreviousCompleted = node.activities
                       .filter((a) => (a.orden_secuencial ?? 0) < (activity.orden_secuencial ?? 0))
                       .every((a) => progress[a.id_actividad] === 'completada' || progress[a.id_actividad] === 'saltada');
@@ -196,7 +237,6 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
                     const isExamenFinal = isEsDeSalto && allPreviousCompleted;
                     const isLeft = actIndex % 2 === 0;
 
-                    // --- COLORES SEGÚN ESTADO ---
                     let colorClass = 'bg-gradient-to-br from-emerald-400 to-teal-500 border-emerald-300';
                     
                     if (isLocked) {
@@ -205,17 +245,20 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
                       if (estado === 'disponible') colorClass = 'bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]';
                       if (estado === 'completada' || estado === 'saltada') colorClass = 'bg-teal-700 border-teal-500 text-white/80';
                       
-                      // Colores especiales para saltos desbloqueados
                       if (isEsDeSalto && !isExamenFinal) colorClass = 'bg-yellow-500 border-yellow-400 text-white shadow-[0_0_15px_rgba(234,179,8,0.5)]';
                       if (isEsDeSalto && isExamenFinal) colorClass = 'bg-purple-600 border-purple-400 text-white shadow-[0_0_15px_rgba(147,51,234,0.5)]';
                     }
 
                     const numero = `${node.orden_secuencial}.${activity.orden_secuencial ?? 1}`;
                     
-                    // Determinar el ícono según el tipo de actividad y si es examen de salto
                     let icon = activity.tipo_actividad === 'lectura' ? BookIcon : PencilIcon
-                    if (isEsDeSalto && !isExamenFinal) icon = <div className="w-8 h-8 drop-shadow-sm">{LightningIcon}</div>
-                    if (isEsDeSalto && isExamenFinal) icon = '🏆'
+                    if (isEsDeSalto) {
+                      icon = (
+                        <div className="w-8 h-8 flex items-center justify-center drop-shadow-sm">
+                          {isExamenFinal ? TrophyIcon : LightningIcon}
+                        </div>
+                      );
+                    }
 
                     const ButtonContent = (
                       <div
@@ -238,7 +281,7 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
                           </p>
                         </div>
 
-                        {/* Decoración - Forzando tamaño absoluto */}
+                        {/* Decoración */}
                         {theme.decorations && theme.decorations[actIndex] && (
                           <div className={`absolute top-1/2 transform -translate-y-1/2 pointer-events-none z-20 
                                           ${isLeft ? 'left-1/2 ml-16 sm:ml-28' : 'right-1/2 mr-16 sm:mr-28'}`}>
@@ -252,7 +295,7 @@ export default function LearningPath({ nodes = [], progress = {}, activeActivity
                           </div>
                         )}
 
-                        {/* Botón con Link o Div (Bloqueado) */}
+                        {/* Botón */}
                         {isLocked ? (
                           <div className="opacity-60">{ButtonContent}</div>
                         ) : (

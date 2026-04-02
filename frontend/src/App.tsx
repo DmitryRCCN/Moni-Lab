@@ -16,6 +16,7 @@ import About from './pages/About'
 import { AuthProvider } from './context/AuthContext'
 import Footer from './components/Footer'
 import RequireAuth from './components/RequireAuth'
+import RequireGuest from './components/RequireGuest'
 import ItemEditor from './components/ItemEditor'
 
 function AppContent() {
@@ -31,10 +32,10 @@ function AppContent() {
           <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="/store" element={<RequireAuth><Store /></RequireAuth>} />
           <Route path="/path" element={<RequireAuth><Path /></RequireAuth>} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/register/user" element={<RegisterUser />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/login" element={<RequireGuest><Login /></RequireGuest>} />
+          <Route path="/register" element={<RequireGuest><Register /></RequireGuest>} />
+          <Route path="/register/user" element={<RequireGuest><RegisterUser /></RequireGuest>} />
+          <Route path="/forgot-password" element={<RequireGuest><ForgotPassword /></RequireGuest>} />
           <Route path="/confirm-update" element={<ConfirmUpdate />} />
           <Route path="/terms" element={<TermCond />} />
           <Route path="/privacy" element={<Privacy />} />

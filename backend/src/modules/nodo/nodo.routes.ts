@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { listNodos, createNodoHandler } from './nodo.controller';
+import { listNodos } from './nodo.controller';
 
 const router = Router();
 
