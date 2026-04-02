@@ -16,6 +16,7 @@ import About from './pages/About'
 import { AuthProvider } from './context/AuthContext'
 import Footer from './components/Footer'
 import RequireAuth from './components/RequireAuth'
+import ItemEditor from './components/ItemEditor'
 
 function AppContent() {
   return (
@@ -38,6 +39,7 @@ function AppContent() {
           <Route path="/terms" element={<TermCond />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/about" element={<About />} />
+          <Route path="/item-editor" element={<RequireAuth><ItemEditor /></RequireAuth>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
