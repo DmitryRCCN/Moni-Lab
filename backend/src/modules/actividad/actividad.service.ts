@@ -78,7 +78,7 @@ export async function getActividadById(id: string) {
 // --- NUEVAS FUNCIONES: intento congelado y actualización final ---
 
 // Función auxiliar para verificar si el usuario completó todas las actividades previas del nodo
-async function hasCompletedPreviousActivities(id_usuario: string, id_actividad: string): Promise<boolean> {
+export async function hasCompletedPreviousActivities(id_usuario: string, id_actividad: string): Promise<boolean> {
   // Obtener id_nodo de manera segura
   const nodoInfo = await db.execute({
     sql: `SELECT a.id_nodo FROM actividad a WHERE a.id_actividad = ?`,

@@ -1,0 +1,174 @@
+import { getOrCreateIntento, hasCompletedPreviousActivities } from '../../src/modules/actividad/actividad.service';
+import { db } from '../../src/db/client';
+
+// Mock de la BD
+jest.mock('../../src/db/client');
+
+const mockDb = db as jest.Mocked<typeof db>;
+
+describe('actividad.service - getOrCreateIntento', () => {
+  
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('debe crear intento NORMAL para ejercicio no-salto', async () => {
+    const id_usuario = 'user-123';
+    const id_actividad = 'activity-normal';
+
+    // Mock actividad normal
+    mockDb.execute
+      .mockResolvedValueOnce({
+        rows: [{ id_nodo: 'node-1', es_aleatorio: false }]
+      } as any) // actividad query
+      .mockResolvedValueOnce({
+        rows: [{ topico: 'educacion-financiera' }]
+      } as any) // nodo query
+      .mockResolvedValueOnce({
+        rows: [{ es_de_salto: 0, cantidad_preguntas: 5, dificultad_min: 1 }]
+      } as any) // ejercicio query
+      .mockResolvedValueOnce({
+        rows: [] // no hay intento previo abierto
+      } as any) // intento abierto query
+      .mockResolvedValueOnce({
+        rows: [] // no completada
+      } as any) // progreso query
+      .mockResolvedValueOnce({
+        rows: [{ id_pregunta: 'p1' }, { id_pregunta: 'p2' }]
+      } as any) // ejercicio_pregunta query
+      .mockResolvedValueOnce({} as any); // insert intento
+
+    const result = await getOrCreateIntento(id_usuario, id_actividad);
+
+    expect(result.modo).toBe('NORMAL');
+    expect(mockDb.execute).toHaveBeenCalled();
+  });
+
+  test('debe crear intento SALTO para ejercicio de salto sin completar anteriores', async () => {
+    const id_usuario = 'user-123';
+    const id_actividad = 'exam-salto-002';
+
+    // Mock ejercicio de salto
+    mockDb.execute
+      .mockResolvedValueOnce({
+        rows: [{ id_nodo: 'node-exam', es_aleatorio: true }]
+      } as any) // actividad
+      .mockResolvedValueOnce({
+        rows: [{ topico: 'dinero-banca' }]
+      } as any) // nodo
+      .mockResolvedValueOnce({
+        rows: [{ es_de_salto: 1, cantidad_preguntas: 5, dificultad_min: 1, jump_cantidad_preguntas: 15, jump_dificultad_min: 2 }]
+      } as any) // ejercicio
+      .mockResolvedValueOnce({
+        rows: [] // sin intento abierto
+      } as any)
+      .mockResolvedValueOnce({
+        rows: [] // no completada
+      } as any) // progreso query
+      .mockResolvedValueOnce({
+        rows: [] // sin actividades previas completadas
+      } as any) // todas las actividades count
+      .mockResolvedValueOnce({
+        rows: Array(15).fill(0).map((_, i) => ({ id_pregunta: `q${i}` }))
+      } as any) // random preguntas SALTO
+      .mockResolvedValueOnce({} as any); // insert
+
+    const result = await getOrCreateIntento(id_usuario, id_actividad);
+
+    expect(result.modo).toBe('SALTO');
+  });
+
+  test('debe crear intento NORMAL si está completada, aunque sea de salto', async () => {
+    const id_usuario = 'user-123';
+    const id_actividad = 'exam-salto-002';
+
+    // Mock ejercicio de salto pero YA COMPLETADO
+    mockDb.execute
+      .mockResolvedValueOnce({
+        rows: [{ id_nodo: 'node-exam', es_aleatorio: false }]
+      } as any) // actividad
+      .mockResolvedValueOnce({
+        rows: [{ topico: 'dinero-banca' }]
+      } as any) // nodo
+      .mockResolvedValueOnce({
+        rows: [{ es_de_salto: 1, cantidad_preguntas: 5, jump_cantidad_preguntas: 15 }]
+      } as any) // ejercicio
+      .mockResolvedValueOnce({
+        rows: []
+      } as any) // sin intento abierto
+      .mockResolvedValueOnce({
+        rows: [{ estado: 'completada' }] // ← IMPORTANTE: ya completada
+      } as any) // progreso query
+      .mockResolvedValueOnce({
+        rows: [{ id_pregunta: 'p1' }, { id_pregunta: 'p2' }, { id_pregunta: 'p3' }, { id_pregunta: 'p4' }, { id_pregunta: 'p5' }]
+      } as any) // preguntas NORMALES (5, no 15)
+      .mockResolvedValueOnce({} as any); // insert
+
+    const result = await getOrCreateIntento(id_usuario, id_actividad);
+
+    // Debe ser NORMAL aunque el ejercicio sea de salto, porque ya está completado
+    expect(result.modo).toBe('NORMAL');
+  });
+
+});
+
+describe('actividad.service - hasCompletedPreviousActivities', () => {
+
+  test('retorna true si todas las actividades previas están completadas', async () => {
+    const id_usuario = 'user-123';
+    const id_actividad = 'activity-3';
+
+    mockDb.execute
+      .mockResolvedValueOnce({
+        rows: [{ id_nodo: 'node-1' }]
+      } as any) // get nodo
+      .mockResolvedValueOnce({
+        rows: [{ id_actividad: 'activity-1' }, { id_actividad: 'activity-2' }]
+      } as any) // get otras actividades
+      .mockResolvedValueOnce({
+        rows: [{ count: 2 }]
+      } as any); // count completadas
+
+    const result = await hasCompletedPreviousActivities(id_usuario, id_actividad);
+
+    expect(result).toBe(true);
+  });
+
+  test('retorna false si hay actividades no completadas', async () => {
+    const id_usuario = 'user-123';
+    const id_actividad = 'activity-3';
+
+    mockDb.execute
+      .mockResolvedValueOnce({
+        rows: [{ id_nodo: 'node-1' }]
+      } as any) // get nodo
+      .mockResolvedValueOnce({
+        rows: [{ id_actividad: 'activity-1' }, { id_actividad: 'activity-2' }]
+      } as any) // get otras actividades
+      .mockResolvedValueOnce({
+        rows: [{ count: 1 }] // solo 1 de 2
+      } as any); // count completadas
+
+    const result = await hasCompletedPreviousActivities(id_usuario, id_actividad);
+
+    expect(result).toBe(false);
+  });
+
+  test('retorna true si no hay actividades previas', async () => {
+    const id_usuario = 'user-123';
+    const id_actividad = 'activity-1';
+
+    mockDb.execute
+      .mockResolvedValueOnce({
+        rows: [{ id_nodo: 'node-1' }]
+      } as any) // get nodo
+      .mockResolvedValueOnce({
+        rows: [] // sin otras actividades
+      } as any) // get otras actividades
+
+    const result = await hasCompletedPreviousActivities(id_usuario, id_actividad);
+
+    expect(result).toBe(true);
+  });
+
+});
