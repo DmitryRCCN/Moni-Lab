@@ -13,11 +13,15 @@ import ConfirmUpdate from './pages/ConfirmUpdate';
 import TermCond from './pages/TermCond'
 import Privacy from './pages/Privacy'
 import About from './pages/About'
+import NotFound from './pages/NotFound'
+import ServerError from './pages/ServerError'
+import AccessDenied from './pages/AccessDenied'
 import { AuthProvider } from './context/AuthContext'
 import Footer from './components/Footer'
 import RequireAuth from './components/RequireAuth'
 import RequireGuest from './components/RequireGuest'
 import ItemEditor from './components/ItemEditor'
+import ErrorBoundary from './components/ErrorBoundary'
 
 function AppContent() {
   return (
@@ -41,7 +45,14 @@ function AppContent() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/about" element={<About />} />
           <Route path="/item-editor" element={<RequireAuth><ItemEditor /></RequireAuth>} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          
+          {/* Error Routes */}
+          <Route path="/error/404" element={<NotFound />} />
+          <Route path="/error/500" element={<ServerError />} />
+          <Route path="/error/403" element={<AccessDenied />} />
+          
+          {/* Catch all - 404 */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       <Footer />
@@ -51,13 +62,15 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <div className="relative w-full overflow-x-hidden">
-          <AppContent />
-        </div>
-      </BrowserRouter>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
+          <div className="relative w-full overflow-x-hidden">
+            <AppContent />
+          </div>
+        </BrowserRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
 

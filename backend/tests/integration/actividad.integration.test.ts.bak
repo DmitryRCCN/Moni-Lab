@@ -1,0 +1,192 @@
+import request from 'supertest';
+import app from '../../src/app';
+import { db } from '../../src/db/client';
+
+// Tests de integración - API Endpoints
+
+describe('API - Actividad Endpoints', () => {
+
+  describe('GET /ejercicio/:id/preguntas', () => {
+
+    test('debe retornar preguntas en modo NORMAL para ejercicio recién iniciado', async () => {
+      // Setup: Usuario logeado
+      const userId = 'test-user-123';
+      const activityId = 'activity-normal-001';
+
+      const response = await request(app)
+        .get(`/ejercicio/${activityId}/preguntas`)
+        .set('Authorization', `Bearer valid_token_${userId}`)
+        .set('Cookie', `id_usuario=${userId}`)
+        .expect(200);
+
+      expect(response.body).toHaveProperty('id_intento');
+      expect(response.body).toHaveProperty('preguntas');
+      expect(response.body).toHaveProperty('modo');
+      expect(response.body.modo).toBe('NORMAL');
+      expect(Array.isArray(response.body.preguntas)).toBe(true);
+    });
+
+    test('debe retornar preguntas en modo SALTO para ejercicio de salto sin completar previas', async () => {
+      const userId = 'test-user-456';
+      const activityId = 'exam-salto-002';
+
+      const response = await request(app)
+        .get(`/ejercicio/${activityId}/preguntas`)
+        .set('Authorization', `Bearer valid_token_${userId}`)
+        .set('Cookie', `id_usuario=${userId}`)
+        .expect(200);
+
+      expect(response.body.modo).toBe('SALTO');
+      expect(response.body.preguntas.length).toBeGreaterThanOrEqual(10); // más preguntas en salto
+    });
+
+    test('debe retornar preguntas en modo NORMAL si ya está completada, aunque sea de salto', async () => {
+      const userId = 'test-user-789';
+      const activityId = 'exam-salto-completed';
+
+      // Prerequisito: Usuario ya completó este examen de salto antes
+      // (Se asume que está en progreso_actividad con estado='completada')
+
+      const response = await request(app)
+        .get(`/ejercicio/${activityId}/preguntas`)
+        .set('Authorization', `Bearer valid_token_${userId}`)
+        .set('Cookie', `id_usuario=${userId}`)
+        .expect(200);
+
+      expect(response.body.modo).toBe('NORMAL');
+    });
+
+  });
+
+  describe('POST /ejercicio/respuesta', () => {
+
+    test('debe registrar respuesta correcta', async () => {
+      const userId = 'test-user-123';
+      const intentoId = 'intento-123';
+
+      const response = await request(app)
+        .post(`/ejercicio/respuesta`)
+        .set('Authorization', `Bearer valid_token_${userId}`)
+        .send({
+          id_intento: intentoId,
+          id_pregunta: 'pregunta-123',
+          respuesta_usuario: 'opcion-a'
+        })
+        .expect(200);
+
+      expect(response.body).toHaveProperty('es_correcta');
+    });
+
+  });
+
+  describe('POST /ejercicio/:id/finalizar', () => {
+
+    test('debe completar intento y actualizar progreso', async () => {
+      const userId = 'test-user-123';
+      const activityId = 'activity-123';
+
+      const response = await request(app)
+        .post(`/ejercicio/${activityId}/finalizar`)
+        .set('Authorization', `Bearer valid_token_${userId}`)
+        .send({
+          puntaje_obtenido: 85,
+          respuestas: [
+            { id_pregunta: 'p1', respuesta_usuario: 'A', es_correcta: true }
+          ]
+        })
+        .expect(200);
+
+      expect(response.body).toHaveProperty('puntaje');
+      expect(response.body.puntaje).toBe(85);
+
+      // Validar que progreso se actualizó
+      const progreso = await db.execute({
+        sql: `SELECT estado FROM progreso_actividad WHERE id_usuario = ? AND id_actividad = ?`,
+        args: [userId, activityId]
+      });
+
+      expect(progreso.rows[0]?.estado).toBe('completada');
+    });
+
+  });
+
+});
+
+describe('API - Nodo Endpoints', () => {
+
+  describe('GET /nodos', () => {
+
+    test('debe retornar lista de nodos con actividades', async () => {
+      const response = await request(app)
+        .get('/nodos')
+        .expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body.length).toBeGreaterThan(0);
+      
+      const nodo = response.body[0];
+      expect(nodo).toHaveProperty('id_nodo');
+      expect(nodo).toHaveProperty('titulo');
+      expect(nodo).toHaveProperty('activities');
+    });
+
+  });
+
+});
+
+describe('API - Validaciones ML Integrity', () => {
+
+  test('actividades saltadas no deben incluirse en queries de desempeño real', async () => {
+    // Validar que la vista/query que alimenta al ML filtre estado 'saltada'
+    const response = await request(app)
+      .get('/stats/ml/performance-data') // endpoint hipotético
+      .expect(200);
+
+    const data = response.body;
+
+    // No debe haber registros con estado='saltada'
+    const hasSaltadaData = data.some((record: any) => record.estado === 'saltada');
+    expect(hasSaltadaData).toBe(false);
+
+    // Solo debe tener estado='completada' o datos de intentos reales
+    data.forEach((record: any) => {
+      expect(['completada', 'disponible', 'bloqueada']).toContain(record.estado);
+    });
+  });
+
+  test('no debe generar puntaje ficticio (100) para actividades saltadas', async () => {
+    const userId = 'test-user-jump';
+    
+    // Simular: Usuario completa examen de salto
+    await request(app)
+      .post('/ejercicio/exam-salto/finalizar')
+      .set('Authorization', `Bearer valid_token_${userId}`)
+      .send({
+        puntaje_obtenido: 95,
+        respuestas: []
+      });
+
+    // Validar que actividades anteriores estén marcadas como 'saltada', NO 'completada' con 100
+    const saltadas = await db.execute({
+      sql: `
+        SELECT COUNT(*) as count FROM progreso_actividad 
+        WHERE id_usuario = ? AND estado = 'saltada'
+      `,
+      args: [userId]
+    });
+
+    expect(saltadas.rows[0]?.count).toBeGreaterThan(0);
+
+    // Validar que NO hay puntajes ficticiios (100) sin intento real
+    const fakeScores = await db.execute({
+      sql: `
+        SELECT COUNT(*) as count FROM progreso_actividad pa
+        WHERE id_usuario = ? AND pa.estado = 'saltada' AND pa.puntaje = 100
+      `,
+      args: [userId]
+    });
+
+    expect(fakeScores.rows[0]?.count).toBe(0);
+  });
+
+});
