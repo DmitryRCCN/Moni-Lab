@@ -338,36 +338,47 @@ export async function updateIntentoFinal(id_usuario: string, data: { id_activida
     const tipoActividad = actividadRes.rows[0]?.tipo_actividad;
     const puntosOtorgados = Number(actividadRes.rows[0]?.puntos_otorgados || 0);
     
-    let debeActualizar = false;
+    // Validar el puntaje mínimo requerido (60% por defecto) ANTES de actualizar progreso
+    const puntajeNumerico = Number(data.puntaje_obtenido || 0);
+    const MINIMO_APROBATORIO_DEFAULT = 60;
+    
+    let puntajeValido = false;
+    
     if (tipoActividad === 'minijuego') {
-      debeActualizar = data.puntaje_obtenido !== null && Number(data.puntaje_obtenido) >= 0;
+      // Los minijuegos también requieren 60% mínimo para dar monedas
+      puntajeValido = puntajeNumerico >= MINIMO_APROBATORIO_DEFAULT;
     } else {
+      // Para ejercicios, consulta el valor de minimo_aprobatorio específico
       const ejercicioRes = await db.execute({ sql: `SELECT minimo_aprobatorio FROM ejercicio WHERE id_actividad = ?`, args: [data.id_actividad] });
-      const minimo = Number(ejercicioRes.rows[0]?.minimo_aprobatorio || 0);
-      debeActualizar = Number(data.puntaje_obtenido) >= minimo;
+      const minimoRequerido = Number(ejercicioRes.rows[0]?.minimo_aprobatorio || MINIMO_APROBATORIO_DEFAULT);
+      puntajeValido = puntajeNumerico >= minimoRequerido;
     }
 
-    if (debeActualizar) {
+    // Solo actualizar progreso y dar monedas si el puntaje es válido
+    if (puntajeValido) {
       const prev = await db.execute({ sql: `SELECT estado FROM progreso_actividad WHERE id_usuario = ? AND id_actividad = ?`, args: [id_usuario, data.id_actividad] });
       const prevEstado = prev.rows[0]?.estado;
+      const esPrimeraVezCompletada = prevEstado !== 'completada';
 
       if (!prev.rows || prev.rows.length === 0) {
         await db.execute({ 
           sql: `INSERT INTO progreso_actividad (id_progreso, id_usuario, id_actividad, estado, mejor_puntaje, fecha_actualizacion) VALUES (?, ?, ?, 'completada', ?, CURRENT_TIMESTAMP)`, 
-          args: [uuid(), id_usuario, data.id_actividad, data.puntaje_obtenido] 
+          args: [uuid(), id_usuario, data.id_actividad, puntajeNumerico] 
         });
       } else {
         await db.execute({ 
           sql: `UPDATE progreso_actividad SET estado = 'completada', mejor_puntaje = ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id_usuario = ? AND id_actividad = ?`, 
-          args: [data.puntaje_obtenido, id_usuario, data.id_actividad] 
+          args: [puntajeNumerico, id_usuario, data.id_actividad] 
         });
       }
 
-      if (prevEstado !== 'completada' && puntosOtorgados > 0) {
+      // Solo da monedas si es la PRIMERA VEZ que se completa exitosamente
+      if (esPrimeraVezCompletada && puntosOtorgados > 0) {
         await db.execute({ sql: `UPDATE usuarios SET monedas_virtuales = COALESCE(monedas_virtuales,0) + ? WHERE id = ?`, args: [puntosOtorgados, id_usuario] });
         awardedCoins = puntosOtorgados;
       }
     }
+    // Si el puntaje es inválido, NO se actualiza progreso NI se dan monedas
   } catch (e) {
     console.error('Error en progreso:', e);
   }
