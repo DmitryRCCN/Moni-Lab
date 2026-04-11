@@ -1,27 +1,15 @@
 import { useState, useCallback } from 'react'
 import { useNavigate, useLocation, Link, Navigate } from 'react-router-dom'
 import api from '../api'
-import { useAuth } from '../context/AuthContext'
 
 type LocationState = {
   email?: string
-}
-
-type RegisterResponse = {
-  accessToken: string
-  refreshToken?: string
-  user: {
-    id: string
-    nombre: string
-    email: string
-  }
 }
 
 export default function RegisterUser() {
 
   const navigate = useNavigate()
   const location = useLocation()
-  const { loginFromResponse } = useAuth()
 
   const state = location.state as LocationState | null
   const email = state?.email
@@ -71,33 +59,37 @@ export default function RegisterUser() {
 
       try {
 
-        const res = await api('/auth/register', {
+        await api('/auth/request-registration', {
           method: 'POST',
           body: {
             email,
             password,
             nombre: username
           }
-        }) as RegisterResponse
+        })
 
-        loginFromResponse(res)
-
-        navigate('/Path')
+        // Navegar a página de confirmación
+        navigate('/auth/confirm-email', { state: { email } })
 
       } catch (err) {
-        let safeErrorMessage = 'Error interno en el servidor. Inténtalo más tarde.';
+        let safeErrorMessage = 'Error al procesar tu solicitud. Intenta de nuevo.';
 
         if (err instanceof Error) {
-          const rawMessage = err.message.toLowerCase();
-          
-          // Filtramos errores comunes de Base de Datos
-          if (rawMessage.includes('unique') || rawMessage.includes('duplicate')) {
-            safeErrorMessage = 'El nombre de usuario ya está en uso. Elige otro.';
-          } else if (rawMessage.includes('sqlite') || rawMessage.includes('sql') || rawMessage.includes('database')) {
-            safeErrorMessage = 'Ocurrió un error al guardar tus datos. Inténtalo más tarde.';
-          } else {
-            // Si es un error controlado (ej. "Contraseña muy corta"), lo mostramos directamente
-            safeErrorMessage = err.message; 
+          try {
+            // Intentar parsear como JSON (respuesta del servidor)
+            const errorData = JSON.parse(err.message);
+            safeErrorMessage = errorData.error || safeErrorMessage;
+          } catch {
+            // Si no es JSON, intentar interpretar el mensaje
+            const rawMessage = err.message.toLowerCase();
+            
+            if (rawMessage.includes('already taken')) {
+              safeErrorMessage = 'El nombre de usuario ya está registrado. Elige otro.';
+            } else if (rawMessage.includes('network') || rawMessage.includes('failed')) {
+              safeErrorMessage = 'Error de conexión. Verifica tu internet e intenta de nuevo.';
+            } else {
+              safeErrorMessage = err.message;
+            }
           }
         }
         
@@ -105,7 +97,7 @@ export default function RegisterUser() {
       }
 
     },
-    [username, password, confirm, email, navigate, validate, loginFromResponse]
+    [username, password, confirm, email, navigate, validate]
   )
 
   if (!email) {
@@ -121,8 +113,8 @@ export default function RegisterUser() {
         <div className="flex items-center gap-4 mb-4">
 
           <div className="w-16 h-16 rounded-full bg-yellow-300 flex items-center justify-center text-3xl font-bold text-emerald-900">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
             </svg>
           </div>
 

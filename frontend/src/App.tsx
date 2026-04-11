@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Path from './pages/Path'
 import Lesson from './pages/Lesson'
@@ -8,6 +8,8 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import RegisterUser from './pages/RegisterUser'
+import ConfirmEmail from './pages/ConfirmEmail'
+import ConfirmRegistration from './pages/ConfirmRegistration'
 import ForgotPassword from './pages/ForgotPassword';
 import ConfirmUpdate from './pages/ConfirmUpdate';
 import TermCond from './pages/TermCond'
@@ -20,7 +22,7 @@ import { AuthProvider } from './context/AuthContext'
 import Footer from './components/Footer'
 import RequireAuth from './components/RequireAuth'
 import RequireGuest from './components/RequireGuest'
-import ItemEditor from './components/ItemEditor'
+import ItemEditor from './components/itemEditor'
 import ErrorBoundary from './components/ErrorBoundary'
 
 function AppContent() {
@@ -39,6 +41,8 @@ function AppContent() {
           <Route path="/login" element={<RequireGuest><Login /></RequireGuest>} />
           <Route path="/register" element={<RequireGuest><Register /></RequireGuest>} />
           <Route path="/register/user" element={<RequireGuest><RegisterUser /></RequireGuest>} />
+          <Route path="/auth/confirm-email" element={<RequireGuest><ConfirmEmail /></RequireGuest>} />
+          <Route path="/auth/confirm-registration" element={<ConfirmRegistration />} />
           <Route path="/forgot-password" element={<RequireGuest><ForgotPassword /></RequireGuest>} />
           <Route path="/confirm-update" element={<ConfirmUpdate />} />
           <Route path="/terms" element={<TermCond />} />

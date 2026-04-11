@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { registerSchema, loginSchema } from './auth.schema';
-import { registerUser, loginUser, refreshAccessToken, revokeRefreshToken } from './auth.service';
+import { registerSchema, loginSchema, requestRegistrationSchema, confirmRegistrationSchema } from './auth.schema';
+import { registerUser, loginUser, refreshAccessToken, revokeRefreshToken, requestRegistrationConfirmation, confirmRegistrationWithToken } from './auth.service';
 import { z } from 'zod';
 import { env } from '../../config/env';
 import { mailService } from '../mail/mail.service';
@@ -272,5 +272,94 @@ export async function updateNameDirect(req: Request, res: Response) {
     res.json({ message: 'Nombre actualizado correctamente' });
   } catch (err: any) {
     res.status(500).json({ error: 'Error al actualizar el nombre' });
+  }
+}
+
+/**
+ * POST /auth/request-registration
+ * Solicita confirmación de registro. Envía email de confirmación
+ */
+export async function requestRegistration(req: Request, res: Response) {
+  try {
+    const data = requestRegistrationSchema.parse(req.body);
+    
+    // Crear solicitud de confirmación
+    const confirmationToken = await requestRegistrationConfirmation(data);
+    
+    // Enviar email de confirmación (sin await para no retrasar respuesta)
+    mailService.sendConfirmRegistrationEmail(data.email, data.nombre, confirmationToken).catch(err => {
+      console.error('Error enviando correo de confirmación:', err);
+    });
+
+    res.status(200).json({ 
+      message: 'Correo de confirmación enviado. Por favor verifica tu email.',
+    });
+  } catch (err: any) {
+    let statusCode = 400;
+    let message = 'Error al procesar el registro.';
+
+    const errorMessage = err.message || '';
+
+    if (errorMessage.includes('already taken')) {
+      statusCode = 409;
+      message = 'El usuario ya está registrado. Intenta con otro nombre de usuario.';
+    } else if (errorMessage.includes('email') && errorMessage.includes('invalid')) {
+      statusCode = 400;
+      message = 'El email no es válido. Verifica e intenta de nuevo.';
+    }
+
+    res.status(statusCode).json({ 
+      error: message,
+      code: errorMessage 
+    });
+  }
+}
+
+/**
+ * POST /auth/confirm-registration
+ * Confirma el registro usando el token del email
+ */
+export async function confirmRegistration(req: Request, res: Response) {
+  try {
+    const { token } = confirmRegistrationSchema.parse(req.body);
+    
+    // Confirmar registro y crear usuario
+    const result = await confirmRegistrationWithToken(token);
+
+    // Enviar email de bienvenida (sin await)
+    if (result.user?.email) {
+      mailService.sendWelcomeEmail(result.user.email, result.user.nombre).catch(() => {
+        // Silenciar errores de envío de email
+      });
+    }
+
+    res.cookie('refreshToken', result.refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+    res.status(201).json({ 
+      accessToken: result.accessToken, 
+      user: result.user,
+      message: 'Registro completado exitosamente' 
+    });
+  } catch (err: any) {
+    // Mapear errores a mensajes
+    let statusCode = 400;
+    let message = 'Error al confirmar el registro.';
+
+    const errorMessage = err.message || '';
+
+    if (errorMessage.includes('TOKEN_EXPIRED')) {
+      statusCode = 410; // Gone
+      message = 'El enlace de confirmación ha expirado. Por favor, regístrate de nuevo.';
+    } else if (errorMessage.includes('USERNAME_TAKEN')) {
+      statusCode = 409; // Conflict
+      message = 'El usuario ya está registrado. Intenta con otro nombre de usuario.';
+    } else if (errorMessage.includes('REGISTRATION_FAILED')) {
+      statusCode = 500;
+      message = 'Error al crear tu cuenta. Intenta más tarde.';
+    }
+
+    res.status(statusCode).json({ 
+      error: message,
+      code: errorMessage 
+    });
   }
 }

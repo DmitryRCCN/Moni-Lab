@@ -5,6 +5,7 @@ import TutorReportEmail from "../../shared/mail/react/templates/TutorReportEmail
 import TutorBatchEmail from "../../shared/mail/react/templates/TutorBatchEmail";
 import ConfirmChangeEmail from "../../shared/mail/react/templates/ConfirmChangeEmail";
 import ResetPasswordEmail from "../../shared/mail/react/templates/ResetPasswordEmail";
+import ConfirmRegistrationEmail from "../../shared/mail/react/templates/ConfirmRegistrationEmail";
 import { sendMail } from "../../config/mail";
 
 export class MailService {
@@ -44,14 +45,14 @@ export class MailService {
     nombre: string,
     porcentajeProgreso: number,
     actividadesSemanales: any[],
-    unidadesCompletadas: any[] // <--- Agregamos el cuarto argumento aquí
+    unidadesCompletadas: any[]
   ): Promise<string> {
     return await render(
       TutorReportEmail({
         nombre,
         progreso: porcentajeProgreso,
         actividadesSemanales,
-        unidadesCompletadas, // <--- Lo pasamos a la plantilla
+        unidadesCompletadas,
       })
     );
   }
@@ -69,12 +70,11 @@ export class MailService {
       })
     );
 
-    // Asegúrate de que tu función 'sendMail' en config/mail soporte recibir el 4to parámetro (attachments)
     return sendMail(
       emailTutor,
       `Reporte Semanal de Estudiantes - Moni-Lab 📊`,
       html,
-      adjuntosPdf // Pasamos los adjuntos a tu configurador de correo
+      adjuntosPdf
     );
   }
 
@@ -103,6 +103,24 @@ export class MailService {
   async sendResetPasswordEmail(email: string, nombre: string, code: string) {
     const html = await render(ResetPasswordEmail({ nombre, code }));
     return sendMail(email, "Código de recuperación 🔑", html);
+  }
+
+  async sendConfirmRegistrationEmail(email: string, nombre: string, token: string) {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const confirmLink = `${frontendUrl}/auth/confirm-registration?token=${token}`;
+
+    const html = await render(
+      ConfirmRegistrationEmail({
+        nombre,
+        confirmLink
+      })
+    );
+
+    return sendMail(
+      email,
+      "Confirma tu registro en Moni-Lab 🎓",
+      html
+    );
   }
 }
 

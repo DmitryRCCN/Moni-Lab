@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode} from 'react'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 import api, { setAccessToken, refreshAccessTokenViaCookie } from '../api'
 
 // --- TIPOS PARA EL AVATAR ---
@@ -20,12 +21,17 @@ type User = {
   experiencia_total?: number;
 }
 
+type LoginResponse = {
+  accessToken?: string
+  user?: User
+}
+
 type AuthContextValue = {
   user: User | null
   accessToken: string | null
-  loginFromResponse: (res: any) => void
+  loginFromResponse: (res: LoginResponse) => void
   logout: () => Promise<void>
-  updateUserData: (data: Partial<User>) => void // Definido en el tipo
+  updateUserData: (data: Partial<User>) => void
   initializing: boolean
 }
 
@@ -101,7 +107,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  function loginFromResponse(res: any) {
+  const loginFromResponse = useCallback((res: LoginResponse) => {
     if (res?.accessToken) {
       setAccessToken(res.accessToken)
       setAccessTokenState(res.accessToken)
@@ -110,7 +116,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('moni_user', JSON.stringify(res.user))
       setUser(res.user)
     }
-  }
+  }, []);
 
   async function logout() {
     try {

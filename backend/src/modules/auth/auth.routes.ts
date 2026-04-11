@@ -9,7 +9,9 @@ import {
   verifyResetCode, 
   resetPassword,   
   confirmAction,
-  updateNameDirect        
+  updateNameDirect,
+  requestRegistration,
+  confirmRegistration
 } from './auth.controller';
 
 const router = Router();
@@ -25,5 +27,9 @@ router.post('/verify-reset-code', verifyResetCode);
 router.post('/reset-password', resetPassword);
 router.post('/confirm-action', confirmAction);
 router.post('/update-name-direct', updateNameDirect);
+
+// Rutas para registro con confirmación por email
+router.post('/request-registration', requestRegistration);
+router.post('/confirm-registration', confirmRegistration);
 
 export default router;
