@@ -1,5 +1,5 @@
-// backend/src/shared/mail/react/templates/ConfirmChangeEmail.tsx
-import { Html, Body, Container, Text, Button, Section, Heading, Hr } from "@react-email/components";
+import { Text, Button, Section, Heading } from "@react-email/components";
+import EmailLayout, { COLORS } from "../components/EmailLayout";
 
 interface ConfirmProps {
   nombreActual: string;
@@ -9,57 +9,131 @@ interface ConfirmProps {
 }
 
 export default function ConfirmChangeEmail({ nombreActual, nuevoNombre, link, cambiaPass }: ConfirmProps) {
+  const nombrePrimero = nombreActual.split(' ')[0];
+
   return (
-    <Html>
-      <Body style={{ backgroundColor: "#020617", color: "#f8fafc", fontFamily: "sans-serif", padding: "20px" }}>
-        <Container style={{ backgroundColor: "#0f172a", borderRadius: "12px", padding: "40px", border: "1px solid #1e293b", textAlign: "center" }}>
-          <Heading style={{ color: "#fbbf24", fontSize: "24px", marginBottom: "20px" }}>🛡️ Verificación de Seguridad</Heading>
-          
-          <Section>
-            <Text style={{ fontSize: "16px" }}>Hola <strong>{nombreActual}</strong>,</Text>
-            <Text style={{ fontSize: "14px", color: "#94a3b8" }}>
-              Hemos recibido una solicitud para actualizar tus datos en Moni-Lab:
+    <EmailLayout title="Confirmación Necesaria">
+      <Section style={{ marginBottom: "20px" }}>
+        <Text
+          style={{
+            fontSize: "16px",
+            color: COLORS.textDark,
+            margin: "0 0 15px 0",
+            lineHeight: "1.6"
+          }}
+        >
+          Hola <strong>{nombrePrimero}</strong>,
+        </Text>
+      </Section>
+
+      <Section style={{ marginBottom: "20px" }}>
+        <Text
+          style={{
+            fontSize: "15px",
+            color: COLORS.textDark,
+            margin: "0 0 20px 0",
+            lineHeight: "1.6"
+          }}
+        >
+          Hemos recibido una solicitud para actualizar los datos de tu cuenta en Moni-Lab. Revisa los cambios que se aplicarán:
+        </Text>
+      </Section>
+
+      <Section
+        style={{
+          background: `linear-gradient(135deg, ${COLORS.emerald}15 0%, ${COLORS.cyan}15 100%)`,
+          border: `1px solid ${COLORS.mediumGray}`,
+          borderRadius: "12px",
+          padding: "20px",
+          marginBottom: "25px"
+        }}
+      >
+        {cambiaPass ? (
+          <>
+            <Text style={{ fontSize: "14px", color: COLORS.textDark, margin: "0 0 10px 0", fontWeight: "bold" }}>
+              Cambios solicitados:
             </Text>
-          </Section>
-
-          <Section style={{ backgroundColor: "#1e293b", padding: "20px", borderRadius: "8px", margin: "20px 0", textAlign: "left" }}>
-            <Text style={{ margin: "5px 0", fontSize: "14px" }}>
-              ✨ <strong>Nuevo Nombre:</strong> {nuevoNombre}
+            <Text style={{ fontSize: "13px", color: COLORS.textDark, margin: "5px 0" }}>
+              Nuevo Usuario: <strong>{nuevoNombre}</strong>
             </Text>
-            {cambiaPass && (
-              <Text style={{ margin: "5px 0", fontSize: "14px" }}>
-                🔑 <strong>Seguridad:</strong> Se ha solicitado un cambio de contraseña.
-              </Text>
-            )}
-          </Section>
+            <Text style={{ fontSize: "13px", color: COLORS.textDark, margin: "5px 0" }}>
+              Contraseña: Se modificará
+            </Text>
+          </>
+        ) : (
+          <>
+            <Text style={{ fontSize: "14px", color: COLORS.textDark, margin: "0 0 10px 0", fontWeight: "bold" }}>
+              Nuevo Usuario:
+            </Text>
+            <Text style={{ fontSize: "13px", color: COLORS.textDark, margin: "5px 0" }}>
+              <strong>{nuevoNombre}</strong>
+            </Text>
+          </>
+        )}
+      </Section>
 
-          <Text style={{ fontSize: "14px", marginBottom: "25px" }}>
-            Para aplicar estos cambios, por favor haz clic en el siguiente botón:
-          </Text>
+      <Section
+        style={{
+          background: `linear-gradient(135deg, ${COLORS.amber}20 0%, ${COLORS.emerald}20 100%)`,
+          border: `2px solid ${COLORS.emerald}`,
+          borderRadius: "12px",
+          padding: "25px",
+          marginBottom: "25px",
+          textAlign: "center"
+        }}
+      >
+        <Button
+          href={link}
+          style={{
+            background: `linear-gradient(135deg, ${COLORS.emerald} 0%, ${COLORS.cyan} 100%)`,
+            color: COLORS.white,
+            padding: "14px 40px",
+            borderRadius: "8px",
+            fontWeight: "bold",
+            textDecoration: "none",
+            display: "inline-block",
+            fontSize: "16px",
+            border: "none",
+            cursor: "pointer"
+          }}
+        >
+          Confirmar Cambios
+        </Button>
+      </Section>
 
-          <Button
-            href={link}
-            style={{
-              backgroundColor: "#fbbf24",
-              color: "#020617",
-              padding: "12px 30px",
-              borderRadius: "6px",
-              fontWeight: "bold",
-              textDecoration: "none",
-              display: "inline-block"
-            }}
-          >
-            Confirmar Actualización
-          </Button>
+      <Section
+        style={{
+          background: `${COLORS.amber}15`,
+          borderLeft: `4px solid ${COLORS.amber}`,
+          borderRadius: "6px",
+          padding: "15px",
+          marginBottom: "20px"
+        }}
+      >
+        <Text
+          style={{
+            fontSize: "12px",
+            color: COLORS.darkGray,
+            margin: 0,
+            lineHeight: "1.5"
+          }}
+        >
+          <strong>Importante:</strong> Este enlace expirará en 15 minutos. Si no solicitaste esta actualización, ignora este correo. Los cambios no se aplicarán sin tu confirmación.
+        </Text>
+      </Section>
 
-          <Hr style={{ borderColor: "#334155", margin: "30px 0" }} />
-          
-          <Text style={{ fontSize: "12px", color: "#64748b" }}>
-            Si no reconoces esta actividad, ignora este correo. Los cambios no se aplicarán a menos que confirmes.
-            <br />Este enlace expirará en 15 minutos.
-          </Text>
-        </Container>
-      </Body>
-    </Html>
+      <Section style={{ marginBottom: "0" }}>
+        <Text
+          style={{
+            fontSize: "13px",
+            color: COLORS.textDark,
+            margin: "0",
+            lineHeight: "1.5"
+          }}
+        >
+          Tu seguridad es prioritaria. Si tienes dudas, no confirmes y contacta con nuestro equipo.
+        </Text>
+      </Section>
+    </EmailLayout>
   );
 }
