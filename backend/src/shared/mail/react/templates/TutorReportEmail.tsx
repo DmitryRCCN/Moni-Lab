@@ -1,5 +1,5 @@
 import { Text, Heading, Section, Row, Column } from "@react-email/components";
-import EmailLayout from "../components/EmailLayout";
+import EmailLayout, { COLORS } from "../components/EmailLayout";
 
 interface ActivityDetail {
   nombre: string;
@@ -31,7 +31,7 @@ export default function TutorReportEmail({
       labels: ['Completado', 'Pendiente'],
       datasets: [{
         data: [progreso, 100 - progreso],
-        backgroundColor: ['#10b981', '#e5e7eb']
+        backgroundColor: [COLORS.emerald, COLORS.mediumGray]
       }]
     },
     options: {
@@ -47,20 +47,24 @@ export default function TutorReportEmail({
   const chartUrl = `https://quickchart.io/chart?c=${encodeURIComponent(chartConfig)}&w=200&h=200`;
 
   return (
-    <EmailLayout>
-      <Heading style={{ color: '#10b981', fontSize: '24px' }}>
-        ¡Hola! Aquí tienes el resumen de la semana 📊
-      </Heading>
-
-      <Text>
-        Esta semana, el estudiante <b>{nombre}</b> ha continuado su camino en <b>Moni-Lab</b>. 
-        Aquí te presentamos el análisis de su desempeño:
-      </Text>
+    <EmailLayout title="Resumen Semanal de Progreso">
+      <Section style={{ marginBottom: "20px" }}>
+        <Text
+          style={{
+            fontSize: "16px",
+            color: COLORS.textDark,
+            margin: "0 0 15px 0",
+            lineHeight: "1.6"
+          }}
+        >
+          El estudiante <strong>{nombre}</strong> ha continuado su camino en <strong>Moni-Lab</strong>. Aquí te presentamos el análisis detallado de su desempeño:
+        </Text>
+      </Section>
 
       {/* SECCIÓN DE PROGRESO GENERAL */}
       <Section style={styles.card}>
         <Row>
-          <Column style={{ width: '60%' }}>
+          <Column style={{ width: "60%" }}>
             <Text style={styles.label}>Progreso Total del Curso</Text>
             <div style={styles.progressContainer}>
               <div style={{ ...styles.progressBar, width: `${progreso}%` }} />
@@ -73,21 +77,28 @@ export default function TutorReportEmail({
         </Row>
       </Section>
 
-      {/* SECCIÓN NUEVA: UNIDADES (NODOS) COMPLETADAS */}
+      {/* SECCIÓN DE UNIDADES COMPLETADAS */}
       {unidadesCompletadas && unidadesCompletadas.length > 0 && (
-        <Section style={{ marginTop: '20px' }}>
-          <Heading as="h3" style={{ fontSize: '18px', color: '#374151' }}>
-            🏆 Unidades Dominadas esta semana
+        <Section style={{ marginTop: "20px" }}>
+          <Heading
+            style={{
+              fontSize: "18px",
+              color: COLORS.darkGreen,
+              margin: "0 0 15px 0",
+              fontWeight: "bold"
+            }}
+          >
+            Unidades Dominadas esta Semana
           </Heading>
           {unidadesCompletadas.map((unidad, i) => (
-            <div key={i} style={{ ...styles.card, marginBottom: '10px', borderLeft: '4px solid #f59e0b' }}>
-              <Text style={{ margin: 0, fontWeight: 'bold', color: '#10b981' }}>
-                Unidad: {unidad.titulo}
+            <div key={i} style={{ ...styles.card, marginBottom: "10px", borderLeft: `4px solid ${COLORS.amber}` }}>
+              <Text style={{ margin: 0, fontWeight: "bold", color: COLORS.emerald }}>
+                {unidad.titulo}
               </Text>
-              <Text style={{ margin: 0, fontSize: '13px', color: '#4b5563', marginTop: '4px' }}>
-                {unidad.metodo === 'salto' 
-                  ? '⚡ Aprobada por Reto de Salto. Las actividades previas han sido validadas por competencia.'
-                  : '📖 Completada de manera natural paso a paso.'}
+              <Text style={{ margin: "4px 0 0 0", fontSize: "13px", color: COLORS.darkGray, lineHeight: "1.4" }}>
+                {unidad.metodo === "salto"
+                  ? "Aprobada por Reto de Salto. Evidencia de dominio previo validada."
+                  : "Completada paso a paso de manera natural."}
               </Text>
             </div>
           ))}
@@ -95,41 +106,52 @@ export default function TutorReportEmail({
       )}
 
       {/* SECCIÓN DE ACTIVIDAD SEMANAL */}
-      <Section style={{ marginTop: '20px' }}>
-        <Heading as="h3" style={{ fontSize: '18px', color: '#374151' }}>
-          Actividades trabajadas esta semana
+      <Section style={{ marginTop: "20px" }}>
+        <Heading
+          style={{
+            fontSize: "18px",
+            color: COLORS.darkGreen,
+            margin: "0 0 15px 0",
+            fontWeight: "bold"
+          }}
+        >
+          Actividades Trabajadas esta Semana
         </Heading>
-        
+
         {actividadesSemanales && actividadesSemanales.length > 0 ? (
           actividadesSemanales.map((act, i) => {
-            // LÓGICA DE ALERTA: Si el mejor puntaje es menor a 60
             const necesitaRefuerzo = act.mejor_puntaje < 60;
 
             return (
               <div key={i} style={styles.activityRow}>
                 <Row>
                   <Column>
-                    <Text style={{ margin: 0, fontWeight: 'bold' }}>{act.nombre}</Text>
-                    <Text style={{ margin: 0, fontSize: '12px', color: '#6b7280' }}>
-                      Intentos realizados: {act.total_intentos}
+                    <Text style={{ margin: 0, fontWeight: "bold", color: COLORS.textDark }}>
+                      {act.nombre}
+                    </Text>
+                    <Text style={{ margin: "4px 0 0 0", fontSize: "12px", color: COLORS.darkGray }}>
+                      Intentos: {act.total_intentos}
                     </Text>
                   </Column>
                   <Column align="right">
-                    <Text style={{ 
-                      margin: 0, 
-                      fontWeight: 'bold', 
-                      color: necesitaRefuerzo ? '#ef4444' : '#059669' 
-                    }}>
-                      Nota: {Math.round(act.mejor_puntaje)}/100
+                    <Text
+                      style={{
+                        margin: 0,
+                        fontWeight: "bold",
+                        fontSize: "14px",
+                        color: necesitaRefuerzo ? "#dc2626" : COLORS.emerald
+                      }}
+                    >
+                      {Math.round(act.mejor_puntaje)}%
                     </Text>
                   </Column>
                 </Row>
 
-                {/* BLOQUE DE ALERTA ROJA */}
+                {/* BLOQUE DE ALERTA */}
                 {necesitaRefuerzo && (
                   <Section style={styles.alertBox}>
                     <Text style={styles.alertText}>
-                      ⚠️ <b>Tópico por reforzar:</b> El estudiante ha tenido dificultades en esta actividad. ¡Un poco de práctica extra junto a ti le vendría genial!
+                      Tópico por reforzar: El estudiante ha tenido dificultades. Un poco de práctica extra junto a ti le vendría bien.
                     </Text>
                   </Section>
                 )}
@@ -137,63 +159,84 @@ export default function TutorReportEmail({
             );
           })
         ) : (
-          <Text style={{ fontStyle: 'italic', color: '#9ca3af', textAlign: 'center' }}>
-            No se registró actividad regular en la plataforma durante esta semana.
+          <Text
+            style={{
+              fontStyle: "italic",
+              color: COLORS.darkGray,
+              textAlign: "center",
+              margin: "20px 0"
+            }}
+          >
+            No se registró actividad durante esta semana.
           </Text>
         )}
       </Section>
 
-      <Text style={{ ...styles.subtext, marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
-        Este es un reporte automático generado por el sistema educativo de Moni-Lab.
-        Si tienes dudas sobre el progreso, puedes contactar al equipo técnico.
-      </Text>
+      <Section
+        style={{
+          marginTop: "30px",
+          paddingTop: "20px",
+          borderTop: `1px solid ${COLORS.mediumGray}`
+        }}
+      >
+        <Text
+          style={{
+            fontSize: "11px",
+            color: COLORS.darkGray,
+            margin: 0,
+            lineHeight: "1.5"
+          }}
+        >
+          Este es un reporte automático generado por el sistema educativo de Moni-Lab. Si tienes dudas sobre el progreso, contacta al equipo técnico.
+        </Text>
+      </Section>
     </EmailLayout>
   );
 }
 
 const styles = {
   card: {
-    padding: '20px',
-    backgroundColor: '#f9fafb',
-    borderRadius: '12px',
-    border: '1px solid #f3f4f6',
+    padding: "20px",
+    backgroundColor: COLORS.lightGray,
+    borderRadius: "12px",
+    border: `1px solid ${COLORS.mediumGray}`,
   },
   label: {
-    fontSize: '14px',
-    fontWeight: 'bold',
-    color: '#4b5563',
-    marginBottom: '8px',
+    fontSize: "14px",
+    fontWeight: "bold" as const,
+    color: COLORS.darkGreen,
+    marginBottom: "8px",
   },
   progressContainer: {
-    width: '100%',
-    backgroundColor: '#e5e7eb',
-    borderRadius: '10px',
-    height: '12px',
-    overflow: 'hidden' as const,
+    width: "100%",
+    backgroundColor: COLORS.mediumGray,
+    borderRadius: "10px",
+    height: "12px",
+    overflow: "hidden" as const,
   },
   progressBar: {
-    backgroundColor: '#10b981',
-    height: '100%',
+    backgroundColor: COLORS.emerald,
+    height: "100%",
   },
   subtext: {
-    fontSize: '12px',
-    color: '#6b7280',
+    fontSize: "12px",
+    color: COLORS.darkGray,
   },
   activityRow: {
-    padding: '12px 0',
-    borderBottom: '1px solid #f3f4f6',
+    padding: "12px 0",
+    borderBottom: `1px solid ${COLORS.mediumGray}`,
   },
   alertBox: {
-    marginTop: '8px',
-    padding: '10px',
-    backgroundColor: '#fef2f2',
-    borderRadius: '8px',
-    borderLeft: '4px solid #ef4444',
+    marginTop: "8px",
+    padding: "10px",
+    backgroundColor: `${COLORS.amber}15`,
+    borderRadius: "8px",
+    borderLeft: `4px solid ${COLORS.amber}`,
   },
   alertText: {
     margin: 0,
-    fontSize: '12px',
-    color: '#991b1b',
-    lineHeight: '1.4',
+    fontSize: "12px",
+    color: COLORS.darkGray,
+    lineHeight: "1.4" as const,
   }
 };

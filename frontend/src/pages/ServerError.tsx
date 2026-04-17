@@ -50,7 +50,7 @@ export default function ServerError() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
             onClick={handleRefresh}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-lime-600 to-green-600 hover:from-lime-700 hover:to-green-700 text-white font-bold rounded-lg transition-all duration-300 hover:shadow-lg"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-slate-900 font-bold rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105"
           >
             <RefreshCw size={20} />
             Reintentar
@@ -58,7 +58,7 @@ export default function ServerError() {
 
           <button
             onClick={() => navigate('/')}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white font-bold rounded-lg transition-all duration-300 hover:shadow-lg"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105"
           >
             <Home size={20} />
             Ir al Inicio

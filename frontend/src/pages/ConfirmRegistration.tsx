@@ -109,107 +109,105 @@ export default function ConfirmRegistration() {
   }, [token, navigate, loginFromResponse]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 to-slate-800">
-      <div className="w-full max-w-md">
-        <div className="bg-emerald-800 p-8 rounded-2xl shadow-xl border border-white/6 text-center">
-          {status === 'loading' && (
-            <>
-              <div className="flex justify-center mb-6">
-                <div className="animate-spin">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    className="w-12 h-12 text-yellow-300"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.995-1.465"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <h1 className="text-2xl font-bold mb-3 text-white">Un momento...</h1>
-              <p className="text-white/80">{message}</p>
-            </>
-          )}
-
-          {status === 'success' && (
-            <>
-              <div className="flex justify-center mb-6">
-                <div className="w-20 h-20 rounded-full bg-emerald-700 flex items-center justify-center animate-bounce">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    className="w-10 h-10 text-yellow-300"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="m4.5 12.75l6 6 9-13.5"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <h1 className="text-2xl font-bold mb-3 text-emerald-200">¡Éxito!</h1>
-              <p className="text-white/80 mb-6">{message}</p>
-              <p className="text-sm text-white/60">
-                Redirigiendo a tu dashboard...
-              </p>
-            </>
-          )}
-
-          {status === 'error' && (
-            <>
-              <div className="flex justify-center mb-6">
-                <div className="w-20 h-20 rounded-full bg-rose-700/30 flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    className="w-10 h-10 text-rose-400"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <h1 className="text-2xl font-bold mb-3 text-rose-300">Error</h1>
-              <p className="text-white/80 mb-8">{message}</p>
-
-              <div className="space-y-3">
-                <button
-                  onClick={() => window.location.reload()}
-                  className="w-full py-3 rounded-lg bg-amber-400 text-slate-900 hover:scale-105 transition-transform font-bold"
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-emerald-800 p-8 rounded-2xl shadow-xl border border-white/6">
+        {status === 'loading' && (
+          <>
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-yellow-300 flex items-center justify-center animate-spin">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2"
+                  stroke="currentColor"
+                  className="w-8 h-8 text-emerald-900"
                 >
-                  🔄 Intentar de Nuevo
-                </button>
-
-                <button
-                  onClick={() => navigate('/register')}
-                  className="w-full py-3 rounded-lg bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-colors font-semibold"
-                >
-                  ← Volver al Registro
-                </button>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.995-1.465"
+                  />
+                </svg>
               </div>
+            </div>
+            <h1 className="text-2xl font-bold mb-3 text-white text-center">Un momento...</h1>
+            <p className="text-white/80 text-center">{message}</p>
+          </>
+        )}
 
-              <p className="text-xs text-white/60 mt-6">
-                Si el problema persiste, intenta registrarte de nuevo.
-              </p>
-            </>
-          )}
-        </div>
+        {status === 'success' && (
+          <>
+            <div className="flex justify-center mb-6 animate-in zoom-in duration-500">
+              <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="3"
+                  stroke="currentColor"
+                  className="w-8 h-8 text-white"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m4.5 12.75l6 6 9-13.5"
+                  />
+                </svg>
+              </div>
+            </div>
+            <h1 className="text-2xl font-bold mb-3 text-white text-center">Registro Confirmado</h1>
+            <p className="text-white/80 mb-6 text-center">{message}</p>
+            <p className="text-sm text-white/60 text-center">
+              Redirigiendo a tu dashboard...
+            </p>
+          </>
+        )}
+
+        {status === 'error' && (
+          <>
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 rounded-xl bg-rose-500 flex items-center justify-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="3"
+                  stroke="currentColor"
+                  className="w-8 h-8 text-white"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </div>
+            </div>
+            <h1 className="text-2xl font-bold mb-3 text-white text-center">Error</h1>
+            <p className="text-white/80 mb-8 text-center">{message}</p>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full py-3 rounded-lg bg-amber-400 text-slate-900 hover:scale-105 transition-transform font-bold"
+              >
+                Intentar de Nuevo
+              </button>
+
+              <button
+                onClick={() => navigate('/register')}
+                className="w-full py-3 rounded-lg bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-colors font-semibold"
+              >
+                Volver al Registro
+              </button>
+            </div>
+
+            <p className="text-xs text-white/60 mt-6">
+              Si el problema persiste, intenta registrarte de nuevo.
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
