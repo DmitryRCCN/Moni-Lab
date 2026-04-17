@@ -110,6 +110,8 @@ export default function Lesson() {
       ? minigameConfig.elementos.filter(e => e.es_correcto).length
       : minigameConfig.tipo === 'SEQUENTIAL_DECISION'
       ? minigameConfig.pasos.length
+      : minigameConfig.tipo === 'MULTIPLE_CHOICE'
+      ? minigameConfig.pasos.length
       : minigameConfig.tipo === 'SAVINGS_PATH'
       ? minigameConfig.pasos.length
         : minigameConfig.tipo === 'CATEGORIZE'
@@ -183,11 +185,21 @@ export default function Lesson() {
           </div>
         </div>
       ) : actividad.tipo_actividad === 'minijuego' && minigameConfig ? (
-        <MinigameEngine
-          config={minigameConfig}
-          feedback={minigameFeedback}
-          onFinish={handleMinigameFinish}
-        />
+        <div className="space-y-6">
+          {actividad.minijuego?.titulo_pantalla && (
+            <div className="moni-panel p-6">
+              <h2 className="text-2xl font-bold mb-3">{actividad.minijuego.titulo_pantalla}</h2>
+              {actividad.minijuego?.historia_intro && (
+                <p className="text-white/80 leading-relaxed">{actividad.minijuego.historia_intro}</p>
+              )}
+            </div>
+          )}
+          <MinigameEngine
+            config={minigameConfig}
+            feedback={minigameFeedback}
+            onFinish={handleMinigameFinish}
+          />
+        </div>
       ) : (
         <Exercise ejercicio={actividad.ejercicio} activityId={actividad.id_actividad} />
       )}

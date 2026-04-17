@@ -1,9 +1,11 @@
 export type MinigameFeedback = {
-  puntos: number
+  puntos?: number
+  minScore?: number
+  maxScore?: number
   msg: string
 }
 
-export type MinigameConfig = (PickNConfig | SequentialDecisionConfig | SavingsPathConfig | CategorizeConfig | ShopCalculatorConfig) & {
+export type MinigameConfig = (PickNConfig | SequentialDecisionConfig | MultipleChoiceConfig | SavingsPathConfig | CategorizeConfig | ShopCalculatorConfig) & {
   titulo: string
   descripcion?: string
 }
@@ -25,6 +27,19 @@ export type SequentialDecisionConfig = {
     pregunta: string
     respuesta_correcta: 'si' | 'no'
     contexto?: string
+  }>
+}
+
+export type MultipleChoiceConfig = {
+  tipo: 'MULTIPLE_CHOICE'
+  pasos: Array<{
+    pregunta: string
+    contexto?: string
+    opciones: Array<{
+      id: string
+      texto: string
+      es_correcto: boolean
+    }>
   }>
 }
 

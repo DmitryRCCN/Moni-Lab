@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import type { MinigameConfig, MinigameFeedback } from './types'
 import MochilaGame from './MochilaGame'
 import DecisionGame from './DecisionGame'
+import MultipleChoiceGame from './MultipleChoiceGame'
 import SavingsGame from './SavingsGame'
 import CategorizeGame from './CategorizeGame'
 import ShopCalculator from './ShopCalculator'
@@ -26,6 +27,8 @@ export default function MinigameEngine({ config, feedback, onFinish }: MinigameE
         return config.elementos?.filter(e => e.es_correcto).length || 0
       case 'SEQUENTIAL_DECISION':
         return config.pasos?.length || 0
+      case 'MULTIPLE_CHOICE':
+        return config.pasos?.length || 0
       case 'SAVINGS_PATH':
         return config.pasos?.length || 0
       case 'CATEGORIZE':
@@ -39,8 +42,26 @@ export default function MinigameEngine({ config, feedback, onFinish }: MinigameE
 
   const finalMessage = useMemo(() => {
     if (finalScore === null) return ''
-    const found = feedback.find((item) => item.puntos === finalScore)
-    return found?.msg ?? ''
+    
+    // Buscar retroalimentación por rango (minScore/maxScore)
+    const byRange = feedback.find((item) => 
+      item.minScore !== undefined && item.maxScore !== undefined
+        ? finalScore >= item.minScore && finalScore <= item.maxScore
+        : false
+    )
+    if (byRange) return byRange.msg
+    
+    // Buscar retroalimentación exacta o por valor más cercano
+    const byExact = feedback.find((item) => item.puntos === finalScore)
+    if (byExact) return byExact.msg
+    
+    // Si no hay exacto, buscar el más cercano por debajo
+    const byClosest = feedback
+      .filter((item) => item.puntos !== undefined && item.puntos <= finalScore)
+      .sort((a, b) => (b.puntos ?? 0) - (a.puntos ?? 0))[0]
+    if (byClosest) return byClosest.msg
+    
+    return ''
   }, [feedback, finalScore])
 
   useEffect(() => {
@@ -79,7 +100,6 @@ export default function MinigameEngine({ config, feedback, onFinish }: MinigameE
 
   return (
     <div className="moni-panel p-6 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold mb-3">{config.titulo}</h2>
       {config.descripcion ? <p className="mb-6 text-white/80">{config.descripcion}</p> : null}
 
       <AnimatePresence mode="wait">
@@ -120,6 +140,8 @@ export default function MinigameEngine({ config, feedback, onFinish }: MinigameE
               <MochilaGame config={config} onComplete={handleComplete} />
             ) : config.tipo === 'SEQUENTIAL_DECISION' ? (
               <DecisionGame config={config} onComplete={handleComplete} />
+            ) : config.tipo === 'MULTIPLE_CHOICE' ? (
+              <MultipleChoiceGame config={config} onComplete={handleComplete} />
             ) : config.tipo === 'SAVINGS_PATH' ? (
               <SavingsGame config={config} onComplete={handleComplete} />
             ) : config.tipo === 'CATEGORIZE' ? (
