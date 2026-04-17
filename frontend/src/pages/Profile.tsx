@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import api from '../api'
@@ -201,7 +202,7 @@ export default function Profile() {
   )
 }
 
-function StatItem({ label, value, icon }: { label: string; value: string | number; icon: string }) {
+function StatItem({ label, value, icon }: { label: string; value: string | number; icon: ReactNode }) {
   return (
     <div className="flex justify-between items-center bg-black/40 p-4 rounded-2xl border border-white/5">
       <div className="flex items-center gap-3">

@@ -4,6 +4,8 @@ import api from '../api'
 import Exercise from '../components/Exercise'
 import MinigameEngine from '../components/minigames/MinigameEngine'
 import type { MinigameConfig, MinigameFeedback } from '../components/minigames/types'
+import NotFound from './NotFound'
+import ServerError from './ServerError'
 
 type Actividad = {
   tipo_actividad: string
@@ -133,8 +135,8 @@ export default function Lesson() {
   }
 
   if (loading) return <div className="p-8 text-white">Cargando actividad...</div>
-  if (error) return <div className="p-8 text-red-300">{error}</div>
-  if (!actividad) return <div className="p-8 text-white">Actividad no disponible</div>
+  if (error) return <ServerError />
+  if (!actividad) return <NotFound />
 
   const title =
     actividad.tipo_actividad === 'lectura'

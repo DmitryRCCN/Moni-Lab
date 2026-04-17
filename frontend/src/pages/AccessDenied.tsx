@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Home, Lock, ArrowLeft } from 'lucide-react'
+import { Home, ArrowLeft } from 'lucide-react'
 
 export default function AccessDenied() {
   const navigate = useNavigate()
@@ -18,12 +18,14 @@ export default function AccessDenied() {
           <div className="h-1 w-24 bg-orange-500 mx-auto rounded"></div>
         </div>
 
-        {/* Lock Icon */}
-        <div className="mb-8 flex justify-center">
-          <div className="p-6 bg-orange-500/20 rounded-full border border-orange-500/40">
-            <Lock size={64} className="text-orange-500" />
-          </div>
-        </div>
+        {/* Error Image */}
+        <img
+          src="/images/monaError.avif"
+          alt="Acceso Denegado"
+          loading="lazy"
+          decoding="async"
+          className="w-48 md:w-64 mx-auto mb-8 opacity-90"
+        />
 
         {/* Error Message */}
         
@@ -36,7 +38,7 @@ export default function AccessDenied() {
         {/* Permission Info */}
         <div className="bg-orange-900/20 border border-orange-500/30 rounded-lg p-4 mb-8">
           <p className="text-orange-300 text-sm">
-            🔒 Esta área requiere permisos especiales que no tienes actualmente.
+            Esta área requiere permisos especiales que no tienes actualmente.
           </p>
         </div>
 
@@ -44,7 +46,7 @@ export default function AccessDenied() {
          <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-lime-600 to-green-600 hover:from-lime-700 hover:to-green-700 text-white font-bold rounded-lg transition-all duration-300 hover:shadow-lg"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-slate-900 font-bold rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105"
           >
             <ArrowLeft size={20} />
             Volver Atrás
@@ -52,7 +54,7 @@ export default function AccessDenied() {
 
           <button
             onClick={() => navigate('/')}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white font-bold rounded-lg transition-all duration-300 hover:shadow-lg"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105"
           >
             <Home size={20} />
             Ir al Inicio
