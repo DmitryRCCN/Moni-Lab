@@ -75,7 +75,7 @@ const THEMES: Record<number, {
     headerBg: 'bg-gradient-to-r from-blue-500 to-blue-400', 
     iconLeft: BrainIcon,
     iconRight: LightningIcon, 
-    decorations: { 0: '/images/monaU1.1.webp', 3: '/images/monoCoin.avif', 6: '/images/monaRead.avif' }
+    decorations: { 0: '/images/monaU1.1.webp', 3: '/images/monoDuda.webp', 6: '/images/monaRead.avif' }
   },
   2: {
     colorTitle: 'text-white',
@@ -83,7 +83,7 @@ const THEMES: Record<number, {
     headerBg: 'bg-gradient-to-r from-yellow-500 to-orange-400', 
     iconLeft: BrainIcon,
     iconRight: BrainIcon, 
-    decorations: { 1: '/images/mono-leyendo.png' }
+    decorations: { 1: '/images/trueque.webp', 4: '/images/mercadoTrueque.webp', 7: '/images/monoIntercambio.webp' }
   },
   3: {
     colorTitle: 'text-white',
