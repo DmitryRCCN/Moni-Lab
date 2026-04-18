@@ -312,79 +312,105 @@ export async function getPreguntasByEjercicio(id_actividad: string, id_usuario: 
 }
 
 export async function updateIntentoFinal(id_usuario: string, data: { id_actividad: string; puntaje_obtenido: number; detalle_respuestas: string }) {
+  // 1. Registro del intento (Igual que antes)
   const current = await db.execute({ 
     sql: `SELECT id_intento FROM intento_actividad WHERE id_usuario = ? AND id_actividad = ? AND puntaje_obtenido IS NULL`, 
     args: [id_usuario, data.id_actividad] 
   });
   
-  let id_intento: string;
-  if (!current.rows || current.rows.length === 0) {
-    id_intento = uuid();
+  let id_intento = current.rows[0]?.id_intento as string || uuid();
+  if (!current.rows.length) {
     await db.execute({
       sql: `INSERT INTO intento_actividad (id_intento, id_usuario, id_actividad, detalle_respuestas, puntaje_obtenido, fecha_hora) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       args: [id_intento, id_usuario, data.id_actividad, data.detalle_respuestas, data.puntaje_obtenido]
     });
   } else {
-    id_intento = current.rows[0].id_intento as string;
     await db.execute({ 
       sql: `UPDATE intento_actividad SET puntaje_obtenido = ?, detalle_respuestas = ?, fecha_hora = CURRENT_TIMESTAMP WHERE id_intento = ?`, 
       args: [data.puntaje_obtenido, data.detalle_respuestas, id_intento] 
     });
   }
 
-  let awardedCoins = 0;
-  try {
-    const actividadRes = await db.execute({ sql: `SELECT tipo_actividad, puntos_otorgados FROM actividad WHERE id_actividad = ?`, args: [data.id_actividad] });
-    const tipoActividad = actividadRes.rows[0]?.tipo_actividad;
-    const puntosOtorgados = Number(actividadRes.rows[0]?.puntos_otorgados || 0);
-    
-    // Validar el puntaje mínimo requerido (60% por defecto) ANTES de actualizar progreso
-    const puntajeNumerico = Number(data.puntaje_obtenido || 0);
-    const MINIMO_APROBATORIO_DEFAULT = 60;
-    
-    let puntajeValido = false;
-    
-    if (tipoActividad === 'minijuego') {
-      // Los minijuegos también requieren 60% mínimo para dar monedas
-      puntajeValido = puntajeNumerico >= MINIMO_APROBATORIO_DEFAULT;
-    } else {
-      // Para ejercicios, consulta el valor de minimo_aprobatorio específico
-      const ejercicioRes = await db.execute({ sql: `SELECT minimo_aprobatorio FROM ejercicio WHERE id_actividad = ?`, args: [data.id_actividad] });
-      const minimoRequerido = Number(ejercicioRes.rows[0]?.minimo_aprobatorio || MINIMO_APROBATORIO_DEFAULT);
-      puntajeValido = puntajeNumerico >= minimoRequerido;
-    }
+  // 2. Preparación de datos para lógica de negocio
+  const actividadRes = await db.execute({ 
+    sql: `SELECT tipo_actividad, puntos_otorgados, id_nodo, orden_secuencial FROM actividad WHERE id_actividad = ?`, 
+    args: [data.id_actividad] 
+  });
+  const act = actividadRes.rows[0];
+  const detalleObj = JSON.parse(data.detalle_respuestas || '{}');
+  const isModoSalto = detalleObj.modo === 'SALTO';
 
-    // Solo actualizar progreso y dar monedas si el puntaje es válido
-    if (puntajeValido) {
-      const prev = await db.execute({ sql: `SELECT estado FROM progreso_actividad WHERE id_usuario = ? AND id_actividad = ?`, args: [id_usuario, data.id_actividad] });
-      const prevEstado = prev.rows[0]?.estado;
-      const esPrimeraVezCompletada = prevEstado !== 'completada';
-
-      if (!prev.rows || prev.rows.length === 0) {
-        await db.execute({ 
-          sql: `INSERT INTO progreso_actividad (id_progreso, id_usuario, id_actividad, estado, mejor_puntaje, fecha_actualizacion) VALUES (?, ?, ?, 'completada', ?, CURRENT_TIMESTAMP)`, 
-          args: [uuid(), id_usuario, data.id_actividad, puntajeNumerico] 
-        });
-      } else {
-        await db.execute({ 
-          sql: `UPDATE progreso_actividad SET estado = 'completada', mejor_puntaje = ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id_usuario = ? AND id_actividad = ?`, 
-          args: [puntajeNumerico, id_usuario, data.id_actividad] 
-        });
-      }
-
-      // Solo da monedas si es la PRIMERA VEZ que se completa exitosamente
-      if (esPrimeraVezCompletada && puntosOtorgados > 0) {
-        await db.execute({ sql: `UPDATE usuarios SET monedas_virtuales = COALESCE(monedas_virtuales,0) + ? WHERE id = ?`, args: [puntosOtorgados, id_usuario] });
-        awardedCoins = puntosOtorgados;
-      }
-    }
-    // Si el puntaje es inválido, NO se actualiza progreso NI se dan monedas
-  } catch (e) {
-    console.error('Error en progreso:', e);
+  // 3. Verificación de aprobación
+  let aprobado = false;
+  const puntaje = Number(data.puntaje_obtenido || 0);
+  if (act.tipo_actividad === 'minijuego') {
+    aprobado = puntaje >= 60;
+  } else {
+    const ejRes = await db.execute({ sql: `SELECT minimo_aprobatorio FROM ejercicio WHERE id_actividad = ?`, args: [data.id_actividad] });
+    aprobado = puntaje >= Number(ejRes.rows[0]?.minimo_aprobatorio || 70);
   }
 
-  const updated = await db.execute({ sql: `SELECT monedas_virtuales FROM usuarios WHERE id = ?`, args: [id_usuario] });
-  return { id_intento, awardedCoins, monedas_restantes: updated.rows[0]?.monedas_virtuales };
+  let awardedCoins = 0;
+
+  if (aprobado) {
+    // --- LÓGICA DE MONEDAS (ANTES DEL UPDATE DE ESTADO) ---
+    // Consultamos el estado actual antes de que el trigger lo cambie
+    const progActual = await db.execute({ 
+      sql: `SELECT estado FROM progreso_actividad WHERE id_usuario = ? AND id_actividad = ?`, 
+      args: [id_usuario, data.id_actividad] 
+    });
+    const estadoPrevio = progActual.rows[0]?.estado;
+
+    if (estadoPrevio !== 'completada') {
+      // Sumamos puntos de la actividad actual
+      awardedCoins += Number(act.puntos_otorgados || 0);
+
+      // Si es salto, buscamos las previas que NO estén completadas ni saltadas aún
+      if (isModoSalto && act.id_nodo && act.orden_secuencial) {
+        const previas = await db.execute({
+          sql: `
+            SELECT a.puntos_otorgados 
+            FROM actividad a
+            JOIN progreso_actividad pa ON a.id_actividad = pa.id_actividad
+            WHERE a.id_nodo = ? 
+              AND a.orden_secuencial < ? 
+              AND pa.id_usuario = ?
+              AND pa.estado NOT IN ('completada', 'saltada')
+          `,
+          args: [act.id_nodo, act.orden_secuencial, id_usuario]
+        });
+
+        for (const row of previas.rows) {
+          awardedCoins += Number(row.puntos_otorgados || 0);
+        }
+      }
+
+      // 4. Pago de monedas
+      if (awardedCoins > 0) {
+        await db.execute({ 
+          sql: `UPDATE usuarios SET monedas_virtuales = COALESCE(monedas_virtuales,0) + ? WHERE id = ?`, 
+          args: [awardedCoins, id_usuario] 
+        });
+      }
+    }
+
+    // 5. ACTUALIZACIÓN DE ESTADO (ESTO DISPARA LOS TRIGGERS)
+    // Al ejecutar esto, el trigger 5 marcará las demás como 'saltada' y el trigger 4 desbloqueará el siguiente nodo.
+    if (!progActual.rows.length) {
+      await db.execute({ 
+        sql: `INSERT INTO progreso_actividad (id_progreso, id_usuario, id_actividad, estado, mejor_puntaje, fecha_actualizacion) VALUES (?, ?, ?, 'completada', ?, CURRENT_TIMESTAMP)`, 
+        args: [uuid(), id_usuario, data.id_actividad, puntaje] 
+      });
+    } else {
+      await db.execute({ 
+        sql: `UPDATE progreso_actividad SET estado = 'completada', mejor_puntaje = ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id_usuario = ? AND id_actividad = ?`, 
+        args: [puntaje, id_usuario, data.id_actividad] 
+      });
+    }
+  }
+
+  const userRes = await db.execute({ sql: `SELECT monedas_virtuales FROM usuarios WHERE id = ?`, args: [id_usuario] });
+  return { id_intento, awardedCoins, monedas_restantes: userRes.rows[0]?.monedas_virtuales };
 }
 
 export async function completeLectura(id_usuario: string, id_actividad: string) {

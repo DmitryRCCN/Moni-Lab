@@ -91,12 +91,15 @@ export default function Exercise({ ejercicio, activityId }: { ejercicio: any; ac
 
     setSubmitting(true)
     try {
-      const detalle = JSON.stringify(newAnswers.map(a => ({
-        id_pregunta: a.id,
-        respuesta_usuario: a.selected,
-        es_correcta: a.correct,
-        puntos_obtenidos: a.puntos
-      })))
+      const detalle = JSON.stringify({
+        modo: modo, 
+        respuestas: newAnswers.map(a => ({
+          id_pregunta: a.id,
+          respuesta_usuario: a.selected,
+          es_correcta: a.correct,
+          puntos_obtenidos: a.puntos
+        }))
+      })
 
       const res: any = await api('/intento', {
         method: 'POST',
