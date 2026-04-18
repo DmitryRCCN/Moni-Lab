@@ -57,10 +57,16 @@ export default function MochilaGame({ config, onComplete }: Props) {
                   : 'border-white/10 bg-white/5 hover:bg-white/10'
               }`}
             >
-              <div className="flex items-center justify-between gap-3">
-                <div>
+              <div className="flex flex-col items-center justify-between gap-3">
+                {element.img && (
+                  <img 
+                    src={`/images/${element.img}.png`}
+                    alt={element.nombre}
+                    className="h-16 w-16 object-contain"
+                  />
+                )}
+                <div className="text-center">
                   <div className="font-semibold text-white">{element.nombre}</div>
-                  {element.img && <div className="text-xs text-white/60">{element.img}</div>}
                 </div>
                 {isSelected && submitted ? (
                   <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white ${
