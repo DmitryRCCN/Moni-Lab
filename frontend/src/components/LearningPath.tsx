@@ -107,7 +107,7 @@ const THEMES: Record<number, {
     headerBg: 'bg-gradient-to-r from-purple-500 to-pink-500', 
     iconLeft: LightningIcon, 
     iconRight: LightningIcon,
-    decorations: { 0: '/images/mono-leyendo.png', 3: '/images/mono-emoji.png' }
+    decorations: { 0: '/images/monoCuentas.webp', 3: '/images/monaPresupuesto.webp', 6: '/images/monoDecision.webp' }
   }
 }
 
