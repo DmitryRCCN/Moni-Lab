@@ -189,8 +189,7 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
 
   const sortedNodes = [...nodes].sort((a, b) => a.orden_secuencial - b.orden_secuencial)
   return (
-    <div className="w-full flex flex-col items-center justify-center py-4 gap-4">
-      
+    <div className="w-full overflow-x-hidden flex flex-col items-center justify-center py-4 gap-4">      
       {/* Botón Arriba */}
       <button onClick={() => scroll('up')} className="z-30 p-3 text-emerald-400 bg-gray-900/80 backdrop-blur-md rounded-full transition-all hover:scale-110 active:scale-95 shadow-lg border border-gray-700">
         <svg className="w-8 h-8 sm:w-10 sm:h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -199,7 +198,7 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
       </button>
 
       {/* Contenedor del recorrido - SE AGREGÓ 'relative' PARA CÁLCULOS EXACTOS */}
-      <div ref={carouselRef} className="relative flex flex-col w-full h-[70vh] overflow-y-auto py-10 gap-24 scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div ref={carouselRef} className="relative flex flex-col w-full h-[70vh] overflow-y-auto overflow-x-hidden py-10 gap-24 scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {sortedNodes.map((node) => {
           const theme = THEMES[node.orden_secuencial] || { colorTitle: 'text-white', lineGradient: 'from-emerald-400/20 via-teal-400/50 to-emerald-400/20', headerBg: 'bg-emerald-500' }
 
@@ -284,7 +283,7 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
                         {/* Decoración */}
                         {theme.decorations && theme.decorations[actIndex] && (
                           <div className={`absolute top-1/2 transform -translate-y-1/2 pointer-events-none z-20 
-                                          ${isLeft ? 'left-1/2 ml-16 sm:ml-28' : 'right-1/2 mr-16 sm:mr-28'}`}>
+                                          ${isLeft ? 'left-1/2 ml-10 sm:ml-28' : 'right-1/2 mr-10 sm:mr-28'}`}>
                             <div className="relative w-[100px] h-[100px] sm:w-[200px] sm:h-[200px] flex items-center justify-center">
                               <img 
                                 src={theme.decorations[actIndex]} 
