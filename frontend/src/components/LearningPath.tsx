@@ -91,7 +91,7 @@ const THEMES: Record<number, {
     headerBg: 'bg-gradient-to-r from-purple-500 to-pink-500', 
     iconLeft: LightningIcon, 
     iconRight: LightningIcon,
-    decorations: { 0: '/images/mono-leyendo.png', 3: '/images/mono-emoji.png' }
+    decorations: { 0: '/images/monoBillete.webp', 3: '/images/monaMoneda.webp', 6: '/images/monosMonedas.webp' }
   },
   4: {
     colorTitle: 'text-white',
@@ -99,7 +99,7 @@ const THEMES: Record<number, {
     headerBg: 'bg-gradient-to-r from-yellow-500 to-orange-400', 
     iconLeft: BrainIcon,
     iconRight: BrainIcon, 
-    decorations: { 1: '/images/mono-leyendo.png' }
+    decorations: { 1: '/images/alcancia.webp', 4: '/images/stoncks.webp', 7: '/images/monoAlcancia.webp' }
   },
   5: {
     colorTitle: 'text-white',
@@ -285,11 +285,11 @@ export default function LearningPath({ nodes = [], progress = {} }: Props) {
                         {theme.decorations && theme.decorations[actIndex] && (
                           <div className={`absolute top-1/2 transform -translate-y-1/2 pointer-events-none z-20 
                                           ${isLeft ? 'left-1/2 ml-16 sm:ml-28' : 'right-1/2 mr-16 sm:mr-28'}`}>
-                            <div className="relative w-[100px] h-[100px] sm:w-[200px] sm:h-[200px] flex items-center justify-center">
+                            <div className="relative w-[84px] h-[86px] sm:w-[200px] sm:h-[200px] flex items-center justify-center">
                               <img 
                                 src={theme.decorations[actIndex]} 
                                 alt="Decor" 
-                                className="absolute w-full h-full object-contain drop-shadow-xl" 
+                                className="absolute w-full h-full object-contain drop-shadow-xl rounded-xl" 
                               />
                             </div>
                           </div>
