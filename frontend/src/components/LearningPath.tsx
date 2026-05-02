@@ -95,21 +95,41 @@ const THEMES: Record<number, {
   },
   4: {
     colorTitle: 'text-white',
-    lineGradient: 'from-yellow-400/20 via-orange-400/50 to-yellow-400/20',
-    headerBg: 'bg-gradient-to-r from-yellow-500 to-orange-400', 
+    lineGradient: 'from-emerald-400/20 via-teal-400/50 to-emerald-400/20',
+    headerBg: 'bg-gradient-to-r from-emerald-500 to-teal-400', 
     iconLeft: BrainIcon,
     iconRight: BrainIcon, 
     decorations: { 1: '/images/alcancia.webp', 4: '/images/stoncks.webp', 7: '/images/monoAlcancia.webp' }
   },
   5: {
     colorTitle: 'text-white',
-    lineGradient: 'from-purple-400/20 via-pink-400/50 to-purple-400/20',
-    headerBg: 'bg-gradient-to-r from-purple-500 to-pink-500', 
+    lineGradient: 'from-red-400/20 via-rose-400/50 to-red-400/20',
+    headerBg: 'bg-gradient-to-r from-red-500 to-rose-400', 
     iconLeft: LightningIcon, 
     iconRight: LightningIcon,
     decorations: { 0: '/images/monoCuentas.webp', 3: '/images/monaPresupuesto.webp', 6: '/images/monoDecision.webp' }
+  },
+  6: {
+    colorTitle: 'text-white',
+    lineGradient: 'from-cyan-400/20 via-sky-400/50 to-cyan-400/20',
+    headerBg: 'bg-gradient-to-r from-cyan-500 to-sky-400'
+  },
+  7: {
+    colorTitle: 'text-white',
+    lineGradient: 'from-indigo-400/20 via-violet-400/50 to-indigo-400/20',
+    headerBg: 'bg-gradient-to-r from-indigo-500 to-violet-500'
+  },
+  8: {
+    colorTitle: 'text-white',
+    lineGradient: 'from-amber-400/20 via-yellow-500/50 to-amber-400/20',
+    headerBg: 'bg-gradient-to-r from-amber-500 to-yellow-400'
+  },
+  9: {
+    colorTitle: 'text-white',
+    lineGradient: 'from-lime-400/20 via-green-400/50 to-lime-400/20',
+    headerBg: 'bg-gradient-to-r from-lime-500 to-green-500'
   }
-}
+};
 
 export default function LearningPath({ nodes = [], progress = {} }: Props) {
   const [pulsing, setPulsing] = useState<Record<string, boolean>>({})
