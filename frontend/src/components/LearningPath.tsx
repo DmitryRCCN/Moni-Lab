@@ -112,12 +112,14 @@ const THEMES: Record<number, {
   6: {
     colorTitle: 'text-white',
     lineGradient: 'from-cyan-400/20 via-sky-400/50 to-cyan-400/20',
-    headerBg: 'bg-gradient-to-r from-cyan-500 to-sky-400'
+    headerBg: 'bg-gradient-to-r from-cyan-500 to-sky-400',
+    decorations: { 1: '/images/monoEmprendedor.webp', 4: '/images/monaEmprendedora.webp', 7: '/images/monaCuentas.webp' }
   },
   7: {
     colorTitle: 'text-white',
     lineGradient: 'from-indigo-400/20 via-violet-400/50 to-indigo-400/20',
-    headerBg: 'bg-gradient-to-r from-indigo-500 to-violet-500'
+    headerBg: 'bg-gradient-to-r from-indigo-500 to-violet-500',
+    decorations: { 0: '/images/monoImpuestos.webp', 3: '/images/monoTransporte.webp', 6: '/images/monoParque.webp' }
   },
   8: {
     colorTitle: 'text-white',
