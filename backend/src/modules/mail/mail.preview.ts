@@ -1,4 +1,4 @@
-// BORRAR TODO ESTE ARCHIVO DESPUES DE PRUEBAS
+/* BORRAR TODO ESTE ARCHIVO DESPUES DE PRUEBAS
 
 import { render } from "@react-email/render";
 import WelcomeEmail from "../../shared/mail/react/templates/WelcomeEmail";
@@ -86,3 +86,4 @@ export const emailPreviews = {
 };
 
 export type EmailPreviewType = keyof typeof emailPreviews;
+*/

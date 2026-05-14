@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { mailService } from './mail.service';
 import { processAllTutorReports } from './tutorReport.service';
-import { emailPreviews, EmailPreviewType } from './mail.preview'; // BORRAR DESPUES DE PRUEBAS
+// import { emailPreviews, EmailPreviewType } from './mail.preview'; // BORRAR DESPUES DE PRUEBAS
 
 export class MailController {
 
@@ -45,15 +45,18 @@ export class MailController {
     }
   }
 
-  async previewEmail(req: Request, res: Response) { // BORRAR TODA LA SIGUIENTE FUNCIÓN DESPUES DE PRUEBAS
-    const { type } = req.params;
-    const { desarrollo } = req.query;
+  /*async previewEmail(req: Request, res: Response) { // BORRAR TODA LA SIGUIENTE FUNCIÓN DESPUES DE PRUEBAS
+    // Express params/query can be string | string[]; normalizamos a string
+    const rawType = req.params.type;
+    const type = Array.isArray(rawType) ? rawType[0] : rawType;
+    const rawDesarrollo = (req.query as any)?.desarrollo;
+    const desarrollo = Array.isArray(rawDesarrollo) ? rawDesarrollo[0] : rawDesarrollo;
 
     try {
-      // Validar que el tipo existe
-      if (!(type in emailPreviews)) {
+      // Validar que el tipo es una cadena y que existe
+      if (typeof type !== 'string' || !(type in emailPreviews)) {
         return res.status(404).json({ 
-          error: `Template no encontrado: ${type}`,
+          error: `Template no encontrado: ${String(type)}`,
           available: Object.keys(emailPreviews)
         });
       }
@@ -168,10 +171,12 @@ ${Object.keys(emailPreviews).map(k => `• ${k}`).join('\n')}
       });
     }
   }
+*/
 
   /**
    * Endpoint para listar todos los templates disponibles en una página interactiva
    */
+  /*
   async indexPreviews(req: Request, res: Response) { // BORRAR TODA LA SIGUIENTE FUNCIÓN DESPUES DE PRUEBAS
     const templates = Object.keys(emailPreviews);
     
@@ -328,7 +333,7 @@ ${Object.keys(emailPreviews).map(k => `• ${k}`).join('\n')}
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(htmlIndex);
-  }
+  }*/
 
 }
 
