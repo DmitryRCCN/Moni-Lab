@@ -58,9 +58,42 @@ const TrophyIcon = (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
     <path fillRule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 0 0-.584.859 6.753 6.753 0 0 0 6.138 5.6 6.73 6.73 0 0 0 2.743 1.346A6.707 6.707 0 0 1 9.279 15H8.54c-1.036 0-1.875.84-1.875 1.875V19.5h-.75a2.25 2.25 0 0 0-2.25 2.25c0 .414.336.75.75.75h15a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-2.25-2.25h-.75v-2.625c0-1.036-.84-1.875-1.875-1.875h-.739a6.706 6.706 0 0 1-1.112-3.173 6.73 6.73 0 0 0 2.743-1.347 6.753 6.753 0 0 0 6.139-5.6.75.75 0 0 0-.585-.858 47.077 47.077 0 0 0-3.07-.543V2.62a.75.75 0 0 0-.658-.744 49.22 49.22 0 0 0-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 0 0-.657.744Zm0 2.629c0 1.196.312 2.32.857 3.294A5.266 5.266 0 0 1 3.16 5.337a45.6 45.6 0 0 1 2.006-.343v.256Zm13.5 0v-.256c.674.1 1.343.214 2.006.343a5.265 5.265 0 0 1-2.863 3.207 6.72 6.72 0 0 0 .857-3.294Z" clipRule="evenodd" />
   </svg>
-);
+)
 
-// 1. DICCIONARIO DE TEMAS ACTUALIZADO CON FONDOS E ÍCONOS
+// --- NUEVOS ÍCONOS PARA VARIEDAD ---
+const LightbulbIcon = (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path d="M12 .75a8.25 8.25 0 0 0-4.135 15.39c.686.398 1.115 1.008 1.134 1.623a.75.75 0 0 0 .577.706c.352.083.71.148 1.074.195.323.041.6-.218.6-.544v-4.661a6.714 6.714 0 0 1-.937-.171.75.75 0 1 1 .374-1.453 5.261 5.261 0 0 0 2.626 0 .75.75 0 1 1 .374 1.452 6.712 6.712 0 0 1-.937.172v4.66c0 .327.277.586.6.545.364-.047.722-.112 1.074-.195a.75.75 0 0 0 .577-.706c.02-.615.448-1.225 1.134-1.623A8.25 8.25 0 0 0 12 .75Z" />
+    <path fill-rule="evenodd" d="M9.013 19.9a.75.75 0 0 1 .877-.597 11.319 11.319 0 0 0 4.22 0 .75.75 0 1 1 .28 1.473 12.819 12.819 0 0 1-4.78 0 .75.75 0 0 1-.597-.876ZM9.754 22.344a.75.75 0 0 1 .824-.668 13.682 13.682 0 0 0 2.844 0 .75.75 0 1 1 .156 1.492 15.156 15.156 0 0 1-3.156 0 .75.75 0 0 1-.668-.824Z" clip-rule="evenodd" />
+  </svg>
+
+)
+
+const ChartBarIcon = (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path d="M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75ZM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75a1.875 1.875 0 0 1-1.875-1.875V8.625ZM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75A1.875 1.875 0 0 1 3 19.875v-6.75Z" />
+  </svg>
+)
+
+const BriefcaseIcon = (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path fill-rule="evenodd" d="M7.5 5.25a3 3 0 0 1 3-3h3a3 3 0 0 1 3 3v.205c.933.085 1.857.197 2.774.334 1.454.218 2.476 1.483 2.476 2.917v3.033c0 1.211-.734 2.352-1.936 2.752A24.726 24.726 0 0 1 12 15.75c-2.73 0-5.357-.442-7.814-1.259-1.202-.4-1.936-1.541-1.936-2.752V8.706c0-1.434 1.022-2.7 2.476-2.917A48.814 48.814 0 0 1 7.5 5.455V5.25Zm7.5 0v.09a49.488 49.488 0 0 0-6 0v-.09a1.5 1.5 0 0 1 1.5-1.5h3a1.5 1.5 0 0 1 1.5 1.5Zm-3 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd" />
+    <path d="M3 18.4v-2.796a4.3 4.3 0 0 0 .713.31A26.226 26.226 0 0 0 12 17.25c2.892 0 5.68-.468 8.287-1.335.252-.084.49-.189.713-.311V18.4c0 1.452-1.047 2.728-2.523 2.923-2.12.282-4.282.427-6.477.427a49.19 49.19 0 0 1-6.477-.427C4.047 21.128 3 19.852 3 18.4Z" />
+  </svg>
+)
+
+const GlobeIcon = (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM6.262 6.072a8.25 8.25 0 1 0 10.562-.766 4.5 4.5 0 0 1-1.318 1.357L14.25 7.5l.165.33a.809.809 0 0 1-1.086 1.085l-.604-.302a1.125 1.125 0 0 0-1.298.21l-.132.131c-.439.44-.439 1.152 0 1.591l.296.296c.256.257.622.374.98.314l1.17-.195c.323-.054.654.036.905.245l1.33 1.108c.32.267.46.694.358 1.1a8.7 8.7 0 0 1-2.288 4.04l-.723.724a1.125 1.125 0 0 1-1.298.21l-.153-.076a1.125 1.125 0 0 1-.622-1.006v-1.089c0-.298-.119-.585-.33-.796l-1.347-1.347a1.125 1.125 0 0 1-.21-1.298L9.75 12l-1.64-1.64a6 6 0 0 1-1.676-3.257l-.172-1.03Z" clip-rule="evenodd" />
+  </svg>
+)
+
+const BuildingIcon = (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path fillRule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v.75h5.25a.75.75 0 0 1 .75.75v12a.75.75 0 0 1-.75.75h-12a.75.75 0 0 1-.75-.75V4.5a.75.75 0 0 1 .75-.75h5.25V3a.75.75 0 0 1 .75-.75Zm-4.5 6a.75.75 0 0 0 0 1.5h1.5a.75.75 0 0 0 0-1.5h-1.5Zm0 3a.75.75 0 0 0 0 1.5h1.5a.75.75 0 0 0 0-1.5h-1.5Zm0 3a.75.75 0 0 0 0 1.5h1.5a.75.75 0 0 0 0-1.5h-1.5Zm6-6a.75.75 0 0 0 0 1.5h1.5a.75.75 0 0 0 0-1.5h-1.5Zm0 3a.75.75 0 0 0 0 1.5h1.5a.75.75 0 0 0 0-1.5h-1.5Zm0 3a.75.75 0 0 0 0 1.5h1.5a.75.75 0 0 0 0-1.5h-1.5Z" clipRule="evenodd" />
+  </svg>
+)
+
 const THEMES: Record<number, { 
   colorTitle: string; 
   lineGradient: string; 
@@ -113,26 +146,35 @@ const THEMES: Record<number, {
     colorTitle: 'text-white',
     lineGradient: 'from-cyan-400/20 via-sky-400/50 to-cyan-400/20',
     headerBg: 'bg-gradient-to-r from-cyan-500 to-sky-400',
+    iconLeft: LightbulbIcon, 
+    iconRight: BriefcaseIcon,
     decorations: { 1: '/images/monoEmprendedor.webp', 4: '/images/monaEmprendedora.webp', 7: '/images/monaCuentas.webp' }
   },
   7: {
     colorTitle: 'text-white',
     lineGradient: 'from-indigo-400/20 via-violet-400/50 to-indigo-400/20',
     headerBg: 'bg-gradient-to-r from-indigo-500 to-violet-500',
+    iconLeft: BuildingIcon, 
+    iconRight: ChartBarIcon,
     decorations: { 0: '/images/monoImpuestos.webp', 3: '/images/monoTransporte.webp', 6: '/images/monoParque.webp' }
   },
   8: {
     colorTitle: 'text-white',
     lineGradient: 'from-amber-400/20 via-yellow-500/50 to-amber-400/20',
-    headerBg: 'bg-gradient-to-r from-amber-500 to-yellow-400'
+    headerBg: 'bg-gradient-to-r from-amber-500 to-yellow-400' ,
+    iconLeft: GlobeIcon, // Añadido para planeta/comercio
+    iconRight: LightningIcon, // Añadido
+    decorations: { 1: '/images/monosPlaneta.webp', 4: '/images/monosComercio.webp', 7: '/images/monoCoin.avif' }
   },
   9: {
     colorTitle: 'text-white',
     lineGradient: 'from-lime-400/20 via-green-400/50 to-lime-400/20',
-    headerBg: 'bg-gradient-to-r from-lime-500 to-green-500'
+    headerBg: 'bg-gradient-to-r from-lime-500 to-green-500' ,
+    iconLeft: ChartBarIcon, // Añadido para stonks/inversión
+    iconRight: BrainIcon, // Añadido
+    decorations: { 0: '/images/monaStonks.webp', 3: '/images/monoBitcoin.webp', 6: '/images/monoInversion.webp' }
   }
 };
-
 export default function LearningPath({ nodes = [], progress = {} }: Props) {
   const [pulsing, setPulsing] = useState<Record<string, boolean>>({})
   const [highlightId, setHighlightId] = useState<string | null>(null);
