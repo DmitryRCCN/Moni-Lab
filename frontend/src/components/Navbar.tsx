@@ -8,7 +8,7 @@ export default function Navbar() {
 
   async function handleLogout() {
     await logout()
-    navigate('/home')
+    navigate('/')
   }
 
   // Estilos base para todos los links
